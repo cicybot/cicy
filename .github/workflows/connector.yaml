@@ -18,7 +18,7 @@ jobs:
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
 
-            - name: Download Npcap SDK
+      - name: Download Npcap SDK
         run: |
           curl -L -o npcap-sdk.zip https://npcap.com/dist/npcap-sdk-1.13.zip
           tar -xf npcap-sdk.zip -C $env:USERPROFILE
