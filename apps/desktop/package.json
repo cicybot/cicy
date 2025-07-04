@@ -1,7 +1,7 @@
 {
     "name": "@cc/desktop",
     "license": "Apache-2.0",
-    "version": "1.0.19",
+    "version": "1.0.20",
     "description": "CiCi desktop",
     "main": ".webpack/main",
     "repository": {
