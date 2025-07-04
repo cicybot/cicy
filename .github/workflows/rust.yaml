@@ -28,16 +28,19 @@ jobs:
 
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
+      - name: Set up Java (required for sdkmanager)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Install cargo-ndk
-        run: cargo install cargo-ndk
-
-            
-      - name: Install NDK and CMake
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install NDK
         run: |
-          yes | sdkmanager --install "ndk;$ANDROID_NDK_VERSION"
-          echo "NDK installed at $ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk$ANDROID_NDK_VERSION" >> $GITHUB_ENV
+          sdkmanager --install "ndk;$ANDROID_NDK_VERSION"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> $GITHUB_ENV
+            
 
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
