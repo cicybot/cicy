@@ -26,7 +26,6 @@ use hex;
 use libc;
 use std::env;
 use std::process;
-use tokio::signal::unix::SignalKind;
 use tokio::time::{sleep, Duration};
 
 use std::sync::Arc;
@@ -60,7 +59,6 @@ struct Args {
     #[arg(long = "loop", hide = true)]
     loop_mode: bool,
 
-
     #[arg(long)]
     gen_key: bool,
 }
@@ -78,15 +76,21 @@ fn run_daemon(ip: &str, port: u16) {
 
     info!("[+] Starting daemon on {}:{}", ip, port);
 
-    let child = match Command::new(std::env::current_exe().unwrap())
-        .arg("--loop")
+    let mut command = Command::new(std::env::current_exe().unwrap());
+    command.arg("--loop")
         .arg("--ip").arg(ip)
         .arg("--port").arg(port.to_string())
         .stdin(Stdio::null())
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
+        .stderr(Stdio::null());
+
+    #[cfg(windows)]
     {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x08000000); // CREATE_NO_WINDOW flag
+    }
+
+    let child = match command.spawn() {
         Ok(c) => c,
         Err(e) => {
             error!("Failed to spawn daemon process: {}", e);
@@ -101,11 +105,11 @@ fn run_daemon(ip: &str, port: u16) {
 fn stop_daemon() {
     match fs::read_to_string(PID_FILE) {
         Ok(pid_str) => {
-            if let Ok(pid) = pid_str.trim().parse::<i32>() {
+            if let Ok(pid) = pid_str.trim().parse::<u32>() {
                 info!("[+] Stopping daemon with PID {}...", pid);
                 #[cfg(unix)]
                 unsafe {
-                    libc::kill(pid, libc::SIGTERM);
+                    libc::kill(pid as i32, libc::SIGTERM);
                 }
                 #[cfg(windows)]
                 {
@@ -163,19 +167,13 @@ fn custom_format(
     )
 }
 
-async fn daemon_loop(args: &Args)  {
-    // Setup signals
-    let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate())
-        .expect("Cannot listen SIGTERM");
-    let mut sigint = tokio::signal::unix::signal(SignalKind::interrupt())
-        .expect("Cannot listen SIGINT");
-
+async fn daemon_loop(args: &Args) {
     let pid = process::id().to_string();
     const KEY: &str = "9067941512fcb28a0db7d1beb0e9ece001995bf3f66e36b157a384efbc6bdae4";
 
     AesGcmCrypto::init_encryption(KEY).unwrap();
 
-    // 初始化数据库连接池和表
+    // Initialize database connection pool and tables
     let db_pool = match sqlite::init_sqlite_pool("sqlite:data.db").await {
         Ok(pool) => {
             if let Err(e) = model_contact::Contact::init_table(&pool).await {
@@ -204,14 +202,32 @@ async fn daemon_loop(args: &Args)  {
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
 
-    // Use move to transfer ownership of sigterm and sigint to the async block
-    let server = axum::serve(listener, app)
-        .with_graceful_shutdown(async move {
-            tokio::select! {
-                _ = sigterm.recv() => info!("Received SIGTERM, shutting down"),
-                _ = sigint.recv() => info!("Received SIGINT, shutting down"),
-            }
-        });
+    // Platform-specific signal handling
+    #[cfg(unix)]
+    let server = {
+        use tokio::signal::unix::{signal, SignalKind};
+        let mut sigterm = signal(SignalKind::terminate()).expect("Cannot listen SIGTERM");
+        let mut sigint = signal(SignalKind::interrupt()).expect("Cannot listen SIGINT");
+
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async move {
+                tokio::select! {
+                    _ = sigterm.recv() => info!("Received SIGTERM, shutting down"),
+                    _ = sigint.recv() => info!("Received SIGINT, shutting down"),
+                }
+            })
+    };
+
+    #[cfg(windows)]
+    let server = {
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("Failed to listen for Ctrl+C");
+                info!("Received Ctrl+C, shutting down");
+            })
+    };
 
     tokio::select! {
         _ = server => {
@@ -224,6 +240,9 @@ async fn daemon_loop(args: &Args)  {
             }
         } => {}
     }
+
+    // Clean up PID file
+    fs::remove_file(PID_FILE).ok();
 }
 
 fn change_to_exe_dir() -> std::io::Result<()> {
@@ -278,7 +297,7 @@ async fn main() {
 
         // Generate random 32-byte key (64 hex chars)
         let mut key = [0u8; 32];
-        OsRng.fill_bytes(&mut key);  // Now works with RngCore in scope
+        OsRng.fill_bytes(&mut key);
 
         // Convert to hex string
         let hex_key = hex::encode(key);
@@ -289,7 +308,6 @@ async fn main() {
         // Also generate UUID if needed
         println!("\nUUID for reference:");
         println!("{}", uuid::Uuid::new_v4());
-
     } else {
         daemon_loop(&args).await;
     }
