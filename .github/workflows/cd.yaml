@@ -250,7 +250,7 @@ jobs:
           - aarch64-linux-android
           - x86_64-linux-android
     env:
-      ANDROID_NDK_VERSION: 27.2.12479018
+      ANDROID_NDK_VERSION: 1.0.1
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
