@@ -73,7 +73,7 @@ jobs:
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
           cd apps-rust/cc-agent-rust
-          cargo build --target=${{ matrix.target }} -o ./target/android build --release
+          cargo build --target=${{ matrix.target }} --release
 
       - name: Copy build output to assets with version
         run: |
@@ -81,7 +81,7 @@ jobs:
           VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
           echo $VERSION
           ARTIFACT_NAME=cc-agent-rust
-          BUILT_PATH=target/android/${{ matrix.target }}/release/$ARTIFACT_NAME
+          BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
           OUTPUT_NAME=${ARTIFACT_NAME%}-${{ matrix.target }}-v$VERSION
           cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
           ls -alh assets
