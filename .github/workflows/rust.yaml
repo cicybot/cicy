@@ -35,8 +35,10 @@ jobs:
             
       - name: Install NDK and CMake
         run: |
-            yes | sdkmanager --install "ndk;27.0.11718014"
-            echo "NDK installed at $ANDROID_HOME/ndk/27.0.11718014"
+          yes | sdkmanager --install "ndk;27.0.11718014"
+          echo "NDK installed at $ANDROID_HOME/ndk/27.0.11718014"
+          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.11718014
+
 
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
