@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.7
+  VERSION: 1.0.8
   VERSION_ANDROID_NDK: 27.2.12479018
 
 permissions:
@@ -305,8 +305,9 @@ jobs:
           cd ../../
           BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
           TARGET_NAME=$(echo ${{ matrix.target }} | sed 's/.*-//')
-          OUTPUT_NAME=assets/$ARTIFACT_NAME-$TARGET_NAME-v${{ env.VERSION }}
+          OUTPUT_NAME=target/${{ matrix.target }}/release/$ARTIFACT_NAME-$TARGET_NAME-v${{ env.VERSION }}
           cp "$BUILT_PATH" "$OUTPUT_NAME"
+          gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
       - name: Build cc-connector-android
         run: |
@@ -316,5 +317,7 @@ jobs:
           cd ../../
           BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
           TARGET_NAME=$(echo ${{ matrix.target }} | sed 's/.*-//')
-          OUTPUT_NAME=assets/$ARTIFACT_NAME-$TARGET_NAME-v${{ env.VERSION }}
+          OUTPUT_NAME=target/${{ matrix.target }}/release/$ARTIFACT_NAME-$TARGET_NAME-v${{ env.VERSION }}
           cp "$BUILT_PATH" "$OUTPUT_NAME"
+          gh release upload ${{ github.ref_name }} $OUTPUT_NAME
+
