@@ -6,8 +6,9 @@ on:
       - v*
 
 env:
-  node-version: 20.11.1
+  VERSION_NODE: 20.11.1
   VERSION: 1.0.3
+  VERSION_ANDROID_NDK: 1.0.3
 
 permissions:
   contents: write
@@ -44,7 +45,6 @@ jobs:
           - aarch64-linux-android
           - x86_64-linux-android
     env:
-      ANDROID_NDK_VERSION: 1.0.3
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
@@ -73,18 +73,18 @@ jobs:
       - name: Cache Android NDK
         uses: actions/cache@v3
         with:
-          path: ${{ env.ANDROID_HOME }}/ndk/${{ env.ANDROID_NDK_VERSION }}
-          key: ndk-${{ env.ANDROID_NDK_VERSION }}
+          path: ${{ env.ANDROID_HOME }}/ndk/${{ env.VERSION_ANDROID_NDK }}
+          key: ndk-${{ env.VERSION_ANDROID_NDK }}
 
       - name: Install NDK if not cached
         run: |
-          if [ ! -d "$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}" ]; then
-            sdkmanager --install "ndk;${ANDROID_NDK_VERSION}"
+          if [ ! -d "$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}" ]; then
+            sdkmanager --install "ndk;${VERSION_ANDROID_NDK}"
           fi
 
       - name: Set environment for ${{ matrix.target }}
         run: |
-          TOOLCHAIN=$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin
+          TOOLCHAIN=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin
           API=33
           case "${{ matrix.target }}" in
             aarch64-linux-android)
@@ -101,7 +101,7 @@ jobs:
               ;;
           esac
           echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr a-z A-Z | tr '-' '_')_LINKER=$TOOLCHAIN/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=--sysroot=$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
+          echo "RUSTFLAGS=-C link-arg=--sysroot=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
 
       - name: Build with cargo
         run: |
@@ -190,7 +190,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.node-version }}
+          node-version: ${{ env.VERSION_NODE }}
 
       - name: Enable Corepack
         run: corepack enable
@@ -253,7 +253,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.node-version }}
+          node-version: ${{ env.VERSION_NODE }}
 
       - name: Enable Corepack
         run: corepack enable
