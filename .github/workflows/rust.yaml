@@ -32,13 +32,11 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk
 
-      - name: Set up Android NDK
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: ${{ env.ANDROID_NDK_VERSION }}
-          link-to-sdk: true
-          add-to-path: true
-          local-cache: false
+            
+      - name: Install NDK and CMake
+        run: |
+            yes | sdkmanager --install "ndk;27.0.11718014"
+            echo "NDK installed at $ANDROID_HOME/ndk/27.0.11718014"
 
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
