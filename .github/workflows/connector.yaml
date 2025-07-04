@@ -19,11 +19,10 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Download Npcap SDK
-        run: |
-          curl -L -o npcap-sdk.zip https://npcap.com/dist/npcap-sdk-1.13.zip
-          tar -xf npcap-sdk.zip -C $env:USERPROFILE
         shell: powershell
-
+        run: |
+          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "npcap-sdk.zip"
+          Expand-Archive -Path "npcap-sdk.zip" -DestinationPath "$env:USERPROFILE\\npcap-sdk-1.13"
       - name: Set environment for Npcap
         shell: powershell
         run: |
