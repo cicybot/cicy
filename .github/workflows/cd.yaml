@@ -306,12 +306,21 @@ jobs:
           cargo build --target ${{ matrix.target }} --release
           cd ../../
           BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
-          TARGET_NAME=$(echo ${{ matrix.target }} | sed 's/.*-//')
-          echo $TARGET_NAME
+          
+          PLATFORM=$(echo ${{ matrix.target }} | sed 's/.*-//')
 
-        #   OUTPUT_NAME=target/${{ matrix.target }}/release/$ARTIFACT_NAME-$TARGET_NAME-v${{ env.VERSION }}
-        #   cp "$BUILT_PATH" "$OUTPUT_NAME"
-        #   gh release upload ${{ github.ref_name }} $OUTPUT_NAME
+          case "${{ matrix.target }}" in
+            x86_64-apple-darwin)
+              TARGET_NAME=x86_64
+              ;;
+            aarch64-apple-darwin)
+              TARGET_NAME=arm64
+              ;;
+          esac
+          echo $TARGET_NAME
+          OUTPUT_NAME=target/${{ matrix.target }}/release/$ARTIFACT_NAME-$PLATFORM-$TARGET_NAME-v${{ env.VERSION }}
+          cp "$BUILT_PATH" "$OUTPUT_NAME"
+          gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
       - name: Build cc-connector-android
         run: |
@@ -320,9 +329,18 @@ jobs:
           cargo build --target ${{ matrix.target }} --release
           cd ../../
           BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
-          TARGET_NAME=$(echo ${{ matrix.target }} | sed 's/.*-//')
+          PLATFORM=$(echo ${{ matrix.target }} | sed 's/.*-//')
+
+          case "${{ matrix.target }}" in
+            x86_64-apple-darwin)
+              TARGET_NAME=x86_64
+              ;;
+            aarch64-apple-darwin)
+              TARGET_NAME=arm64
+              ;;
+          esac
           echo $TARGET_NAME
-        #   OUTPUT_NAME=target/${{ matrix.target }}/release/$ARTIFACT_NAME-$TARGET_NAME-v${{ env.VERSION }}
-        #   cp "$BUILT_PATH" "$OUTPUT_NAME"
-        #   gh release upload ${{ github.ref_name }} $OUTPUT_NAME
+          OUTPUT_NAME=target/${{ matrix.target }}/release/$ARTIFACT_NAME-$PLATFORM-$TARGET_NAME-v${{ env.VERSION }}
+          cp "$BUILT_PATH" "$OUTPUT_NAME"
+          gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
