@@ -84,10 +84,7 @@ jobs:
             echo "CXX_x86_64_linux_android=$TOOLCHAIN/x86_64-linux-android33-clang++" >> $GITHUB_ENV
             echo "AR_x86_64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
           fi
-          echo "CARGO_TARGET_${{ matrix.target | replace('-', '_') | upper }}_LINKER=${TOOLCHAIN}/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=--sysroot=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
-
-
+          
       - name: Build with cargo for ${{ matrix.target }}
         run: |
           cd apps-rust/cc-agent-rust
