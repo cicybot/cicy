@@ -1,0 +1,29 @@
+{
+  "name": "@cc/utils",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc -w",
+    "build:pkg": "rm -fr dist && yarn build",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@types/node": "^24.0.4",
+    "crypto-js": "^4.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "eslint-plugin-storybook": "^0.8.0",
+    "typescript": "^4.9.4",
+    "typescript-eslint": "^8.0.1"
+  }
+}

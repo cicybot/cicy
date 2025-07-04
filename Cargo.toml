@@ -1,0 +1,19 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps-rust/cc-agent-rust", "apps-rust/cc-connector-android", "apps-rust/cici-server"
+]
+# We miss our linux_no_std example from the default members since `cargo check`
+# and `cargo test` both attempt to link the `std` library into it in error.
+
+default-members = []
+
+[workspace.package]
+version = "0.16.7"
+authors = [
+    "Barry <barry.ptpt@gmail.com>"
+]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com"
+description = "Rust"

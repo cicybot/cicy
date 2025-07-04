@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body{
+            margin:0;
+            padding:0
+        }
+    </style>
+    <script>
+        const windowId = "<%= windowId %>";
+        const rect = {
+            x:parseInt("<%= x %>"),
+            y:parseInt("<%= y %>"),
+            width:parseInt("<%= width %>"),
+            height:parseInt("<%= height %>"),
+        }
+        async function getCapturePageCache() {
+            const res = await fetch("/browser/WebContents",{
+                method:"post",
+                headers:{
+                    "content-type":"application/json"
+                },
+                body:JSON.stringify({
+                    windowId,
+                    action:"capturePage",
+                    params:{
+                        rect
+                    }
+                })
+            })
+            return res.json();
+        }
+        /**
+         * 
+         * type : mouseUp / mouseDown / mouseMove
+         */
+        async function sendInputEvent(type,x,y) {
+            const res = await fetch("/browser/WebContents",{
+                method:"post",
+                headers:{
+                    "content-type":"application/json"
+                },
+                body:JSON.stringify({
+                    windowId,
+                    action:"sendInputEvent",
+                    params:{
+                        event:{
+                            type,
+                            button:"left",
+                            x,y,clickCount:1
+                        },
+                        // showPoint:true
+                    }
+                })
+            })
+            return res.json();
+        }
+        
+        function onMouseDown(e){
+            console.log(onMouseDown)
+        }
+        $(()=>{
+            setInterval(async ()=>{
+                const cache = await getCapturePageCache()
+                document.querySelector("#capture").src = cache.body.imgData
+            },200)
+            $("body").on("mousedown",(e)=>{
+                console.log("mousedown,Position:", rect.x + e.clientX, rect.y + e.clientY);
+                sendInputEvent("mouseDown",rect.x + e.clientX, rect.y + e.clientY)
+            })
+            $("body").on("mousemove",(e)=>{
+                sendInputEvent("mouseMove",rect.x + e.clientX, rect.y + e.clientY)
+            })
+            $("#capture").on("mouseup",(e)=>{
+                console.log("mousedown,mouseup:", rect.x + e.clientX, rect.y + e.clientY);
+                sendInputEvent("mouseUp",rect.x + e.clientX, rect.y + e.clientY)
+            })
+        })
+    </script>
+</head>
+<body>
+    <img draggable="false" src="" id="capture" alt="">
+</body>
+</html>

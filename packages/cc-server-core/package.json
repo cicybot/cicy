@@ -1,0 +1,51 @@
+{
+  "name": "@cc/cc-server-core",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc -w",
+    "build:pkg": "rm -fr dist && yarn build",
+    "lint": "tsc --noEmit && eslint . --ext .ts,.tsx",
+    "lint:fix": "tsc --noEmit && eslint . --ext .ts,.tsx --fix",
+    "test": "jest"
+  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.ts",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/body-parser": "^1",
+    "@types/cors": "^2",
+    "@types/ejs": "^3",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^22.1.0",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/ws": "^8.5.14",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.7.3",
+    "uuid": "^9.0.1"
+  },
+  "dependencies": {
+    "@cc/utils": "1.0.0",
+    "@types/redis": "^4.0.11",
+    "@types/uuid": "^9.0.7",
+    "better-sqlite3": "^11.10.0",
+    "body-parser": "^1.20.3",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "generic-pool": "^3.9.0",
+    "mysql2": "^3.12.0",
+    "redis": "^4.7.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "ws": "^8.18.1"
+  }
+}

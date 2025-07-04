@@ -1,0 +1,47 @@
+{
+  "name": "@cc/cc-ws",
+  "private": true,
+  "scripts": {
+    "start": "tsc -w",
+    "build": "tsc",
+    "build:pkg": "rm -fr dist && yarn build",
+    "server:dev": "nodemon",
+    "server": "ts-node ./src/test_server.ts",
+    "client": "ts-node ./src/test_client.ts",
+    "lint": "tsc --noEmit && eslint . --ext .ts,.tsx",
+    "lint:fix": "tsc --noEmit && eslint . --ext .ts,.tsx --fix",
+    "test": "jest"
+  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/body-parser": "^1",
+    "@types/cors": "^2",
+    "@types/ejs": "^3",
+    "@types/express": "^5",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^22.1.0",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^9.0.7",
+    "@types/ws": "^8.5.14",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@cc/utils": "1.0.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.1"
+  }
+}

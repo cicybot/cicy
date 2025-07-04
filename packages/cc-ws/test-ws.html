@@ -1,0 +1,71 @@
+<html>
+<body>
+<script>
+
+const ws = new WebSocket("ws://localhost:3101/ws?id=test&t="+Date.now)
+ws.onopen =()=>{
+    console.log("onopen")
+    ws.send(JSON.stringify({
+        id:1,
+        action:"ping"
+    }))
+
+    ws.send(JSON.stringify({
+        id:1,
+        action:"__info"
+    }))
+
+    ws.send(JSON.stringify({
+        id:1,
+        action:"__isOnline",
+        payload:{
+            windowId:"test"
+        }
+    }))
+
+    ws.send(JSON.stringify({
+        id:1,
+        action:"__clients",
+    }))
+
+
+    ws.send(JSON.stringify({
+        id:"xxxx-xxxx-xxxx",
+        to:"ADR-Redmi-2409BRN2CC",
+        action:"jsonrpc",
+        payload:{
+            method:"deviceInfo",
+            params:[]
+        }
+    }))
+
+
+    ws.send(JSON.stringify({
+        id:"xxxx-xxxx-xxxx",
+        to:"ADR-Redmi-2409BRN2CC",
+        action:"jsonrpc",
+        payload:{
+            method:"shell",
+            params:["pwd"]
+        }
+    }))
+
+
+    ws.send(JSON.stringify({
+        id:"xxxx-xxxx-xxxx",
+        to:"ADR-Redmi-2409BRN2CC",
+        action:"jsonrpc",
+        payload:{
+            method:"ping",
+            params:[]
+        }
+    }))
+
+}
+
+ws.onmessage =(e)=>{
+    console.log("onmessage",e.data)
+}
+</script>
+</body>
+</html>

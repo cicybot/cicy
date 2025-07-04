@@ -1,0 +1,37 @@
+import {CCWSClient} from "./CCWSClient"
+import {SiteService} from "./SiteService"
+export class MainClientMessageHandler{
+    static async handleMsg(message:string){
+        const {action,id,from:fromClientId,payload} = JSON.parse(message)
+        let res:any = {err:""}
+        switch (action) {
+            case "site":{
+                const {method,params} = payload
+                switch (method) {
+                    case "getWebContentsId":{
+                        const {windowId} = params||{}
+                        const [accountIndex,siteId] = windowId.split("-")
+                        const account = await new SiteService(siteId,accountIndex).getAccountState();
+                        res = {
+                            webContentsId:account?.webContentsId
+                        }
+                        break
+                    }
+                    default:
+                        break
+                }
+                break
+            }
+            default:
+                break
+        }
+        if(id){
+            new CCWSClient(fromClientId).sendWithoutResult({
+                id,
+                action:"callback",
+                payload:res,
+            })
+        }
+
+    }
+}

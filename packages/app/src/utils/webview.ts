@@ -1,0 +1,21 @@
+export type WebveiwEventType =
+    | 'console-message'
+    | 'new-window'
+    | 'context-menu'
+    | 'found-in-page'
+    | 'did-start-navigation'
+    | 'load-commit'
+    | 'did-start-loading'
+    | 'did-stop-loading'
+    | 'will-navigate'
+    | 'did-frame-finish-load'
+    | 'did-fail-load'
+    | 'did-finish-load'
+    | 'dom-ready'
+    | 'page-title-updated'
+    | 'page-favicon-updated'
+    | 'enter-html-full-screen'
+    | 'leave-html-full-screen'
+    | 'close'
+    | 'destroyed';
+export const BLANK_URL = 'about:blank';
