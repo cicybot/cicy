@@ -4,7 +4,6 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc -w",
-    "build:pkg": "rm -fr dist && yarn build",
     "lint": "tsc --noEmit && eslint . --ext .ts,.tsx",
     "lint:fix": "tsc --noEmit && eslint . --ext .ts,.tsx --fix",
     "test": "jest"

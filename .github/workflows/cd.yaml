@@ -2,7 +2,7 @@ name: CiCi CD
 on:
     push:
         branches:
-          - dev1
+          - dev
         # tags:
         #     - v*
 env:
