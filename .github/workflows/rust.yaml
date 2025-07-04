@@ -73,7 +73,7 @@ jobs:
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
           cd apps-rust/cc-agent-rust
-          cargo --target=${{ matrix.target }} -o ./target/android build --release
+          cargo build --target=${{ matrix.target }} -o ./target/android build --release
 
       - name: Copy build output to assets with version
         run: |
