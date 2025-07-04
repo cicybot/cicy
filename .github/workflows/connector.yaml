@@ -2,7 +2,7 @@ name: Rust Multi-Platform Build
 
 on:
   push:
-    branches: [dev]
+    branches: [dev1]
 jobs:
   build-windows:
     runs-on: windows-latest
