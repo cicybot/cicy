@@ -36,18 +36,19 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: |
           mkdir assets
-          $ARTIFACT_NAME = "cici-server.exe"
+          $ARTIFACT_NAME = "cici-server"
           Set-Location "apps-rust/$ARTIFACT_NAME"
           cargo build --target $env:TARGET --release
           $VERSION = (Select-String -Path Cargo.toml -Pattern '^version =' | Select-Object -First 1).Line -replace '.*version = "(.*)".*','$1'
           Write-Host "Version: $VERSION"
-          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME"
+          cd ../../
+          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
           if ($env:TARGET -eq "i686-pc-windows-msvc") {
             $TARGET_NAME = "i686"
           } elseif ($env:TARGET -eq "x86_64-pc-windows-msvc") {
             $TARGET_NAME = "x86_64"
           }
-          $OUTPUT_NAME = "$ARTIFACT_NAME-android-$TARGET_NAME-v$VERSION"
+          $OUTPUT_NAME = "$ARTIFACT_NAME-android-$TARGET_NAME-v$VERSION.exe"
           Copy-Item $BUILT_PATH "../assets/$OUTPUT_NAME"
       - name: Build cc-connector-android
         shell: powershell
@@ -55,18 +56,19 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: |
           mkdir assets
-          $ARTIFACT_NAME = "cc-connector-android.exe"
+          $ARTIFACT_NAME = "cc-connector-android"
           Set-Location "apps-rust/$ARTIFACT_NAME"
           cargo build --target $env:TARGET --release
           $VERSION = (Select-String -Path Cargo.toml -Pattern '^version =' | Select-Object -First 1).Line -replace '.*version = "(.*)".*','$1'
           Write-Host "Version: $VERSION"
-          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME"
+          cd ../../
+          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
           if ($env:TARGET -eq "i686-pc-windows-msvc") {
             $TARGET_NAME = "i686"
           } elseif ($env:TARGET -eq "x86_64-pc-windows-msvc") {
             $TARGET_NAME = "x86_64"
           }
-          $OUTPUT_NAME = "$ARTIFACT_NAME-android-$TARGET_NAME-v$VERSION"
+          $OUTPUT_NAME = "$ARTIFACT_NAME-android-$TARGET_NAME-v$VERSION.exe"
           Copy-Item $BUILT_PATH "../assets/$OUTPUT_NAME"
 
 
