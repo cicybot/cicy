@@ -73,18 +73,18 @@ jobs:
           export API=33
           if [[ "${{ matrix.target }}" == "aarch64-linux-android" ]]; then
             echo "CC_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android33-clang" >> $GITHUB_ENV
-            echo "CXX_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android33-clang++" >> $GITHUB_ENV
             echo "AR_aarch64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
           elif [[ "${{ matrix.target }}" == "armv7-linux-androideabi" ]]; then
             echo "CC_armv7_linux_androideabi=$TOOLCHAIN/armv7a-linux-androideabi33-clang" >> $GITHUB_ENV
-            echo "CXX_armv7_linux_androideabi=$TOOLCHAIN/armv7a-linux-androideabi33-clang++" >> $GITHUB_ENV
             echo "AR_armv7_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
           elif [[ "${{ matrix.target }}" == "x86_64-linux-android" ]]; then
             echo "CC_x86_64_linux_android=$TOOLCHAIN/x86_64-linux-android33-clang" >> $GITHUB_ENV
-            echo "CXX_x86_64_linux_android=$TOOLCHAIN/x86_64-linux-android33-clang++" >> $GITHUB_ENV
             echo "AR_x86_64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
           fi
-          
+          echo "CARGO_TARGET_${{ matrix.target | replace('-', '_') | upper }}_LINKER=${TOOLCHAIN}/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
+          echo "RUSTFLAGS=-C link-arg=--sysroot=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
+
+
       - name: Build with cargo for ${{ matrix.target }}
         run: |
           cd apps-rust/cc-agent-rust
