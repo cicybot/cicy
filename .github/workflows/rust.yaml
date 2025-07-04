@@ -28,6 +28,7 @@ jobs:
 
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
+
       - name: Set up Java (required for sdkmanager)
         uses: actions/setup-java@v3
         with:
@@ -36,11 +37,26 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-      - name: Install NDK
+    
+      
+      - name: Cache Android NDK
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.ANDROID_HOME }}/ndk/${{ env.ANDROID_NDK_VERSION }}
+          key: ndk-${{ env.ANDROID_NDK_VERSION }}
+
+
+      - name: Install NDK if not cached
         run: |
-          sdkmanager --install "ndk;$ANDROID_NDK_VERSION"
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> $GITHUB_ENV
-            
+          if [ ! -d "$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" ]; then
+            sdkmanager --install "ndk;$ANDROID_NDK_VERSION"
+          else
+            echo "NDK already cached."
+          fi
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
           cd apps-rust/cc-agent-rust
@@ -51,7 +67,7 @@ jobs:
           mkdir -p assets
           VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
           echo $VERSION
-          ARTIFACT_NAME=cc-agent-rust  # replace this with the actual file name
+          ARTIFACT_NAME=cc-agent-rust
           BUILT_PATH=target/android/${{ matrix.target }}/release/$ARTIFACT_NAME
           OUTPUT_NAME=${ARTIFACT_NAME%}-${{ matrix.target }}-v$VERSION.so
           cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
