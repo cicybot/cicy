@@ -70,7 +70,7 @@ jobs:
       - name: Set environment for ${{ matrix.target }}
         run: |
           export TOOLCHAIN=$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin
-
+          API=33
           if [[ "${{ matrix.target }}" == "aarch64-linux-android" ]]; then
             echo "CC_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android33-clang" >> $GITHUB_ENV
             echo "CXX_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android33-clang++" >> $GITHUB_ENV
@@ -84,6 +84,8 @@ jobs:
             echo "CXX_x86_64_linux_android=$TOOLCHAIN/x86_64-linux-android33-clang++" >> $GITHUB_ENV
             echo "AR_x86_64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
           fi
+          echo "CARGO_TARGET_${{ matrix.target | replace('-', '_') | upper }}_LINKER=${TOOLCHAIN}/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
+
 
       - name: Build with cargo for ${{ matrix.target }}
         run: |
