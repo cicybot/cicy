@@ -26,6 +26,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+        # ✅ Cache Cargo dependencies
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.target }}-
+
+
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
 
@@ -60,7 +73,7 @@ jobs:
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
           cd apps-rust/cc-agent-rust
-          cargo ndk -t ${{ matrix.target }} -o ./target/android build --release
+          cargo --target=${{ matrix.target }} -o ./target/android build --release
 
       - name: Copy build output to assets with version
         run: |
@@ -69,6 +82,6 @@ jobs:
           echo $VERSION
           ARTIFACT_NAME=cc-agent-rust
           BUILT_PATH=target/android/${{ matrix.target }}/release/$ARTIFACT_NAME
-          OUTPUT_NAME=${ARTIFACT_NAME%}-${{ matrix.target }}-v$VERSION.so
+          OUTPUT_NAME=${ARTIFACT_NAME%}-${{ matrix.target }}-v$VERSION
           cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
           ls -alh assets
