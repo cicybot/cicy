@@ -30,9 +30,11 @@ jobs:
           echo "INCLUDE=$NpcapPath\\Include" | Out-File -Append $env:GITHUB_ENV
 
           if ($env:TARGET -eq "i686-pc-windows-msvc") {
-            echo "LIB=$NpcapPath\\Lib" | Out-File -Append $env:GITHUB_ENV
-          } else ($env:TARGET -eq "x86_64-pc-windows-msvc") {
-            echo "LIB=$NpcapPath\\Lib\\x64" | Out-File -Append $env:GITHUB_ENV
+            $TARGET_NAME = "i686"
+          } elseif ($env:TARGET -eq "x86_64-pc-windows-msvc") {
+            $TARGET_NAME = "x86_64"
+          } else {
+            $TARGET_NAME = $env:TARGET
           }
           
       - name: Build cici-server
@@ -83,8 +85,10 @@ jobs:
 
           if ($env:TARGET -eq "i686-pc-windows-msvc") {
             $TARGET_NAME = "i686"
-          } if ($env:TARGET -eq "x86_64-pc-windows-msvc") {
+          } elseif ($env:TARGET -eq "x86_64-pc-windows-msvc") {
             $TARGET_NAME = "x86_64"
+          } else {
+            $TARGET_NAME = $env:TARGET
           } 
 
           $OUTPUT_NAME = "target/$env:TARGET/release/$ARTIFACT_NAME-v$VERSION.exe"
