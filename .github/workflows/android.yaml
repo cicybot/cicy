@@ -1,4 +1,4 @@
-name: CiCi CD
+name: android CD
 on:
     push:
         branches:
