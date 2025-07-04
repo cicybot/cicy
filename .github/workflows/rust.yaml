@@ -70,7 +70,7 @@ jobs:
       - name: Set environment for ${{ matrix.target }}
         run: |
           export TOOLCHAIN=$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin
-          API=33
+          export API=33
           if [[ "${{ matrix.target }}" == "aarch64-linux-android" ]]; then
             echo "CC_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android33-clang" >> $GITHUB_ENV
             echo "CXX_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android33-clang++" >> $GITHUB_ENV
