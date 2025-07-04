@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches:
-      - dev1
+      - dev
 
 jobs:
   build:
@@ -38,7 +38,7 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: debug-apk
           path: ./apps/cc-agent-adr/app/build/outputs/apk/debug/app-debug.apk
