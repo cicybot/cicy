@@ -43,7 +43,6 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         .route("/api/ws/sendMsg", post(crate::api::ws_sendMsg))
         .route("/api/ws/broadcastMsg", get(crate::api::broadcastMsg))
 
-
         .route("/api/contacts", get(crate::api::list_contacts))
         .route("/api/contacts", post(crate::api::save_contact))
         .route("/api/contacts/:model_id", get(crate::api::get_contact))

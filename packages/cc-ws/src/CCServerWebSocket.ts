@@ -90,7 +90,7 @@ export class CCServerWebSocket {
                                 id,
                                 action:"callback",
                                 payload:{
-                                    isOnline:CCServerWebSocket.hasClient(payload.windowId)
+                                    isOnline:CCServerWebSocket.hasClient(payload.clientId)
                                 }
                             }))
                             break

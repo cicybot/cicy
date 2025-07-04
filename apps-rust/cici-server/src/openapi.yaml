@@ -195,14 +195,14 @@ components:
     WsSendMessageRequest:
       type: object
       required:
-        - client_id
+        - clientId
         - action
         - payload
       properties:
         action:
           description: Action type (e.g., 'jsonrpc')
           type: string
-        client_id:
+        clientId:
           description: Target client ID
           type: string
         payload:

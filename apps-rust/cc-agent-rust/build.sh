@@ -1,7 +1,7 @@
 set -ex
 
 #
-#cd /Users/ton/Desktop/Android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/darwin-x86_64/bin/
+#cd c
 #
 #ln -s llvm-ar aarch64-linux-android-ar
 #

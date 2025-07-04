@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.24
+  VERSION: 1.0.25
   VERSION_ANDROID_NDK: 27.2.12479018
   GH_TOKEN: ${{ github.token }}
 
@@ -35,231 +35,231 @@ jobs:
             echo "Release $tag created."
           fi
   
-  build_server_client:
-    runs-on: windows-latest
-    needs: release
-    strategy:
-      matrix:
-        target:
-          - x86_64-pc-windows-msvc
-        #   - i686-pc-windows-msvc
-    steps:
-      - uses: actions/checkout@v4
+  # build_server_client:
+  #   runs-on: windows-latest
+  #   needs: release
+  #   strategy:
+  #     matrix:
+  #       target:
+  #         - x86_64-pc-windows-msvc
+  #       #   - i686-pc-windows-msvc
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Install Rust target
-        run: rustup target add ${{ matrix.target }}
+  #     - name: Install Rust target
+  #       run: rustup target add ${{ matrix.target }}
 
-      - name: Download Npcap SDK
-        shell: powershell
-        run: |
-          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.15.zip" -OutFile "npcap-sdk.zip"
-          Expand-Archive -Path "npcap-sdk.zip" -DestinationPath "$env:USERPROFILE\\npcap-sdk-1.15"
+  #     - name: Download Npcap SDK
+  #       shell: powershell
+  #       run: |
+  #         Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.15.zip" -OutFile "npcap-sdk.zip"
+  #         Expand-Archive -Path "npcap-sdk.zip" -DestinationPath "$env:USERPROFILE\\npcap-sdk-1.15"
 
-      - name: Set environment for Npcap
-        shell: powershell
-        run: |
-          $NpcapPath = "$env:USERPROFILE\\npcap-sdk-1.15"
-          echo "INCLUDE=$NpcapPath\\Include" | Out-File -Append $env:GITHUB_ENV
-          if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") {
-            echo "LIB=$NpcapPath\\Lib" | Out-File -Append $env:GITHUB_ENV
-          } else {
-            echo "LIB=$NpcapPath\\Lib\\x64" | Out-File -Append $env:GITHUB_ENV
-          }
+  #     - name: Set environment for Npcap
+  #       shell: powershell
+  #       run: |
+  #         $NpcapPath = "$env:USERPROFILE\\npcap-sdk-1.15"
+  #         echo "INCLUDE=$NpcapPath\\Include" | Out-File -Append $env:GITHUB_ENV
+  #         if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") {
+  #           echo "LIB=$NpcapPath\\Lib" | Out-File -Append $env:GITHUB_ENV
+  #         } else {
+  #           echo "LIB=$NpcapPath\\Lib\\x64" | Out-File -Append $env:GITHUB_ENV
+  #         }
 
-      - name: Build cici-server
-        shell: powershell
-        env:
-          TARGET: ${{ matrix.target }}
-        run: |
-          $ARTIFACT_NAME = "cici-server"
-          cd apps-rust/$ARTIFACT_NAME
-          cargo build --target $env:TARGET --release
-          cd ../../
-          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
-          if (!(Test-Path $BUILT_PATH)) {
-            Write-Error "Build output not found at $BUILT_PATH"
-            exit 1
-          }
-          if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") {
-              $TARGET_NAME = "i686"
-          } else {
-              $TARGET_NAME = "x86_64"
-          }
-          $OUTPUT_NAME = "target/$env:TARGET/release/$ARTIFACT_NAME-v${{ env.VERSION }}-win32-$TARGET_NAME.exe"
-          Copy-Item $BUILT_PATH $OUTPUT_NAME
-          gh release upload ${{ github.ref_name }} $OUTPUT_NAME
+  #     - name: Build cici-server
+  #       shell: powershell
+  #       env:
+  #         TARGET: ${{ matrix.target }}
+  #       run: |
+  #         $ARTIFACT_NAME = "cici-server"
+  #         cd apps-rust/$ARTIFACT_NAME
+  #         cargo build --target $env:TARGET --release
+  #         cd ../../
+  #         $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
+  #         if (!(Test-Path $BUILT_PATH)) {
+  #           Write-Error "Build output not found at $BUILT_PATH"
+  #           exit 1
+  #         }
+  #         if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") {
+  #             $TARGET_NAME = "i686"
+  #         } else {
+  #             $TARGET_NAME = "x86_64"
+  #         }
+  #         $OUTPUT_NAME = "target/$env:TARGET/release/$ARTIFACT_NAME-v${{ env.VERSION }}-win32-$TARGET_NAME.exe"
+  #         Copy-Item $BUILT_PATH $OUTPUT_NAME
+  #         gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
-      - name: Build cc-connector-android
-        shell: powershell
-        env:
-          TARGET: ${{ matrix.target }}
-        run: |
-          $ARTIFACT_NAME = "cc-connector-android"
-          cd apps-rust/$ARTIFACT_NAME
-          cargo build --target $env:TARGET --release
-          cd ../../
-          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
-          if (!(Test-Path $BUILT_PATH)) {
-            Write-Error "Build output not found at $BUILT_PATH"
-            exit 1
-          }
+  #     - name: Build cc-connector-android
+  #       shell: powershell
+  #       env:
+  #         TARGET: ${{ matrix.target }}
+  #       run: |
+  #         $ARTIFACT_NAME = "cc-connector-android"
+  #         cd apps-rust/$ARTIFACT_NAME
+  #         cargo build --target $env:TARGET --release
+  #         cd ../../
+  #         $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
+  #         if (!(Test-Path $BUILT_PATH)) {
+  #           Write-Error "Build output not found at $BUILT_PATH"
+  #           exit 1
+  #         }
 
-          if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") {
-              $TARGET_NAME = "i686"
-          } else {
-              $TARGET_NAME = "x86_64"
-          }
-          $OUTPUT_NAME = "target/$env:TARGET/release/$ARTIFACT_NAME-v${{ env.VERSION }}-win32-$TARGET_NAME.exe"
-          Copy-Item $BUILT_PATH $OUTPUT_NAME
-          gh release upload ${{ github.ref_name }} $OUTPUT_NAME
+  #         if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") {
+  #             $TARGET_NAME = "i686"
+  #         } else {
+  #             $TARGET_NAME = "x86_64"
+  #         }
+  #         $OUTPUT_NAME = "target/$env:TARGET/release/$ARTIFACT_NAME-v${{ env.VERSION }}-win32-$TARGET_NAME.exe"
+  #         Copy-Item $BUILT_PATH $OUTPUT_NAME
+  #         gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
-  build_cc_agent_rust:
-    name: Build cc-agent-rust
-    runs-on: ubuntu-latest
-    needs: build_server_client
-    strategy:
-      matrix:
-        target:
-        #   - armv7-linux-androideabi
-          - aarch64-linux-android
-          - x86_64-linux-android
-    env:
-      CARGO_TERM_COLOR: always
-    steps:
-      - uses: actions/checkout@v4
+  # build_cc_agent_rust:
+  #   name: Build cc-agent-rust
+  #   runs-on: ubuntu-latest
+  #   needs: build_server_client
+  #   strategy:
+  #     matrix:
+  #       target:
+  #       #   - armv7-linux-androideabi
+  #         - aarch64-linux-android
+  #         - x86_64-linux-android
+  #   env:
+  #     CARGO_TERM_COLOR: always
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Cache Cargo
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+  #     - name: Cache Cargo
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: |
+  #           ~/.cargo/registry
+  #           ~/.cargo/git
+  #           target
+  #         key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install Rust target
-        run: rustup target add ${{ matrix.target }}
+  #     - name: Install Rust target
+  #       run: rustup target add ${{ matrix.target }}
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+  #     - name: Set up Java
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         distribution: 'temurin'
+  #         java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+  #     - name: Set up Android SDK
+  #       uses: android-actions/setup-android@v3
 
-      - name: Cache Android NDK
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ANDROID_HOME }}/ndk/${{ env.VERSION_ANDROID_NDK }}
-          key: ndk-${{ env.VERSION_ANDROID_NDK }}
+  #     - name: Cache Android NDK
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ${{ env.ANDROID_HOME }}/ndk/${{ env.VERSION_ANDROID_NDK }}
+  #         key: ndk-${{ env.VERSION_ANDROID_NDK }}
 
-      - name: Install NDK if not cached
-        run: |
-          if [ ! -d "$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}" ]; then
-            sdkmanager --install "ndk;${VERSION_ANDROID_NDK}"
-          fi
+  #     - name: Install NDK if not cached
+  #       run: |
+  #         if [ ! -d "$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}" ]; then
+  #           sdkmanager --install "ndk;${VERSION_ANDROID_NDK}"
+  #         fi
 
-      - name: Set environment for ${{ matrix.target }}
-        run: |
-          TOOLCHAIN=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin
-          API=33
-          case "${{ matrix.target }}" in
-            aarch64-linux-android)
-              echo "CC_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android$API-clang" >> $GITHUB_ENV
-              echo "AR_aarch64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
-              ;;
-            armv7-linux-androideabi)
-              cp $TOOLCHAIN/armv7a-linux-androideabi$API-clang $TOOLCHAIN/armv7-linux-androideabi$API-clang
-              echo "CC_armv7a_linux_androideabi=$TOOLCHAIN/armv7a-linux-androideabi$API-clang" >> $GITHUB_ENV
-              echo "CC_armv7_linux_androideabi=$TOOLCHAIN/armv7-linux-androideabi$API-clang" >> $GITHUB_ENV
-              echo "AR_armv7a_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
-              echo "AR_armv7_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
-              ;;
-            x86_64-linux-android)
-              echo "CC_x86_64_linux_android=$TOOLCHAIN/x86_64-linux-android$API-clang" >> $GITHUB_ENV
-              echo "AR_x86_64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
-              ;;
-          esac
-          echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr a-z A-Z | tr '-' '_')_LINKER=$TOOLCHAIN/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=--sysroot=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
+  #     - name: Set environment for ${{ matrix.target }}
+  #       run: |
+  #         TOOLCHAIN=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin
+  #         API=33
+  #         case "${{ matrix.target }}" in
+  #           aarch64-linux-android)
+  #             echo "CC_aarch64_linux_android=$TOOLCHAIN/aarch64-linux-android$API-clang" >> $GITHUB_ENV
+  #             echo "AR_aarch64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
+  #             ;;
+  #           armv7-linux-androideabi)
+  #             cp $TOOLCHAIN/armv7a-linux-androideabi$API-clang $TOOLCHAIN/armv7-linux-androideabi$API-clang
+  #             echo "CC_armv7a_linux_androideabi=$TOOLCHAIN/armv7a-linux-androideabi$API-clang" >> $GITHUB_ENV
+  #             echo "CC_armv7_linux_androideabi=$TOOLCHAIN/armv7-linux-androideabi$API-clang" >> $GITHUB_ENV
+  #             echo "AR_armv7a_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
+  #             echo "AR_armv7_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
+  #             ;;
+  #           x86_64-linux-android)
+  #             echo "CC_x86_64_linux_android=$TOOLCHAIN/x86_64-linux-android$API-clang" >> $GITHUB_ENV
+  #             echo "AR_x86_64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
+  #             ;;
+  #         esac
+  #         echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr a-z A-Z | tr '-' '_')_LINKER=$TOOLCHAIN/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
+  #         echo "RUSTFLAGS=-C link-arg=--sysroot=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
 
-      - name: Build with cargo
-        run: |
-          cd apps-rust/cc-agent-rust
-          cargo build --target=${{ matrix.target }} --release
-          cd ../../
+  #     - name: Build with cargo
+  #       run: |
+  #         cd apps-rust/cc-agent-rust
+  #         cargo build --target=${{ matrix.target }} --release
+  #         cd ../../
 
-      - name: Copy build output to assets
-        run: |
-          case "${{ matrix.target }}" in
-            aarch64-linux-android)
-                TARGET_NAME="arm64"
-              ;;
-            armv7a-linux-androideabi)
-                TARGET_NAME="armv7a"
-              ;;
-            x86_64-linux-android)
-                TARGET_NAME="x86_64"
-              ;;
-          esac
-          cp target/${{ matrix.target }}/release/cc-agent-rust target/${{ matrix.target }}/release/cc-agent-rust-v${{ env.VERSION }}-$TARGET_NAME
-          gh release upload ${{ github.ref_name }} target/${{ matrix.target }}/release/cc-agent-rust-v${{ env.VERSION }}-$TARGET_NAME
+  #     - name: Copy build output to assets
+  #       run: |
+  #         case "${{ matrix.target }}" in
+  #           aarch64-linux-android)
+  #               TARGET_NAME="arm64"
+  #             ;;
+  #           armv7a-linux-androideabi)
+  #               TARGET_NAME="armv7a"
+  #             ;;
+  #           x86_64-linux-android)
+  #               TARGET_NAME="x86_64"
+  #             ;;
+  #         esac
+  #         cp target/${{ matrix.target }}/release/cc-agent-rust target/${{ matrix.target }}/release/cc-agent-rust-v${{ env.VERSION }}-$TARGET_NAME
+  #         gh release upload ${{ github.ref_name }} target/${{ matrix.target }}/release/cc-agent-rust-v${{ env.VERSION }}-$TARGET_NAME
 
-  build_apk:
-    name: Build APK
-    runs-on: ubuntu-latest
-    needs: build_cc_agent_rust
-    steps:
-      - uses: actions/checkout@v4
+  # build_apk:
+  #   name: Build APK
+  #   runs-on: ubuntu-latest
+  #   needs: build_cc_agent_rust
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.VERSION_NODE }}
+  #     - name: Set up Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.VERSION_NODE }}
 
-      - name: Enable Corepack
-        run: corepack enable
+  #     - name: Enable Corepack
+  #       run: corepack enable
 
-      - name: Run install
-        uses: borales/actions-yarn@v5
-        with:
-          cmd: install
+  #     - name: Run install
+  #       uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: install
 
-      - name: Build Pkg
-        run: |
-          yarn build:pkg
-          cd apps/cc-agent-web
-          yarn build
+  #     - name: Build Pkg
+  #       run: |
+  #         yarn build:pkg
+  #         cd apps/cc-agent-web
+  #         yarn build
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 17
+  #     - name: Set up JDK 17
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         distribution: 'temurin'
+  #         java-version: 17
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper/
-          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/cc-agent-adr/**/*.gradle*', 'apps/cc-agent-adr/gradle-wrapper.properties') }}
+  #     - name: Cache Gradle packages
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: |
+  #           ~/.gradle/caches
+  #           ~/.gradle/wrapper/
+  #         key: ${{ runner.os }}-gradle-${{ hashFiles('apps/cc-agent-adr/**/*.gradle*', 'apps/cc-agent-adr/gradle-wrapper.properties') }}
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./apps/cc-agent-adr/gradlew
+  #     - name: Grant execute permission for gradlew
+  #       run: chmod +x ./apps/cc-agent-adr/gradlew
 
-      - name: Build APK
-        working-directory: ./apps/cc-agent-adr
-        run: |
-          ./gradlew assembleDebug
-          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-${{ env.VERSION }}.apk
-          gh release upload ${{ github.ref_name }} app/build/outputs/apk/debug/app-${{ env.VERSION }}.apk
+  #     - name: Build APK
+  #       working-directory: ./apps/cc-agent-adr
+  #       run: |
+  #         ./gradlew assembleDebug
+  #         mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-${{ env.VERSION }}.apk
+  #         gh release upload ${{ github.ref_name }} app/build/outputs/apk/debug/app-${{ env.VERSION }}.apk
 
   desktop-build:
     name: desktop-build
-    needs: build_apk
+    needs: release
     strategy:
       matrix:
         include:
@@ -289,16 +289,13 @@ jobs:
         uses: borales/actions-yarn@v5
         with:
           cmd: install
-
       - name: Build Pkg
         run: |
           yarn build:pkg
-          DIR=pwd
           mkdir -p apps/desktop/public/static/assets
           cd apps/desktop/public/static/assets
           gh release download ${{ github.ref_name }}
-          dir
-          cd $DIR
+          cd ../../../../../
           echo "export {App} from '@cc/app';" > apps/desktop/src/app/App.tsx
 
       - name: Run build distributive

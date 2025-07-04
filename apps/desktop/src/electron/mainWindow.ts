@@ -194,7 +194,6 @@ export class MainWindow {
             height:savedBounds?.height || 768,
         });
         
-        
         const userDataPath = app.getPath('userData');
         console.log("DEV_URL",DEV_URL)
         console.log('[+] CurrentUrl:', this.currentUrl);

@@ -20,7 +20,7 @@ CCClientWebsocket.configServer(
                 id:Date.now()+"."+Math.floor(Math.random()  *1000),
                 action:"__isOnline",
                 payload:{
-                    windowId:"test"
+                    clientId:"test"
                 }
             }))
 
