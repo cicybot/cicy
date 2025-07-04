@@ -81,9 +81,12 @@ jobs:
             echo "CC_x86_64_linux_android=$TOOLCHAIN/x86_64-linux-android$API-clang" >> $GITHUB_ENV
             echo "AR_x86_64_linux_android=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
           fi
-          echo "CARGO_TARGET_${{ matrix.target | replace('-', '_') | upper }}_LINKER=${TOOLCHAIN}/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=--sysroot=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
+          # Set linker and rustflags
+          linker_path="$TOOLCHAIN/${{ matrix.target }}$API-clang"
+          target_env_key="CARGO_TARGET_$(echo '${{ matrix.target }}' | tr a-z A-Z | tr '-' '_')_LINKER"
+          echo "$target_env_key=$linker_path" >> $GITHUB_ENV
 
+          echo "RUSTFLAGS=-C link-arg=--sysroot=$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
 
       - name: Build with cargo for ${{ matrix.target }}
         run: |
