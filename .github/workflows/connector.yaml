@@ -1,0 +1,105 @@
+name: Rust Multi-Platform Build
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  build-windows:
+    name: Build for Windows 32-bit and 64-bit
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [i686-pc-windows-msvc, x86_64-pc-windows-msvc]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build cici-server
+        run: |
+          mkdir -p assets
+          ARTIFACT_NAME=cici-server
+          cd apps-rust/$ARTIFACT_NAME
+          cargo build --target ${{ matrix.target }} --release
+          VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
+          echo $VERSION
+          BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
+          if [[ "${{ matrix.target }}" == "i686-pc-windows-msvc" ]]; then
+            TARGET_NAME=i686
+          elif [[ "${{ matrix.target }}" == "x86_64-pc-windows-msvc" ]]; then
+            TARGET_NAME=x86_64
+          fi
+          OUTPUT_NAME=${ARTIFACT_NAME%}-android-${TARGET_NAME}-v$VERSION
+          cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
+
+      - name: Build cc-connector-android
+        run: |
+          mkdir -p assets
+          ARTIFACT_NAME=cc-connector-android
+          cd apps-rust/$ARTIFACT_NAME
+          cargo build --target ${{ matrix.target }} --release
+          VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
+          echo $VERSION
+          BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
+          if [[ "${{ matrix.target }}" == "i686-pc-windows-msvc" ]]; then
+            TARGET_NAME=i686
+          elif [[ "${{ matrix.target }}" == "x86_64-pc-windows-msvc" ]]; then
+            TARGET_NAME=x86_64
+          fi
+          OUTPUT_NAME=${ARTIFACT_NAME%}-android-${TARGET_NAME}-v$VERSION
+          cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
+
+      - name: LIST ASSETS
+        run: |
+          ls -alh assets
+
+  build-macos:
+    name: Build for macOS Intel and ARM
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [x86_64-apple-darwin, aarch64-apple-darwin]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build cici-server
+        run: |
+          mkdir -p assets
+          ARTIFACT_NAME=cici-server
+          cd apps-rust/$ARTIFACT_NAME
+          cargo build --target ${{ matrix.target }} --release
+          VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
+          echo $VERSION
+          BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
+          if [[ "${{ matrix.target }}" == "x86_64-apple-darwin" ]]; then
+            TARGET_NAME=x86_64
+          elif [[ "${{ matrix.target }}" == "aarch64-apple-darwin" ]]; then
+            TARGET_NAME=arm64
+          fi
+          OUTPUT_NAME=${ARTIFACT_NAME%}-android-${TARGET_NAME}-v$VERSION
+          cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
+
+      - name: Build cc-connector-android
+        run: |
+          mkdir -p assets
+          ARTIFACT_NAME=cc-connector-android
+          cd apps-rust/$ARTIFACT_NAME
+          cargo build --target ${{ matrix.target }} --release
+          VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
+          echo $VERSION
+          BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
+          if [[ "${{ matrix.target }}" == "x86_64-apple-darwin" ]]; then
+            TARGET_NAME=x86_64
+          elif [[ "${{ matrix.target }}" == "aarch64-apple-darwin" ]]; then
+            TARGET_NAME=arm64
+          fi
+          OUTPUT_NAME=${ARTIFACT_NAME%}-android-${TARGET_NAME}-v$VERSION
+          cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
+
