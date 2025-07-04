@@ -11,7 +11,7 @@ jobs:
       matrix:
         target:
           - x86_64-pc-windows-msvc
-          # - i686-pc-windows-msvc
+          - i686-pc-windows-msvc
     steps:
       - uses: actions/checkout@v4
 
@@ -59,9 +59,9 @@ jobs:
             $TARGET_NAME = "x86_64"
           }
 
-          $OUTPUT_NAME = "$ARTIFACT_NAME-$TARGET_NAME-v$VERSION.exe"
-
-          Copy-Item $BUILT_PATH "$env:GITHUB_WORKSPACE/assets/$OUTPUT_NAME"
+          $OUTPUT_NAME = "target/$env:TARGET/release/$ARTIFACT_NAME-v$VERSION.exe"
+          echo $OUTPUT_NAME
+          Copy-Item $BUILT_PATH $OUTPUT_NAME
           
       - name: Build cc-connector-android
         shell: powershell
@@ -83,15 +83,13 @@ jobs:
 
           if ($env:TARGET -eq "i686-pc-windows-msvc") {
             $TARGET_NAME = "i686"
-          } elseif ($env:TARGET -eq "x86_64-pc-windows-msvc") {
+          } if ($env:TARGET -eq "x86_64-pc-windows-msvc") {
             $TARGET_NAME = "x86_64"
-          } else {
-            $TARGET_NAME = $env:TARGET
-          }
+          } 
 
-          $OUTPUT_NAME = "$ARTIFACT_NAME-$TARGET_NAME-v$VERSION.exe"
-
-          Copy-Item $BUILT_PATH "$env:GITHUB_WORKSPACE/assets/$OUTPUT_NAME"
+          $OUTPUT_NAME = "target/$env:TARGET/release/$ARTIFACT_NAME-v$VERSION.exe"
+          echo $OUTPUT_NAME
+          Copy-Item $BUILT_PATH $OUTPUT_NAME
 
 
   # build-macos:
