@@ -3,60 +3,58 @@ name: Rust Multi-Platform Build
 on:
   push:
     branches: [dev]
-
 jobs:
   build-windows:
-    name: Build for Windows 32-bit and 64-bit
     runs-on: windows-latest
     strategy:
       matrix:
-        target: 
-          # - i686-pc-windows-msvc
+        target:
           - x86_64-pc-windows-msvc
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
 
       - name: Build cici-server
+        shell: powershell
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          mkdir -p assets
-          ARTIFACT_NAME=cici-server
-          cd apps-rust/$ARTIFACT_NAME
-          cargo build --target ${{ matrix.target }} --release
-          VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
-          echo $VERSION
-          BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
-          if [[ "${{ matrix.target }}" == "i686-pc-windows-msvc" ]]; then
-            TARGET_NAME=i686
-          elif [[ "${{ matrix.target }}" == "x86_64-pc-windows-msvc" ]]; then
-            TARGET_NAME=x86_64
-          fi
-          OUTPUT_NAME=${ARTIFACT_NAME%}-android-${TARGET_NAME}-v$VERSION
-          cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
-
+          mkdir assets
+          $ARTIFACT_NAME = "cici-server"
+          Set-Location "apps-rust/$ARTIFACT_NAME"
+          cargo build --target $env:TARGET --release
+          $VERSION = (Select-String -Path Cargo.toml -Pattern '^version =' | Select-Object -First 1).Line -replace '.*version = "(.*)".*','$1'
+          Write-Host "Version: $VERSION"
+          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
+          if ($env:TARGET -eq "i686-pc-windows-msvc") {
+            $TARGET_NAME = "i686"
+          } elseif ($env:TARGET -eq "x86_64-pc-windows-msvc") {
+            $TARGET_NAME = "x86_64"
+          }
+          $OUTPUT_NAME = "$ARTIFACT_NAME-android-$TARGET_NAME-v$VERSION.exe"
+          Copy-Item $BUILT_PATH "../assets/$OUTPUT_NAME"
       - name: Build cc-connector-android
+        shell: powershell
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          mkdir -p assets
-          ARTIFACT_NAME=cc-connector-android
-          cd apps-rust/$ARTIFACT_NAME
-          cargo build --target ${{ matrix.target }} --release
-          VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
-          echo $VERSION
-          BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
-          if [[ "${{ matrix.target }}" == "i686-pc-windows-msvc" ]]; then
-            TARGET_NAME=i686
-          elif [[ "${{ matrix.target }}" == "x86_64-pc-windows-msvc" ]]; then
-            TARGET_NAME=x86_64
-          fi
-          OUTPUT_NAME=${ARTIFACT_NAME%}-android-${TARGET_NAME}-v$VERSION
-          cp "$BUILT_PATH" "assets/$OUTPUT_NAME"
+          mkdir assets
+          $ARTIFACT_NAME = "cc-connector-android"
+          Set-Location "apps-rust/$ARTIFACT_NAME"
+          cargo build --target $env:TARGET --release
+          $VERSION = (Select-String -Path Cargo.toml -Pattern '^version =' | Select-Object -First 1).Line -replace '.*version = "(.*)".*','$1'
+          Write-Host "Version: $VERSION"
+          $BUILT_PATH = "target/$env:TARGET/release/$ARTIFACT_NAME.exe"
+          if ($env:TARGET -eq "i686-pc-windows-msvc") {
+            $TARGET_NAME = "i686"
+          } elseif ($env:TARGET -eq "x86_64-pc-windows-msvc") {
+            $TARGET_NAME = "x86_64"
+          }
+          $OUTPUT_NAME = "$ARTIFACT_NAME-android-$TARGET_NAME-v$VERSION.exe"
+          Copy-Item $BUILT_PATH "../assets/$OUTPUT_NAME"
 
-      - name: LIST ASSETS
-        run: |
-          ls -alh assets
 
   # build-macos:
   #   name: Build for macOS Intel and ARM
