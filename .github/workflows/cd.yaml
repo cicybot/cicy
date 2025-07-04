@@ -2,9 +2,9 @@ name: CiCi CD
 on:
     push:
         branches:
-        - dev
-        tags:
-            - v*
+          - dev
+        # tags:
+        #     - v*
 env:
     node-version: 20.11.1
 
