@@ -21,14 +21,14 @@ jobs:
       - name: Download Npcap SDK
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "npcap-sdk.zip"
-          Expand-Archive -Path "npcap-sdk.zip" -DestinationPath "$env:USERPROFILE\\npcap-sdk-1.13"
+          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.15.zip" -OutFile "npcap-sdk.zip"
+          Expand-Archive -Path "npcap-sdk.zip" -DestinationPath "$env:USERPROFILE\\npcap-sdk-1.15"
       - name: Set environment for Npcap
         shell: powershell
         run: |
-          $NpcapPath = "$env:USERPROFILE\\npcap-sdk-1.13"
+          $NpcapPath = "$env:USERPROFILE\\npcap-sdk-1.15"
           echo "INCLUDE=$NpcapPath\\Include" | Out-File -Append $env:GITHUB_ENV
-          echo "LIB=$NpcapPath\\Lib" | Out-File -Append $env:GITHUB_ENV
+          echo "LIB=$NpcapPath\\Lib\x64" | Out-File -Append $env:GITHUB_ENV
 
       - name: Build cici-server
         shell: powershell
