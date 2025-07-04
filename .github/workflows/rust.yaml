@@ -19,7 +19,7 @@ jobs:
           - x86_64-linux-android      # x86_64
 
     env:
-      ANDROID_NDK_VERSION: 26.1.10909125
+      ANDROID_NDK_VERSION: 27.2.12479018
       CARGO_TERM_COLOR: always
 
     steps:
@@ -37,6 +37,8 @@ jobs:
         with:
           ndk-version: ${{ env.ANDROID_NDK_VERSION }}
           link-to-sdk: true
+          add-to-path: true
+          local-cache: false
 
       - name: Build with cargo-ndk for ${{ matrix.target }}
         run: |
