@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.6
+  VERSION: 1.0.7
   VERSION_ANDROID_NDK: 27.2.12479018
 
 permissions:
@@ -183,7 +183,7 @@ jobs:
   build_apk:
     name: Build APK
     runs-on: ubuntu-latest
-    needs: build_cc_server_and_connctor
+    needs: build_cc_agent_rust
     steps:
       - uses: actions/checkout@v4
 
