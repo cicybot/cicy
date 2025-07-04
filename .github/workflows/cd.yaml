@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.14
+  VERSION: 1.0.15
   VERSION_ANDROID_NDK: 27.2.12479018
   GH_TOKEN: ${{ github.token }}
 
@@ -179,8 +179,6 @@ jobs:
 
       - name: Copy build output to assets
         run: |
-          gh release download ${{ github.ref_name }}
-          ls -alh
           TARGET_NAME=$(echo "${{ matrix.target }}" | sed 's/-.*//' | sed 's/armv7a/armv7a/')
           cp target/${{ matrix.target }}/release/cc-agent-rust target/${{ matrix.target }}/release/cc-agent-rust-$TARGET_NAME-v${{ env.VERSION }}
 
