@@ -18,6 +18,19 @@ jobs:
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
 
+            - name: Download Npcap SDK
+        run: |
+          curl -L -o npcap-sdk.zip https://npcap.com/dist/npcap-sdk-1.13.zip
+          tar -xf npcap-sdk.zip -C $env:USERPROFILE
+        shell: powershell
+
+      - name: Set environment for Npcap
+        shell: powershell
+        run: |
+          $NpcapPath = "$env:USERPROFILE\\npcap-sdk-1.13"
+          echo "INCLUDE=$NpcapPath\\Include" | Out-File -Append $env:GITHUB_ENV
+          echo "LIB=$NpcapPath\\Lib" | Out-File -Append $env:GITHUB_ENV
+
       - name: Build cici-server
         shell: powershell
         env:
