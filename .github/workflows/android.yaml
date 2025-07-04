@@ -14,11 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: 11
+          java-version: 17
 
       - name: Cache Gradle packages
         uses: actions/cache@v3
@@ -26,18 +26,19 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper/
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/cc-agent-adr/**/*.gradle*', 'apps/cc-agent-adr/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+        run: chmod +x ./apps/cc-agent-adr/gradlew
 
       - name: Build APK
+        working-directory: ./apps/cc-agent-adr
         run: ./gradlew assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v3
         with:
           name: debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: ./apps/cc-agent-adr/app/build/outputs/apk/debug/app-debug.apk
