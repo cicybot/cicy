@@ -1,6 +1,8 @@
 name: CiCi CD
 on:
     push:
+        branches:
+        - dev
         tags:
             - v*
 env:
@@ -12,7 +14,7 @@ permissions:
 jobs:
     desktop-build:
         name: desktop-build
-        needs: release
+        # needs: release
         strategy:
             matrix:
                 include:
@@ -52,30 +54,31 @@ jobs:
               with:
                   cmd: ${{ matrix.command }}
                   dir: 'apps/desktop'
-            - name: Release Upload assets on Win32
-              if: runner.os == 'Windows'
-              env:
-                  tag: ${{ github.ref_name }}
-              run: |
-                  #gh release upload ${{ github.ref_name }} "${{env.MAKE_OUT_DIR}}/zip/win32/x64/${{env.PROJECT_NAME}}-win32-x64-${{env.VERSION}}.zip"
-                  mv "${{env.MAKE_OUT_DIR}}/squirrel.windows/x64/${{env.PROJECT_NAME}}-${{env.VERSION}} Setup.exe" "${{env.MAKE_OUT_DIR}}/squirrel.windows/x64/${{env.PROJECT_NAME}}-win32-x64-${{env.VERSION}} Setup.exe"
-                  gh release upload ${{ github.ref_name }} "${{env.MAKE_OUT_DIR}}/squirrel.windows/x64/${{env.PROJECT_NAME}}-win32-x64-${{env.VERSION}} Setup.exe"
-    release:
-        name: Release pushed tag
-        runs-on: ubuntu-22.04
-        steps:
-            - name: Create release
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  tag: ${{ github.ref_name }}
-              run: |
-                  if gh release view "$tag" --repo="$GITHUB_REPOSITORY" &> /dev/null; then
-                    echo "Release $tag already exists."
-                  else
-                    gh release create "$tag" \
-                        --repo="$GITHUB_REPOSITORY" \
-                        --title="${tag}" \
-                        --draft \
-                        --generate-notes
-                    echo "Release $tag created."
-                  fi
+            # - name: Release Upload assets on Win32
+            #   if: runner.os == 'Windows'
+            #   env:
+            #       tag: ${{ github.ref_name }}
+            #   run: |
+            #       #gh release upload ${{ github.ref_name }} "${{env.MAKE_OUT_DIR}}/zip/win32/x64/${{env.PROJECT_NAME}}-win32-x64-${{env.VERSION}}.zip"
+            #       mv "${{env.MAKE_OUT_DIR}}/squirrel.windows/x64/${{env.PROJECT_NAME}}-${{env.VERSION}} Setup.exe" "${{env.MAKE_OUT_DIR}}/squirrel.windows/x64/${{env.PROJECT_NAME}}-win32-x64-${{env.VERSION}} Setup.exe"
+            #       gh release upload ${{ github.ref_name }} "${{env.MAKE_OUT_DIR}}/squirrel.windows/x64/${{env.PROJECT_NAME}}-win32-x64-${{env.VERSION}} Setup.exe"
+    
+    # release:
+    #     name: Release pushed tag
+    #     runs-on: ubuntu-22.04
+    #     steps:
+    #         - name: Create release
+    #           env:
+    #               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #               tag: ${{ github.ref_name }}
+    #           run: |
+    #               if gh release view "$tag" --repo="$GITHUB_REPOSITORY" &> /dev/null; then
+    #                 echo "Release $tag already exists."
+    #               else
+    #                 gh release create "$tag" \
+    #                     --repo="$GITHUB_REPOSITORY" \
+    #                     --title="${tag}" \
+    #                     --draft \
+    #                     --generate-notes
+    #                 echo "Release $tag created."
+    #               fi
