@@ -27,7 +27,7 @@ jobs:
           cd apps/desktop/public/static/assets
           gh release download v1.0.31
           ls
-          ls $GITHUB_WORKSPACE
+          export
           # cd $GITHUB_WORKSPACE
           # node tools/fix-app.js
           # dir apps/desktop/public/static/assets
