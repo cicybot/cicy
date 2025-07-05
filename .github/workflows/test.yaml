@@ -30,4 +30,4 @@ jobs:
           echo $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
           node tools/fix-app.js
-          ls apps/desktop/public/static/assets
+          dir apps/desktop/public/static/assets
