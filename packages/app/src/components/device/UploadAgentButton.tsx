@@ -1,14 +1,17 @@
 import { Button, message } from 'antd';
 import CCAndroidConnectorClient from '../../services/CCAndroidConnectorClient';
 import { onEvent } from '../../utils/utils';
+import { CCWSClient } from '../../services/CCWSClient';
 
 export const UploadAgentButton = ({
-    serverIp,
+    appInfo,
     connector,
+    serverIp,
     fetchDeviceInfo
 }: {
-    connector:CCAndroidConnectorClient;
-    serverIp: null | string;
+    serverIp: string;
+    connector: CCAndroidConnectorClient;
+    appInfo: null | any;
     fetchDeviceInfo: any;
 }) => {
     return (
@@ -16,30 +19,33 @@ export const UploadAgentButton = ({
             size="small"
             type="primary"
             onClick={async () => {
+                if (!appInfo) {
+                    return;
+                }
+                let { version, isDev } = appInfo;
+                if (isDev) {
+                    version = '0.0.0';
+                }
                 onEvent('showLoading');
                 try {
                     let abi = await connector.getDevcieCpuAbi();
                     if (abi.includes('arm64')) {
-                        abi = abi.split('-')[0];
+                        abi = 'arm64';
                     }
                     if (abi.includes('armeabi')) {
-                        abi = 'arm';
+                        abi = 'armv7a';
                     }
 
-                    const httpServerUrl = `http://${serverIp}:3101/static/assets`;
-                    const serverUrl = `ws://${serverIp}:3101/ws`;
+                    const serverUrl = CCWSClient.getServerUrl(serverIp);
+                    const name = 'cicy-agent';
+                    const url = `${CCWSClient.getHttpUrl(
+                        serverIp
+                    )}/static/assets/${name}-${version}-${abi}`;
+                    console.log('cicy-agent url', url);
+                    await connector.dowloadUrl(url, name);
 
-                    await connector.dowloadUrl(
-                        `${httpServerUrl}/cicy-agent-${abi}`,
-                        `cicy-agent-${abi}`
-                    );
-
-                    await connector.deviceAdbPush(
-                        `cicy-agent-${abi}`,
-                        '/data/local/tmp/cicy-agent'
-                    );
-
-                    await connector.deviceAdbShell('chmod +x /data/local/tmp/cicy-agent');
+                    await connector.deviceAdbPush(name, '/data/local/tmp/' + name);
+                    await connector.deviceAdbShell('chmod +x /data/local/tmp/' + name);
                     await connector.deviceAdbShell(
                         `echo ${serverUrl} > /data/local/tmp/config_server.txt`
                     );

@@ -4,6 +4,7 @@ import {
     BrowserWindowConstructorOptions,
     globalShortcut,
     ipcMain,
+    shell,
     Menu,
     Tray
 } from 'electron';
@@ -11,7 +12,7 @@ import contextMenu from 'electron-context-menu';
 import isDev from 'electron-is-dev';
 import * as fs from 'fs';
 import path from 'path';
-import { loadBounds, saveBounds } from './boundsSaver';
+import { initBoundsPath, loadBounds, saveBounds } from './boundsSaver';
 import { delay } from './utils';
 import WebContentsRequest from './webContentsRequest';
 import { handleMsg, initCCClient, setServerUrl } from './wsMainWindowClient';
@@ -182,6 +183,7 @@ export class MainWindow {
     }
     static async openMainWindow() {
         if (this.mainWindow !== undefined && this.mainWindow !== null) return this.mainWindow;
+        initBoundsPath();
         const savedBounds = loadBounds('default');
         this.mainWindow = new BrowserWindow({
             ...this.getOptions(),
@@ -193,6 +195,7 @@ export class MainWindow {
         });
 
         const userDataPath = app.getPath('userData');
+
         console.log('[+] DEV_URL', DEV_URL || 'null');
         console.log('[+] CurrentUrl:', this.currentUrl);
         console.log('[+] userDataPath:', userDataPath);
@@ -209,27 +212,37 @@ export class MainWindow {
             this.currentUrl = DEV_URL;
         }
         const version = app.getVersion();
+
         setAppInfo({
             publicDir,
             userDataPath,
             version,
             isDev
         });
-
-        initCCServer('0.0.0.0', 4444, true).catch(console.error);
-        initCCClient().catch(console.error);
-
         await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
+            console.log('[+] [MSG]', message);
             const { action, payload } = message || {};
             switch (action) {
+                case 'openPath': {
+                    const { path } = payload || {};
+                    if (fs.existsSync(path)) {
+                        await shell.openPath(path); // Opens in file explorer/finder
+                    } else {
+                        console.warn('[!] path not found:', path);
+                    }
+                    break;
+                }
                 case 'connectCCServer': {
                     setServerUrl(payload.serverUrl);
                     break;
                 }
                 case 'getOpenCv': {
                     return openCvData;
+                }
+                case 'getAppInfo': {
+                    return getAppInfo();
                 }
                 default: {
                     return handleMsg(action, payload);
@@ -286,6 +299,9 @@ export class MainWindow {
         this.mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
             callback(details);
         });
+
+        await initCCServer('0.0.0.0', 4444, true);
+        initCCClient().catch(console.error);
         await delay(500);
         return this.mainWindow;
     }

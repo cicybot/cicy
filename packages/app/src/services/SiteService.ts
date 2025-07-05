@@ -1,6 +1,7 @@
 import { Html5Cache } from '@cicy/utils';
 import md5 from 'md5';
-import DatabaseServcie from './DatabaseService';
+import DatabaseService from './DatabaseService';
+import { CacheService } from './CacheService';
 
 export interface SiteInfo {
     id?: number;
@@ -22,7 +23,7 @@ export interface AccountInfo {
 }
 
 export interface SiteAccountInfo {
-    is_deleted?:boolean;
+    is_deleted?: boolean;
     account_index: number;
     auth: AccountInfo;
 }
@@ -49,16 +50,16 @@ export class SiteService {
         this.siteAccountDb = new Html5Cache().init(`accouts`);
     }
 
-    static addAccount(accounts:SiteAccountInfo[]){
-        let account_index = 0
-        if(accounts.length > 0){
+    static addAccount(accounts: SiteAccountInfo[]) {
+        let account_index = 0;
+        if (accounts.length > 0) {
             accounts.sort((a, b) => -a.account_index + b.account_index);
             account_index = accounts[0].account_index + 1;
         }
-        return {accounts:[{ account_index,auth:{} }, ...accounts],account_index};
+        return { accounts: [{ account_index, auth: {} }, ...accounts], account_index };
     }
 
-    static updateAccount(accounts:SiteAccountInfo[],account:SiteAccountInfo){
+    static updateAccount(accounts: SiteAccountInfo[], account: SiteAccountInfo) {
         return accounts.map(row => {
             if (account.account_index === row.account_index) {
                 return account;
@@ -69,7 +70,7 @@ export class SiteService {
     static async initDb() {
         if (!localStorage.getItem('site_db_inited_13')) {
             //DROP TABLE IF EXISTS site;
-            await new DatabaseServcie().exec(`
+            await new DatabaseService().exec(`
                 
                 CREATE TABLE IF NOT EXISTS site (
                     id INTEGER PRIMARY KEY,
@@ -84,15 +85,17 @@ export class SiteService {
                 );
                 `);
             localStorage.setItem('site_db_inited_13', 'true');
-            const table_info = await new DatabaseServcie().all(`PRAGMA table_info(site);`);
-            console.log("site table_info: ",table_info)
+            const table_info = await new DatabaseService().all(`PRAGMA table_info(site);`);
+            console.log('site table_info: ', table_info);
         }
     }
     static async getAllSite() {
-        return new DatabaseServcie().all(`select * from site where is_deleted= 0 and is_deleted= 0 order by updated_at desc`);
+        return new DatabaseService().all(
+            `select * from site where is_deleted= 0 and is_deleted= 0 order by updated_at desc`
+        );
     }
     async getSiteInfo(): Promise<SiteInfo> {
-        const res = new DatabaseServcie().get(`select * from site where site_id = ?`, [
+        const res = await new DatabaseService().get(`select * from site where site_id = ?`, [
             this.siteId
         ]);
         return res;
@@ -123,7 +126,7 @@ export class SiteService {
             if (site.updated_at !== undefined) {
                 fieldsToUpdate.push('updated_at = ?');
                 values.push(site.updated_at);
-            }else{
+            } else {
                 fieldsToUpdate.push('updated_at = ?');
                 values.push(Math.floor(Date.now() / 1000));
             }
@@ -133,13 +136,13 @@ export class SiteService {
             }
 
             values.push(this.siteId); // For WHERE clause
-            const result = await new DatabaseServcie().run(
+            const result = await new DatabaseService().run(
                 `UPDATE site SET ${fieldsToUpdate.join(', ')} WHERE site_id = ?`,
                 values
             );
-            console.log(result)
+            console.log(result);
         } else {
-            await new DatabaseServcie().run(
+            await new DatabaseService().run(
                 `INSERT INTO site (site_id,url,no_webview,title,icon,updated_at) VALUES (?,?,?,?,?,?)`,
                 [
                     site.site_id,
@@ -154,29 +157,37 @@ export class SiteService {
         return res;
     }
     async deleteSite() {
-        await new DatabaseServcie().run('UPDATE site SET is_deleted = 1, updated_at = ? WHERE site_id = ?', [Math.floor(1000*Date.now()),this.siteId]);
+        await new DatabaseService().run(
+            'UPDATE site SET is_deleted = 1, updated_at = ? WHERE site_id = ?',
+            [Math.floor(1000 * Date.now()), this.siteId]
+        );
     }
-    async getAccounts():Promise<SiteAccountInfo[]> {
-        const rows =  await this.siteAccountDb.getData(this.siteId)
-        return rows ||[]
+    async getAccounts(): Promise<SiteAccountInfo[]> {
+        const rows = await CacheService.get(`site_accounts_${this.siteId}`);
+        return rows || [];
     }
-    async getAccount():Promise<SiteAccountInfo|null> {
+    async getAccount(): Promise<SiteAccountInfo | null> {
         const accounts = await this.getAccounts();
-        if(!accounts){
-            return null
-        }else{
-            return accounts[this.accountIndex] ||[]
+        if (!accounts) {
+            return null;
+        } else {
+            return accounts.find(row => row.account_index === this.accountIndex) || null;
         }
     }
     async getAccountState(): Promise<SiteAccountStateInfo> {
-        const state = await this.siteAccountStateDb.getData(`acc_${this.siteId}_${this.accountIndex}`);
+        const state = await this.siteAccountStateDb.getData(
+            `acc_${this.siteId}_${this.accountIndex}`
+        );
         return state;
     }
     async saveAccounts(accounts: SiteAccountInfo[]) {
-        await this.siteAccountDb.putData(this.siteId, accounts);
+        return CacheService.set(`site_accounts_${this.siteId}`, accounts);
     }
     async saveAccountState(accountState: SiteAccountStateInfo) {
-        await this.siteAccountStateDb.putData(`acc_${this.siteId}_${this.accountIndex}`, accountState);
+        await this.siteAccountStateDb.putData(
+            `acc_${this.siteId}_${this.accountIndex}`,
+            accountState
+        );
     }
     static getIdByUrl(url: string) {
         return md5(url);

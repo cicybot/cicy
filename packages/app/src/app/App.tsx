@@ -11,6 +11,7 @@ import { GlobalProvider } from '../providers/GlobalProvider';
 import { useEffect, useRef } from 'react';
 import { SiteService } from '../services/SiteService';
 import { useEffectOnce } from '../hooks/hooks';
+import { CacheService } from '../services/CacheService';
 
 const router = createHashRouter([
     {
@@ -47,7 +48,10 @@ const router = createHashRouter([
 
 const App = () => {
     useEffectOnce(() => {
-        SiteService.initDb();
+        (async () => {
+            SiteService.initDb();
+            CacheService.initDb();
+        })();
     }, []);
     return (
         <GlobalProvider>

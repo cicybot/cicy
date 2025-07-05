@@ -8,6 +8,8 @@ import { exec } from 'child_process';
 import util from 'util';
 import path from 'path';
 import { getAppInfo } from './info';
+import fs from 'fs';
+import os from 'os';
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const DEV_URL: string;
 
@@ -162,9 +164,11 @@ export const handleMsg = async (action: string, payload: any) => {
                         break;
                     }
                 }
+                break;
             }
             case 'mainWindowInfo': {
                 const info = MainWindow.getInfo();
+                console.log('info', info);
                 res = {
                     err: '',
                     result: info
@@ -174,6 +178,7 @@ export const handleMsg = async (action: string, payload: any) => {
             case 'callBaseWindow': {
                 const { windowId, method, params } = payload || {};
                 const win = MainWindow.getWinById(windowId);
+                console.log(windowId, !!win);
                 if (win) {
                     res = {
                         err: ''
@@ -181,6 +186,8 @@ export const handleMsg = async (action: string, payload: any) => {
                     switch (method) {
                         case 'setTitle': {
                             const { title } = params || {};
+                            console.log('setTitle', title);
+
                             win.setTitle(title);
                             break;
                         }
@@ -514,8 +521,8 @@ export async function initCCClient() {
     CCClientWebsocket.configServer(serverUrl, CURRENT_CLIENT_ID, {
         onMessage: async (ws: WebSocket, data: string) => {
             const { id, action, payload: payload, from: fromClientId } = JSON.parse(data as string);
-            const res: any = handleMsg(action, payload);
-
+            const res: any = await handleMsg(action, payload);
+            console.log('[+] [res]:', id, action, fromClientId, res);
             if (id && fromClientId) {
                 ws.send(
                     JSON.stringify({
@@ -540,20 +547,34 @@ export async function initConnector(serverUrl: string) {
     const platform = process.platform;
     const arch = process.arch;
     const prefix = platform === 'win32' ? '.exe' : '';
-    const { publicDir, userDataPath, version, isDev } = getAppInfo();
+    const { publicDir, userDataPath: userDataPath1, version, isDev } = getAppInfo();
     const ver = isDev ? '0.0.0' : version;
 
-    const connectorFile = `cicy-connector-${ver}-${platform}-${arch}${prefix}`;
+    const name = `cicy-connector-${ver}-${platform}-${arch}${prefix}`;
     const assetsDir = path.join(publicDir, 'static', 'assets');
-    const cmd = `${path.join(
-        assetsDir,
-        connectorFile
-    )} -d --dir "${userDataPath}" --ws-server ${serverUrl} --client-id CONNECTOR-ELECTRON`;
+    const serverPath = path.join(assetsDir, name);
+
+    const userDataPath = platform === 'win32' ? userDataPath1 : path.join(os.homedir(), '.cicy');
+    const pathCmd = path.join(userDataPath, 'app', name);
+
+    if (!fs.existsSync(path.join(userDataPath, 'app'))) {
+        fs.mkdirSync(path.join(userDataPath, 'app'), { recursive: true });
+    }
+
+    if (!fs.existsSync(pathCmd)) {
+        fs.copyFileSync(serverPath, pathCmd);
+        if (platform !== 'win32') {
+            await execPromise(`chmod +x "${pathCmd}"`);
+        }
+    }
+
+    const cmd = `"${pathCmd}" --ws-server ${serverUrl} --client-id CONNECTOR-ELECTRON`;
 
     console.log('initConnector rust: ', {
         platform,
         publicDir,
         arch,
+        pathCmd,
         assetsDir,
         userDataPath,
         serverUrl,

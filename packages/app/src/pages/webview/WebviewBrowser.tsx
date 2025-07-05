@@ -16,7 +16,7 @@ export interface BrowserError {
     validatedURL: string;
     errorDescription: string;
 }
-let _favIcon = ""
+let _favIcon = '';
 
 const WebviewBrowser = () => {
     const { state } = useGlobalContext();
@@ -25,8 +25,8 @@ const WebviewBrowser = () => {
 
     const accountIndex = windowId.split('-')[0];
     const siteId = windowId.split('-')[1];
-    const siteService = new SiteService(siteId,parseInt(accountIndex))
-    const mainWindowWsClient = new CCWSMainWindowClient()
+    const siteService = new SiteService(siteId, parseInt(accountIndex));
+    const mainWindowWsClient = new CCWSMainWindowClient();
     const partition = `persist:account_${accountIndex || 0}`;
     const webviewRef = useRef(null);
     const [error, setError] = useState<BrowserError | null>(null);
@@ -48,12 +48,12 @@ const WebviewBrowser = () => {
                         const accountState = await siteService.getAccountState();
                         await siteService.saveAccountState({
                             ...accountState,
-                            err:errorDescription,
+                            err: errorDescription,
                             currentUrl,
-                            loading:false,
-                            state:"did-fail-load",
-                            updatedAt:Date.now()
-                        })
+                            loading: false,
+                            state: 'did-fail-load',
+                            updatedAt: Date.now()
+                        });
                         setError({ validatedURL, errorDescription });
                         console.error({ validatedURL, errorDescription });
                     }
@@ -64,15 +64,15 @@ const WebviewBrowser = () => {
                     console.log(`[+] dom-ready`, currentUrl);
                     if (currentUrl.startsWith(BLANK_URL)) {
                         console.log(`[+] webContentsId`, webview.getWebContentsId());
-                        const site =await  siteService.getSiteInfo()
+                        const site = await siteService.getSiteInfo();
                         console.log('[+] site', site);
-                        connectCCServer(windowId,{
-                            onOpen:()=>{
+                        connectCCServer(windowId, {
+                            onOpen: () => {
                                 currentWebContentsId = webview.getWebContentsId();
                                 webview.executeJavaScript(`(()=>{
                                     location.href = "${site.url}"
                                 })()`);
-                            },
+                            }
                         });
                     } else {
                         await webview.executeJavaScript(`(()=>{
@@ -81,14 +81,14 @@ const WebviewBrowser = () => {
                         const accountState = await siteService.getAccountState();
                         await siteService.saveAccountState({
                             ...accountState,
-                            err:"",
+                            err: '',
                             currentUrl,
-                            loading:false,
-                            state:"dom-ready",
-                            updatedAt:Date.now()
-                        })
+                            loading: false,
+                            state: 'dom-ready',
+                            updatedAt: Date.now()
+                        });
                     }
-                    
+
                     break;
                 }
                 default:
@@ -105,18 +105,16 @@ const WebviewBrowser = () => {
                 await onEvent('did-start-navigation', e);
                 const { isMainFrame, url } = e;
                 if (isMainFrame) {
-                    mainWindowWsClient.setTitle(windowId,"-")
                     const accountState = await siteService.getAccountState();
                     await siteService.saveAccountState({
                         ...accountState,
-                        err:"",
-                        currentUrl:url,
-                        loading:true,
-                        state:"did-start-navigation",
-                        updatedAt:Date.now()
-                    })
+                        err: '',
+                        currentUrl: url,
+                        loading: true,
+                        state: 'did-start-navigation',
+                        updatedAt: Date.now()
+                    });
                     setCurrentUrl(url);
-                    
                 }
             },
             'load-commit': async (e: any) => {
@@ -125,6 +123,16 @@ const WebviewBrowser = () => {
             'did-start-loading': async (e: any) => {
                 setLoading(true);
                 await onEvent('did-start-loading', e);
+                await window.backgroundApi.message({
+                    action: 'callBaseWindow',
+                    payload: {
+                        windowId,
+                        method: 'setTitle',
+                        params: {
+                            title: '-'
+                        }
+                    }
+                });
             },
             'did-stop-loading': async (e: any) => {
                 setLoading(false);
@@ -132,10 +140,10 @@ const WebviewBrowser = () => {
                 const accountState = await siteService.getAccountState();
                 await siteService.saveAccountState({
                     ...accountState,
-                    loading:false,
-                    state:"did-stop-loading",
-                    updatedAt:Date.now()
-                })
+                    loading: false,
+                    state: 'did-stop-loading',
+                    updatedAt: Date.now()
+                });
             },
             'did-finish-load': async (e: any) => {
                 await onEvent('did-finish-load', e);
@@ -148,38 +156,39 @@ const WebviewBrowser = () => {
             },
             'page-title-updated': async (e: any) => {
                 onEvent('page-title-updated', e);
-                
+
                 const res = await window.backgroundApi.message({
-                    action:"callBaseWindow",
-                    payload:{
-                        method:"setTitle",
-                        params:{
-                            title:e.title
+                    action: 'callBaseWindow',
+                    payload: {
+                        windowId,
+                        method: 'setTitle',
+                        params: {
+                            title: e.title
                         }
                     }
-                })
-                console.log('page-title-updated', e.title,res)
-                const site = await siteService.getSiteInfo()
-                console.log({site})
-                if(!site.title){
+                });
+                console.log('page-title-updated', e.title, res);
+                const site = await siteService.getSiteInfo();
+                console.log({ site });
+                if (!site.title) {
                     siteService.saveSiteInfo({
                         ...site,
-                        title:e.title
-                    })
+                        title: e.title
+                    });
                 }
             },
             'page-favicon-updated': async (e: any) => {
                 await onEvent('page-favicon-updated', e);
                 const { favicons } = e;
                 if (favicons.length > 0 && _favIcon !== favicons[0]) {
-                    _favIcon = favicons[0]
+                    _favIcon = favicons[0];
                     setFavicon(_favIcon);
-                    const site = await siteService.getSiteInfo()
-                    if(!site.icon){
+                    const site = await siteService.getSiteInfo();
+                    if (!site.icon) {
                         siteService.saveSiteInfo({
                             ...site,
-                            icon:_favIcon
-                        })
+                            icon: _favIcon
+                        });
                     }
                 }
             },
@@ -290,12 +299,14 @@ const WebviewBrowser = () => {
                     </View>
                 </View>
                 <View rowVCenter>
-                    <MenuBtn siteService={siteService} webview={webviewRef.current! as WebviewTag} />
+                    <MenuBtn
+                        siteService={siteService}
+                        webview={webviewRef.current! as WebviewTag}
+                    />
                 </View>
             </View>
         </View>
     );
 };
-
 
 export default WebviewBrowser;

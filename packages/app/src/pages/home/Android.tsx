@@ -15,6 +15,7 @@ import { UploadAgentButton } from '../../components/device/UploadAgentButton';
 const Android = () => {
     const [err, setErr] = useState('');
     const [loading, setLoading] = useState(true);
+    const [appInfo, setAppInfo] = useState(null);
     const [clientId, setClientId] = useLocalStorageState('androidClientId', '');
     const [deviceId, setDeviceId] = useLocalStorageState('androidDeviceId', '');
     const [deviceInfo, setDeviceInfo] = useState<any | null>(null);
@@ -25,8 +26,7 @@ const Android = () => {
 
     useEffect(() => {
         new CCWSMainWindowClient().mainWindowInfo().then(res => {
-            const { result } = res;
-            const { publicDir, userDataDir } = result || {};
+            setAppInfo(res.result);
         });
 
         new CCWSMainWindowClient().getServerInfo().then(res => {
@@ -136,6 +136,9 @@ const Android = () => {
                 return false;
             };
             setDevices(r => {
+                if (r.length === 0 && devices.length === 0) {
+                    return r;
+                }
                 // console.log(diffDeivces(devices, r));
                 if (diffDeivces(devices, r) || r.length === 0) {
                     return devices;
@@ -153,9 +156,9 @@ const Android = () => {
             console.error(error);
         }
         setLoading(false);
-    }, 1000);
+    }, 2000);
 
-    console.log('device', { deviceId, clientId }, devices, deviceInfo);
+    console.log('device', { deviceId, clientId }, clients, devices, deviceInfo);
 
     const Page = ({ children }: { children?: ReactNode }) => {
         return (
@@ -274,7 +277,8 @@ const Android = () => {
                             </View>
                             <View hide={'请上传Agent!' !== err}>
                                 <UploadAgentButton
-                                    serverIp={serverIp}
+                                    serverIp={serverIp!}
+                                    appInfo={appInfo}
                                     connector={connector}
                                     fetchDeviceInfo={fetchDeviceInfo}
                                 ></UploadAgentButton>
@@ -283,8 +287,9 @@ const Android = () => {
                     </View>
                 </View>
             )}
-            {Boolean(deviceInfo && serverIp) && (
+            {Boolean(deviceInfo && appInfo) && (
                 <DeviceInfo
+                    appInfo={appInfo}
                     connector={connector}
                     serverIp={serverIp!}
                     refetchClients={refetchClients}

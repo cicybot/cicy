@@ -5,7 +5,6 @@ pub fn exec_cmd(command: &str) -> Result<String, Box<dyn std::error::Error>> {
     let parts: Vec<&str> = command.split_whitespace().collect();
     let (program, args) = parts.split_first().expect("Empty command");
     debug!("exec_cmd: {}", command);
-
     let output = Command::new(program)
         .args(args)
         .stdout(Stdio::piped())

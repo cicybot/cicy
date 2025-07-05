@@ -14,15 +14,17 @@ export const DeviceInfo = ({
     deviceInfo,
     connector,
     serverIp,
+    appInfo,
     fetchDeviceInfo
 }: {
     connector: CCAndroidConnectorClient;
     serverIp: string;
+    appInfo: any;
     deviceInfo: any;
     fetchDeviceInfo: any;
     refetchClients: any;
 }) => {
-    const serverUrl = `ws://${serverIp}:3101/ws`;
+    const serverUrl = CCWSClient.getServerUrl(serverIp);
     const [screen, setScreen] = useState('');
     const fetchScreen = async () => {
         const img = await connector.deviceScreenShot(deviceInfo);
@@ -43,18 +45,14 @@ export const DeviceInfo = ({
                 <View>
                     <UploadAgentButton
                         serverIp={serverIp}
+                        appInfo={appInfo}
                         connector={connector}
                         fetchDeviceInfo={fetchDeviceInfo}
                     ></UploadAgentButton>
                 </View>
                 <View ml12>
                     <Button
-                        disabled={
-                            !Boolean(
-                                deviceInfo &&
-                                    deviceInfo.ccAgentRustPid
-                            )
-                        }
+                        disabled={!Boolean(deviceInfo && deviceInfo.ccAgentRustPid)}
                         size="small"
                         type="primary"
                         onClick={() => {
@@ -107,12 +105,14 @@ export const DeviceInfo = ({
                                 <View ml12>
                                     <ProField text={`${deviceInfo.size}`} mode="read" />
                                 </View>
-                                
                             </ProDescriptions.Item>
                             <ProDescriptions.Item label="本机IP">
                                 <ProField text={deviceInfo.ipAddress} mode="read" />
                                 <View ml12>
-                                    <ProField text={`${deviceInfo.isRoot ? "Root":""}`} mode="read" />
+                                    <ProField
+                                        text={`${deviceInfo.isRoot ? 'Root' : ''}`}
+                                        mode="read"
+                                    />
                                 </View>
                             </ProDescriptions.Item>
                         </ProDescriptions>
@@ -159,11 +159,16 @@ export const DeviceInfo = ({
                                 <View ml12 hide={!deviceInfo.ccAgentAppUploaded}>
                                     <Button
                                         onClick={async () => {
-                                            const serverUrl = `http://${serverIp}:3101/static/assets`;
-                                            await connector.agentRustDownload(
-                                                `${serverUrl}/app.apk`,
-                                                `app.apk`
-                                            );
+                                            let { version, isDev } = appInfo;
+                                            if (isDev) {
+                                                version = '0.0.0';
+                                            }
+                                            const url = `${CCWSClient.getHttpUrl(
+                                                serverIp
+                                            )}/static/assets/app-${version}.apk`;
+                                            console.log('cicy-agent url', url);
+                                            await connector.agentRustDownload(url, 'app.apk');
+
                                             if (deviceInfo.ccAgentAppInstalled) {
                                                 await connector.deviceAdbShell(
                                                     'pm uninstall --user 0 com.cc.agent.adr'
@@ -182,7 +187,9 @@ export const DeviceInfo = ({
                                             }, 1000);
                                         }}
                                         size="small"
-                                        type={!deviceInfo.ccAgentAppInstalled ? 'primary' : undefined}
+                                        type={
+                                            !deviceInfo.ccAgentAppInstalled ? 'primary' : undefined
+                                        }
                                     >
                                         {deviceInfo.ccAgentAppInstalled ? '重新安装' : '安装'}
                                     </Button>
@@ -241,12 +248,14 @@ export const DeviceInfo = ({
                                 <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
                                     <Button
                                         onClick={async () => {
-                                            new CCWSClient(deviceInfo.clientId + "-APP").sendAction(
-                                                "jsonrpc",
+                                            new CCWSClient(deviceInfo.clientId + '-APP').sendAction(
+                                                'jsonrpc',
                                                 {
-                                                    method:deviceInfo.ccAgentAccessibility ? "stopAccessibility":"startAccessibility"
+                                                    method: deviceInfo.ccAgentAccessibility
+                                                        ? 'stopAccessibility'
+                                                        : 'startAccessibility'
                                                 }
-                                            )
+                                            );
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
                                             }, 1000);
@@ -254,7 +263,7 @@ export const DeviceInfo = ({
                                         type={!deviceInfo.ccAgentAppRunning ? 'primary' : undefined}
                                         size="small"
                                     >
-                                        {deviceInfo.ccAgentAccessibility?"关闭":"开启"}
+                                        {deviceInfo.ccAgentAccessibility ? '关闭' : '开启'}
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
@@ -272,13 +281,14 @@ export const DeviceInfo = ({
                                 <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
                                     <Button
                                         onClick={async () => {
-                                            
-                                            new CCWSClient(deviceInfo.clientId + "-APP").sendAction(
-                                                "jsonrpc",
+                                            new CCWSClient(deviceInfo.clientId + '-APP').sendAction(
+                                                'jsonrpc',
                                                 {
-                                                    method:deviceInfo.ccAgentMediaProjection ? "stopMediaProjection":"startMediaProjection"
+                                                    method: deviceInfo.ccAgentMediaProjection
+                                                        ? 'stopMediaProjection'
+                                                        : 'startMediaProjection'
                                                 }
-                                            )
+                                            );
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
                                             }, 1000);
@@ -286,22 +296,16 @@ export const DeviceInfo = ({
                                         type={!deviceInfo.ccAgentAppRunning ? 'primary' : undefined}
                                         size="small"
                                     >
-                                        {deviceInfo.ccAgentMediaProjection?"关闭":"开启"}
+                                        {deviceInfo.ccAgentMediaProjection ? '关闭' : '开启'}
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
                         </ProDescriptions>
                         <Divider></Divider>
                         <ProDescriptions column={1}>
-                            <ProDescriptions.Item
-                                label="服务端地址"
-                                
-                            >
-                                <ProField
-                                    text={deviceInfo.serverUrl}
-                                    mode={'read'}
-                                />
-                                
+                            <ProDescriptions.Item label="服务端地址">
+                                <ProField text={deviceInfo.serverUrl} mode={'read'} />
+
                                 <View ml12 hide={deviceInfo.serverUrl === serverUrl}>
                                     <Button
                                         onClick={async () => {
@@ -318,7 +322,10 @@ export const DeviceInfo = ({
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
-                            <View hide={deviceInfo.serverUrl === serverUrl} color={deviceInfo.serverUrl !== serverUrl ? 'red' : 'green'}>
+                            <View
+                                hide={deviceInfo.serverUrl === serverUrl}
+                                color={deviceInfo.serverUrl !== serverUrl ? 'red' : 'green'}
+                            >
                                 {serverUrl}
                             </View>
                         </ProDescriptions>

@@ -1,4 +1,4 @@
-export default class DatabaseServcie {
+export default class DatabaseService {
     constructor() {}
     async exec(sql: string) {
         await window.backgroundApi.message({
@@ -10,7 +10,7 @@ export default class DatabaseServcie {
         });
     }
 
-    async get(sql: string, params?: any[]):Promise<any> {
+    async get(sql: string, params?: any[]): Promise<any> {
         return window.backgroundApi.message({
             action: 'db',
             payload: {
@@ -20,7 +20,7 @@ export default class DatabaseServcie {
         });
     }
 
-    async all(sql: string, params?: any[]):Promise<any[]> {
+    async all(sql: string, params?: any[]): Promise<any[]> {
         return window.backgroundApi.message({
             action: 'db',
             payload: {
@@ -30,7 +30,7 @@ export default class DatabaseServcie {
         });
     }
 
-    async run(sql: string, params?: any[]):Promise<any> {
+    async run(sql: string, params?: any[]): Promise<any> {
         return window.backgroundApi.message({
             action: 'db',
             payload: {

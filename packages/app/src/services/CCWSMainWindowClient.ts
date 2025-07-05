@@ -1,49 +1,51 @@
-import {CCWSClient,ClientIds} from './CCWSClient'
-export class CCWSMainWindowClient extends CCWSClient{
+import { CCWSClient, ClientIds } from './CCWSClient';
+export class CCWSMainWindowClient extends CCWSClient {
     constructor() {
-        super(ClientIds.MainWindow)
+        super(ClientIds.MainWindow);
     }
 
-    async _baseWindow(windowId:string,method:string,params?:object){
+    async _baseWindow(windowId: string, method: string, params?: object) {
         return this.send({
-            action:"callBaseWindow",
-            payload:{
+            action: 'callBaseWindow',
+            payload: {
                 windowId,
-                method,params:params||{}
+                method,
+                params: params || {}
             }
-        })
+        });
     }
 
-    async _webContents(windowId:string,webContentsId:number,method:string,params?:object){
+    async _webContents(windowId: string, webContentsId: number, method: string, params?: object) {
         return this.send({
-            action:"callWebContents",
-            payload:{
+            action: 'callWebContents',
+            payload: {
                 windowId,
                 webContentsId,
-                method,params:params||{}
+                method,
+                params: params || {}
             }
-        })
+        });
     }
 
-    async setTitle(windowId:string,title:string){
-        this._baseWindow(windowId,"setTitle",{title})
+    async setTitle(windowId: string, title: string) {
+        return this._baseWindow(windowId, 'setTitle', { title });
     }
 
-    async createWindow(payload:{
-        windowId:string,
-        url?:string,
-        noWebview?:boolean,
-        openDevTools?:boolean,
-        windowOptions?:object
-    }){
+    async createWindow(payload: {
+        windowId: string;
+        url?: string;
+        noWebview?: boolean;
+        openDevTools?: boolean;
+        windowOptions?: object;
+    }) {
         return this.send({
-            action:"createWindow",
+            action: 'createWindow',
             payload
-        })
+        });
     }
-    async mainWindowInfo(){
+    async mainWindowInfo() {
         return this.send({
-            action:"mainWindowInfo",
-        })
+            action: 'mainWindowInfo'
+        });
     }
 }

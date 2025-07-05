@@ -23,7 +23,11 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
     }
 
     async adb(cmd: string) {
-        return this._apiShell('exec', `adb ${cmd}`);
+        return this.shellExec(`adb ${cmd}`);
+    }
+
+    async shellExec(cmd: string) {
+        return this._apiShell('exec', `${cmd}`);
     }
 
     async deviceAdb(cmd: string) {

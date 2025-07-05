@@ -124,20 +124,39 @@ export class CCWSClient {
         );
     }
 
-    static getServerUrl() {
-        return __serverUrl;
+    static getServerUrl(serverIp: string) {
+        return __serverUrl.replace('127.0.0.1', serverIp);
     }
+
+    static getHttpUrl(serverIp: string) {
+        return __serverUrl
+            .replace('ws://', 'http://')
+            .replace('/ws', '')
+            .replace('127.0.0.1', serverIp);
+    }
+
     static setServerUrl(serverUrl: string) {
+        console.log('setServerUrl', {
+            serverUrl,
+            __serverUrl
+        });
+        window.backgroundApi &&
+            window.backgroundApi.message({
+                action: 'connectCCServer',
+                payload: { serverUrl }
+            });
         if (__serverUrl !== serverUrl) {
             __serverUrl = serverUrl;
             localStorage.setItem('serverUrl', __serverUrl);
+
             if (__ws && __ws.readyState === WebSocket.OPEN) {
                 __ws.close(WsCloseCode.WS_CLOSE_STOP_RECONNECT, 'WS_CLOSE_STOP_RECONNECT');
             }
         }
     }
 }
-
+//@ts-ignore
+window.__setServerUrl = CCWSClient.setServerUrl;
 export const connectCCServer = (clientId: string, options?: WsOptions) => {
     if (!__serverUrl) {
         setTimeout(() => {

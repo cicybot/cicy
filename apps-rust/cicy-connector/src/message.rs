@@ -1,5 +1,6 @@
 use crate::{file, shell};
 use std::env::current_exe;
+use log::info;
 
 pub fn handle_shell_call(
     method: &str,
@@ -94,7 +95,9 @@ pub fn handle_file_call(
             if let Some(serde_json::Value::Array(arr)) = params {
                 if let Some(serde_json::Value::String(url)) = arr.get(0) {
                     if let Some(serde_json::Value::String(save_path)) = arr.get(1) {
-                        match shell::exec_cmd(&format!("{} --download-url {} --save-path {}",current_exe().unwrap().display(),url, save_path)) {
+                        let cmd = &format!("{} --download-url {} --save-path {}",current_exe().unwrap().display(),url, save_path);
+                        info!("[+] exec_cmd: {}",cmd);
+                        match shell::exec_cmd(cmd) {
                             Ok(output) => (None, serde_json::json!(output)),
                             Err(e) => (
                                 Some(format!("{:?}", e).to_string()),
