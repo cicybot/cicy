@@ -40,8 +40,8 @@ pub fn create_app(state: Arc<AppState>) -> Router {
         // API endpoints
         .route("/api/health", get(crate::api::health_check))
         .route("/api/ws/info", get(crate::api::ws_info))
-        .route("/api/ws/sendMsg", post(crate::api::ws_sendMsg))
-        .route("/api/ws/broadcastMsg", get(crate::api::broadcastMsg))
+        .route("/api/ws/sendMsg", post(crate::api::ws_send_msg))
+        .route("/api/ws/broadcastMsg", get(crate::api::broadcast_msg))
 
         .route("/api/contacts", get(crate::api::list_contacts))
         .route("/api/contacts", post(crate::api::save_contact))

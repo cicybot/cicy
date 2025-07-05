@@ -1,7 +1,7 @@
 {
     "name": "@cicy/desktop",
     "license": "Apache-2.0",
-    "version": "1.0.35",
+    "version": "1.0.36",
     "description": "CiCy desktop",
     "main": ".webpack/main",
     "repository": {
@@ -9,7 +9,6 @@
         "url": "https://github.com/TonStockFi/web3-explorer.git"
     },
     "scripts": {
-        "locales": "ts-node ./task/locales",
         "start": "BUILD=false electron-forge start",
         "package": "electron-forge package",
         "make": "electron-forge make",

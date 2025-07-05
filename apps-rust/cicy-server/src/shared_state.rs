@@ -17,6 +17,7 @@ impl ResponseTracker {
             pending_responses: Arc::new(RwLock::new(HashMap::new())),
         }
     }
+    #[allow(dead_code)]
     pub async fn wait_for_response(
         &self,
         message_id: &str,
@@ -24,6 +25,7 @@ impl ResponseTracker {
     ) -> Result<Value, String> {
         let rx = {
             let mut pending = self.pending_responses.write().await;
+            #[allow(unused_variables)]
             pending.remove(message_id).map(|tx| {
                 let (new_tx, new_rx) = oneshot::channel();
                 pending.insert(message_id.to_string(), new_tx);

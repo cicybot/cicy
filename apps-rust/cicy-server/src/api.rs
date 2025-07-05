@@ -49,7 +49,7 @@ pub async fn ws_info(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     }))
 }
 
-pub async fn ws_sendMsg(
+pub async fn ws_send_msg(
     State(state): State<Arc<AppState>>,
     Json(request): Json<WsSendMessageRequest>,
 ) -> impl IntoResponse {
@@ -76,7 +76,7 @@ pub async fn ws_sendMsg(
         ),
     }
 }
-pub async fn broadcastMsg(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn broadcast_msg(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let message = "Test message from API endpoint".to_string();
 
     broadcast_message(&state, message.clone()).await;
