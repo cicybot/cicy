@@ -35,7 +35,7 @@ jobs:
             echo "Release $tag created."
           fi
   
-  build_server_client:
+  build_server_connector:
     runs-on: windows-latest
     needs: release
     strategy:
@@ -65,7 +65,6 @@ jobs:
           } else {
             echo "LIB=$NpcapPath\\Lib\\x64" | Out-File -Append $env:GITHUB_ENV
           }
-
       - name: Build cicy-server
         shell: powershell
         env:
@@ -113,10 +112,10 @@ jobs:
           Copy-Item $BUILT_PATH $OUTPUT_NAME
           gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
-  build_cc_agent_rust:
+  build_agent:
     name: Build cicy-agent
     runs-on: ubuntu-latest
-    needs: build_server_client
+    needs: build_server_connector
     strategy:
       matrix:
         target:
@@ -127,7 +126,6 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
-
       - name: Cache Cargo
         uses: actions/cache@v3
         with:
@@ -212,7 +210,7 @@ jobs:
   build_apk:
     name: Build APK
     runs-on: ubuntu-latest
-    needs: build_cc_agent_rust
+    needs: build_agent
     steps:
       - uses: actions/checkout@v4
 
@@ -313,7 +311,7 @@ jobs:
           gh release upload ${{ github.ref_name }} \
              "${{ env.MAKE_OUT_DIR }}/squirrel.windows/x64/${{ env.PROJECT_NAME }}-${{ env.VERSION }}-win32-x64 Setup.exe"
 
-  build_mac_server_client:
+  build_mac_server_connector:
     name: build_mac_server_client for macOS
     runs-on: macos-latest
     needs: release
