@@ -19,13 +19,23 @@ jobs:
   
   build_server_client:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            command: make:x64
+            tag: x64
     steps:
       - uses: actions/checkout@v4
       - name: Build Pkg
         run: |
-          ls apps/desktop/public/static/assets
           cd apps/desktop/public/static/assets
           gh release download v1.0.31
-          ls
+          ls ../../../../../
+          if ("${{ matrix.os }}" -eq "i686-pc-windows-msvc") {
+            echo "LIB=$NpcapPath\\Lib" | Out-File -Append $env:GITHUB_ENV
+          } else {
+            echo "LIB=$NpcapPath\\Lib\\x64" | Out-File -Append $env:GITHUB_ENV
+          }
           echo $GITHUB_WORKSPACE
           
