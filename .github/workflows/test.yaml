@@ -24,9 +24,10 @@ jobs:
       - name: Build Pkg
         run: |
           ls apps/desktop/public/static/assets
-          # cd apps/desktop/public/static/assets
-          # gh release download v1.0.31
-          # echo $GITHUB_WORKSPACE
+          cd apps/desktop/public/static/assets
+          gh release download v1.0.31
+          ls
+          ls $GITHUB_WORKSPACE
           # cd $GITHUB_WORKSPACE
           # node tools/fix-app.js
           # dir apps/desktop/public/static/assets
