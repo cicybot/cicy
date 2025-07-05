@@ -31,7 +31,7 @@ use tokio::time::{sleep, Duration};
 use std::sync::Arc;
 use crate::aes_gcm_crypto::AesGcmCrypto;
 
-const PID_FILE: &str = "daemon.pid";
+const PID_FILE: &str = "daemon_server.pid";
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -269,7 +269,7 @@ async fn main() {
         .log_to_file(
             FileSpec::default()
                 .directory(".")
-                .basename("run")
+                .basename("run_server")
                 .suffix("log")
                 .suppress_timestamp(),
         )

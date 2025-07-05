@@ -24,7 +24,7 @@ mod shell;
 mod utils;
 mod ws_client;
 
-const PID_FILE: &str = "daemon.pid";
+const PID_FILE: &str = "daemon_connector.pid";
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -42,10 +42,10 @@ struct Args {
     debug: bool,
 
     /// CC server host : ws://127.0.0.1:3101/ws
-    #[arg(long, default_value = "")]
+    #[arg(long, default_value = "", value_name = "WS_SERVER")]
     ws_server: String,
 
-    /// Client ID: CLIENT-ADR-ELECTRON
+    /// Client ID: CONNECTOR-ELECTRON
     #[arg(long, default_value = "", value_name = "CLIENT_ID")]
     client_id: String,
 
@@ -286,7 +286,7 @@ async fn main() {
         .log_to_file(
             FileSpec::default()
                 .directory(".")
-                .basename("run")
+                .basename("run_connector")
                 .suffix("log")
                 .suppress_timestamp(),
         )

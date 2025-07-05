@@ -209,8 +209,7 @@ export class MainWindow {
         if(DEV_URL){
             this.currentUrl = DEV_URL
         }else{
-            initCCServer(publicDir).catch(console.error)
-
+            //initCCServer(publicDir).catch(console.error)
         }
 
         this.mainWindow.loadURL(this.currentUrl);
