@@ -12,7 +12,7 @@ import {
 import { delay } from './electron/utils';
 import WebContentsRequest from './electron/webContentsRequest';
 
-app.setName('CiCi');
+app.setName('CiCy');
 
 log.initialize({ preload: false });
 log.info('Application start-up', app.getVersion());

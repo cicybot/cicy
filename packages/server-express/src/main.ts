@@ -35,7 +35,7 @@ export function initServer({
         definition: {
             openapi: '3.0.0',
             info: {
-                title: 'CiCi API Documentation', // 文档标题
+                title: 'CiCy API Documentation', // 文档标题
                 version: '1.0.2', // API 版本
                 description: 'API for managing file uploads and downloads'
             },

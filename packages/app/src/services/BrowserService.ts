@@ -1,4 +1,4 @@
-import { waitForResult } from '@cc/utils';
+import { waitForResult } from '@cicy/utils';
 import { SiteService } from './SiteService';
 
 import { CCWSMainWindowClient } from './CCWSMainWindowClient';

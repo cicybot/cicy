@@ -51,7 +51,7 @@ import org.json.JSONObject
 import kotlin.math.max
 import kotlin.math.min
 
-const val DEFAULT_NOTIFY_TITLE = "CiCi"
+const val DEFAULT_NOTIFY_TITLE = "CiCy"
 const val DEFAULT_NOTIFY_TEXT = "Service is running"
 const val DEFAULT_NOTIFY_ID = 1
 const val NOTIFY_ID_OFFSET = 100

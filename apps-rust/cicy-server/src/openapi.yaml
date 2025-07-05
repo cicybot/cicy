@@ -1,0 +1,217 @@
+openapi: 3.0.0
+info:
+  title: CiCy API
+  version: 1.0.0
+paths:
+  /api/contacts:
+    get:
+      summary: List all contacts
+      tags:
+        - contact
+      responses:
+        '200':
+          description: List of contacts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  err:
+                    type: string
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        created_at:
+                          type: integer
+                        id:
+                          type: integer
+                        mobile_id:
+                          type: string
+                        updated_at:
+                          type: integer
+        '500':
+          description: Internal server error
+    post:
+      summary: Save Android contact
+      tags:
+        - contact
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContactRequest'
+      responses:
+        '201':
+          description: Contact saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  err:
+                    type: string
+                  result:
+                    type: object
+        '500':
+          description: Internal server error
+  /api/contacts/{mobile_id}:
+    get:
+      summary: Get contact by Android mobile_id
+      tags:
+        - contact
+      parameters:
+        - name: mobile_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contact found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactResponse'
+        '404':
+          description: Contact not found
+        '500':
+          description: Internal server error
+  /api/health:
+    get:
+      summary: health checker
+      tags:
+        - utils
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/ws/info:
+    get:
+      summary: websocket info
+      tags:
+        - ws
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+  /api/ws/sendMsg:
+    post:
+      summary: Send message to WebSocket client
+      description: |
+        ## Send Msg
+
+        This endpoint allows sending messages to specific WebSocket clients connected to the server.
+
+        ### CC Agent Master:
+
+        ### CC Agent App:
+
+        ```json
+        {
+          "clientId": "ADR-Redmi-2409BRN2CC-2",
+          "action": "jsonrpc",
+          "payload": {
+            "method": "deviceInfo"
+          }
+        }
+        ```
+
+
+        ```json
+        {
+          "clientId": "ADR-Redmi-2409BRN2CC-2",
+          "action": "jsonrpc",
+          "payload": {
+            "method": "deviceInfo",
+            "params": [
+              "Important update!",
+              "Please check your inbox"
+            ]
+          }
+        }
+        ```
+      tags:
+        - ws
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WsSendMessageRequest'
+      responses:
+        '200':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    BaseResponse:
+      type: object
+      properties:
+        err:
+          type: string
+        result:
+          type: object
+    ContactResponse:
+      type: object
+      properties:
+        err:
+          type: string
+        result:
+          type: object
+          properties:
+            content:
+              type: string
+            created_at:
+              type: number
+            mobile_id:
+              type: string
+            updated_at:
+              type: number
+    CreateContactRequest:
+      type: object
+      required:
+        - mobile_id
+        - content
+      properties:
+        content:
+          description: Contact content in JSON format
+          type: string
+        mobile_id:
+          description: Unique identifier from Android
+          type: string
+    WsSendMessageRequest:
+      type: object
+      required:
+        - clientId
+        - action
+        - payload
+      properties:
+        action:
+          description: Action type (e.g., 'jsonrpc')
+          type: string
+        clientId:
+          description: Target client ID
+          type: string
+        payload:
+          description: Message payload content
+          type: object
+          properties:
+            method:
+              type: string
+            params:
+              type: array
+              items:
+                type: string

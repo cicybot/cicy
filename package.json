@@ -1,9 +1,9 @@
 {
-    "name": "cici",
+    "name": "cicy",
     "version": "1.0.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/TonStockFi/cici.git"
+        "url": "https://github.com/cicybot/cicy.git"
     },
     "scripts": {
         "build": "npx turbo build",

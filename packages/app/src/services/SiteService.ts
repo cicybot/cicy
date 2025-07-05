@@ -1,4 +1,4 @@
-import { Html5Cache } from '@cc/utils';
+import { Html5Cache } from '@cicy/utils';
 import md5 from 'md5';
 import DatabaseServcie from './DatabaseService';
 

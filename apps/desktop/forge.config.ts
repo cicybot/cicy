@@ -23,12 +23,12 @@ const IsDev = process.env.BUILD === 'false';
 const schemes = ['cc'];
 
 const devAndRpmOptions = {
-    name: 'CiCi',
-    productName: 'CiCi',
-    genericName: 'CiCi',
+    name: 'CiCy',
+    productName: 'CiCy',
+    genericName: 'CiCy',
     license: 'Apache-2.0',
-    maintainer: 'CiCi Group',
-    bin: 'CiCi', // bin name
+    maintainer: 'CiCy Group',
+    bin: 'CiCy', // bin name
     description: 'Your desktop cc explorer',
     homepage: 'https://web3or.site',
     icon: path.join(__dirname, 'public', 'icon.png'),
@@ -46,11 +46,11 @@ const config: ForgeConfig = {
         },
         asar: true,
         icon: path.join(__dirname, 'public', 'icon'),
-        name: 'CiCi',
-        executableName: 'CiCi',
+        name: 'CiCy',
+        executableName: 'CiCy',
         protocols: [
             {
-                name: 'CiCi Protocol',
+                name: 'CiCy Protocol',
                 schemes: schemes
             }
         ],
@@ -78,8 +78,8 @@ const config: ForgeConfig = {
     makers: [
         new MakerSquirrel(
             {
-                name: 'CiCi',
-                authors: 'CiCi Group',
+                name: 'CiCy',
+                authors: 'CiCy Group',
                 description: 'Your desktop web3 explorer on The Open Network',
                 iconUrl: 'https://raw.githubusercontent.com/TonStockFi/web3-explorer/refs/heads/main/apps/desktop/public/icon.ico',
                 setupIcon: path.join(process.cwd(), 'public', 'icon.ico'),
@@ -100,7 +100,7 @@ const config: ForgeConfig = {
                         x: 200,
                         y: 170,
                         type: 'file',
-                        path: `${process.cwd()}/out/CiCi-darwin-${arch}/CiCi.app`
+                        path: `${process.cwd()}/out/CiCy-darwin-${arch}/CiCy.app`
                     },
                     { x: 400, y: 170, type: 'link', path: '/Applications' }
                 ]

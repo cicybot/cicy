@@ -2,7 +2,7 @@ import { WebContents, webContents } from 'electron';
 import WebSocket from 'ws';
 import { MainWindow } from './mainWindow';
 import WebContentsRequest from './webContentsRequest';
-import { CCClientWebsocket } from '@cc/cc-ws';
+import { CCClientWebsocket } from '@cicy/cicy-ws';
 import { s3 } from './db';
 
 const CURRENT_CLIENT_ID = 'MainWindow';

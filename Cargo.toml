@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "apps-rust/cc-agent-rust", "apps-rust/cc-connector-android", "apps-rust/cici-server"
+    "apps-rust/cicy-agent", "apps-rust/cicy-connector", "apps-rust/cicy-server"
 ]
 # We miss our linux_no_std example from the default members since `cargo check`
 # and `cargo test` both attempt to link the `std` library into it in error.

@@ -1,5 +1,5 @@
 {
-    "name": "@cc/app",
+    "name": "@cicy/app",
     "version": "1.0.0",
     "author": "",
     "description": "cc/app",
@@ -8,7 +8,7 @@
     "dependencies": {
         "@ant-design/pro-components": "^2.8.9",
         "@ant-design/x": "^1.4.0",
-        "@cc/utils": "1.0.0",
+        "@cicy/utils": "1.0.0",
         "antd": "^5.25.3",
         "axios": "^1.9.0",
         "buffer": "^6.0.3",

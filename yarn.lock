@@ -620,13 +620,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cc/app@npm:1.0.0, @cc/app@workspace:packages/app":
+"@chenshuai2144/sketch-color@npm:^1.0.7, @chenshuai2144/sketch-color@npm:^1.0.8":
+  version: 1.0.9
+  resolution: "@chenshuai2144/sketch-color@npm:1.0.9"
+  dependencies:
+    reactcss: "npm:^1.2.3"
+    tinycolor2: "npm:^1.4.2"
+  peerDependencies:
+    react: ">=16.12.0"
+  checksum: 10/2581e805d6c405823222ca2ecf8b3469f55a8cea114b3b2e4c8ec17e6d1f32522987bb9604798bcbd74be1baf193cb69044e5fb96ffa122e6163234eac86576a
+  languageName: node
+  linkType: hard
+
+"@cicy/app@npm:1.0.0, @cicy/app@workspace:packages/app":
   version: 0.0.0-use.local
-  resolution: "@cc/app@workspace:packages/app"
+  resolution: "@cicy/app@workspace:packages/app"
   dependencies:
     "@ant-design/pro-components": "npm:^2.8.9"
     "@ant-design/x": "npm:^1.4.0"
-    "@cc/utils": "npm:1.0.0"
+    "@cicy/utils": "npm:1.0.0"
     "@testing-library/dom": "npm:^9.3.1"
     "@testing-library/jest-dom": "npm:^5.16.5"
     "@testing-library/react": "npm:^13.4.0"
@@ -665,48 +677,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cc/cc-server-core@workspace:packages/cc-server-core":
+"@cicy/cicy-ws@npm:1.0.0, @cicy/cicy-ws@workspace:packages/cicy-ws":
   version: 0.0.0-use.local
-  resolution: "@cc/cc-server-core@workspace:packages/cc-server-core"
+  resolution: "@cicy/cicy-ws@workspace:packages/cicy-ws"
   dependencies:
-    "@cc/utils": "npm:1.0.0"
-    "@types/better-sqlite3": "npm:^7.6.13"
-    "@types/body-parser": "npm:^1"
-    "@types/cors": "npm:^2"
-    "@types/ejs": "npm:^3"
-    "@types/express": "npm:^5.0.0"
-    "@types/jest": "npm:^29.5.11"
-    "@types/node": "npm:^22.1.0"
-    "@types/redis": "npm:^4.0.11"
-    "@types/swagger-jsdoc": "npm:^6.0.4"
-    "@types/swagger-ui-express": "npm:^4.1.8"
-    "@types/uuid": "npm:^9.0.7"
-    "@types/ws": "npm:^8.5.14"
-    better-sqlite3: "npm:^11.10.0"
-    body-parser: "npm:^1.20.3"
-    cheerio: "npm:^1.0.0"
-    cors: "npm:^2.8.5"
-    dotenv: "npm:^16.4.7"
-    ejs: "npm:^3.1.10"
-    express: "npm:^4.21.2"
-    generic-pool: "npm:^3.9.0"
-    mysql2: "npm:^3.12.0"
-    nodemon: "npm:^2.0.22"
-    redis: "npm:^4.7.0"
-    swagger-jsdoc: "npm:^6.2.8"
-    swagger-ui-express: "npm:^5.0.1"
-    ts-node: "npm:^10.9.1"
-    typescript: "npm:^5.7.3"
-    uuid: "npm:^9.0.1"
-    ws: "npm:^8.18.1"
-  languageName: unknown
-  linkType: soft
-
-"@cc/cc-ws@npm:1.0.0, @cc/cc-ws@workspace:packages/cc-ws":
-  version: 0.0.0-use.local
-  resolution: "@cc/cc-ws@workspace:packages/cc-ws"
-  dependencies:
-    "@cc/utils": "npm:1.0.0"
+    "@cicy/utils": "npm:1.0.0"
     "@types/body-parser": "npm:^1"
     "@types/cors": "npm:^2"
     "@types/ejs": "npm:^3"
@@ -731,11 +706,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cc/desktop-render@workspace:apps/desktop-render":
+"@cicy/desktop-render@workspace:apps/desktop-render":
   version: 0.0.0-use.local
-  resolution: "@cc/desktop-render@workspace:apps/desktop-render"
+  resolution: "@cicy/desktop-render@workspace:apps/desktop-render"
   dependencies:
-    "@cc/app": "npm:1.0.0"
+    "@cicy/app": "npm:1.0.0"
     "@testing-library/dom": "npm:^9.3.1"
     "@testing-library/jest-dom": "npm:^5.16.5"
     "@testing-library/react": "npm:^13.4.0"
@@ -767,12 +742,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cc/desktop@workspace:apps/desktop":
+"@cicy/desktop@workspace:apps/desktop":
   version: 0.0.0-use.local
-  resolution: "@cc/desktop@workspace:apps/desktop"
+  resolution: "@cicy/desktop@workspace:apps/desktop"
   dependencies:
-    "@cc/app": "npm:1.0.0"
-    "@cc/cc-ws": "npm:1.0.0"
+    "@cicy/app": "npm:1.0.0"
+    "@cicy/cicy-ws": "npm:1.0.0"
     "@electron-forge/cli": "npm:7.4.0"
     "@electron-forge/maker-deb": "npm:7.4.0"
     "@electron-forge/maker-dmg": "npm:7.4.0"
@@ -837,9 +812,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cc/utils@npm:1.0.0, @cc/utils@workspace:packages/utils":
+"@cicy/utils@npm:1.0.0, @cicy/utils@workspace:packages/utils":
   version: 0.0.0-use.local
-  resolution: "@cc/utils@workspace:packages/utils"
+  resolution: "@cicy/utils@workspace:packages/utils"
   dependencies:
     "@eslint/js": "npm:^9.9.0"
     "@types/node": "npm:^24.0.4"
@@ -857,12 +832,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cc/ws-server@workspace:packages/server-express":
+"@cicy/ws-server@workspace:packages/server-express":
   version: 0.0.0-use.local
-  resolution: "@cc/ws-server@workspace:packages/server-express"
+  resolution: "@cicy/ws-server@workspace:packages/server-express"
   dependencies:
-    "@cc/cc-ws": "npm:1.0.0"
-    "@cc/utils": "npm:1.0.0"
+    "@cicy/cicy-ws": "npm:1.0.0"
+    "@cicy/utils": "npm:1.0.0"
     "@types/better-sqlite3": "npm:^7.6.13"
     "@types/body-parser": "npm:^1"
     "@types/cors": "npm:^2"
@@ -893,18 +868,6 @@ __metadata:
     ws: "npm:^8.18.1"
   languageName: unknown
   linkType: soft
-
-"@chenshuai2144/sketch-color@npm:^1.0.7, @chenshuai2144/sketch-color@npm:^1.0.8":
-  version: 1.0.9
-  resolution: "@chenshuai2144/sketch-color@npm:1.0.9"
-  dependencies:
-    reactcss: "npm:^1.2.3"
-    tinycolor2: "npm:^1.4.2"
-  peerDependencies:
-    react: ">=16.12.0"
-  checksum: 10/2581e805d6c405823222ca2ecf8b3469f55a8cea114b3b2e4c8ec17e6d1f32522987bb9604798bcbd74be1baf193cb69044e5fb96ffa122e6163234eac86576a
-  languageName: node
-  linkType: hard
 
 "@cloudflare/kv-asset-handler@npm:0.3.4":
   version: 0.3.4
@@ -5933,9 +5896,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cici@workspace:.":
+"cicy@workspace:.":
   version: 0.0.0-use.local
-  resolution: "cici@workspace:."
+  resolution: "cicy@workspace:."
   dependencies:
     "@typescript-eslint/eslint-plugin": "npm:^5.50.0"
     "@typescript-eslint/parser": "npm:^5.50.0"

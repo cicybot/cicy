@@ -99,7 +99,7 @@ export class MainWindow {
 
     static createTray(name?: string) {
         const tray = new Tray(path.resolve(publicDir, 'tray-icon.png'));
-        tray.setToolTip(name || 'CiCi');
+        tray.setToolTip(name || 'CiCy');
         tray.on('click', () => {
             console.log('tray clicked');
             const win = this.mainWindow;
@@ -210,6 +210,7 @@ export class MainWindow {
             this.currentUrl = DEV_URL
         }else{
             initCCServer(publicDir).catch(console.error)
+
         }
 
         this.mainWindow.loadURL(this.currentUrl);

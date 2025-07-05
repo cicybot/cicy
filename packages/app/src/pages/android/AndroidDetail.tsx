@@ -9,7 +9,7 @@ import { connectCCServer } from '../../services/CCWSClient';
 
 import Loading from '../../components/UI/Loading';
 import CCAgentClient, { DeviceInfo } from '../../services/CCWSAgentClient';
-import { useLocalStorageState, useTimeoutLoop } from '@cc/utils';
+import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import AndroidDetailWrap from './components/AndroidDetailWrap';
 
 const AndroidDetail = () => {

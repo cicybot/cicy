@@ -6,7 +6,7 @@ import CCAndroidConnectorClient from '../../services/CCAndroidConnectorClient';
 import { UploadAgentButton } from './UploadAgentButton';
 import { useEffect, useState } from 'react';
 import Loading from '../UI/Loading';
-import { useTimeoutLoop } from '@cc/utils';
+import { useTimeoutLoop } from '@cicy/utils';
 import { CCWSClient } from '../../services/CCWSClient';
 
 export const DeviceInfo = ({

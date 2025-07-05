@@ -1,6 +1,6 @@
-# CiCi
+# CiCy
 
-CiCi is a platform 
+CiCy is a platform 
 
 ## Building locally
 
@@ -26,5 +26,5 @@ yarn create vite android-screen --template react-ts
 
 ## License
 
-(c) Copyright 2024 CiCi Limited Released under the
+(c) Copyright 2024 CiCy Limited Released under the
 [Apache License, Version 2.0](LICENSE.txt).

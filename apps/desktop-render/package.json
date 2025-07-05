@@ -1,10 +1,10 @@
 {
-    "name": "@cc/desktop-render",
+    "name": "@cicy/desktop-render",
     "version": "1.0.0",
     "author": "Web3 Discover APPS Limited <barry.ptp@gmail.com>",
     "description": "Web3 Discover",
     "dependencies": {
-        "@cc/app": "1.0.0",
+        "@cicy/app": "1.0.0",
         "buffer": "^6.0.3",
         "inherits": "^2.0.4",
         "process": "^0.11.10",

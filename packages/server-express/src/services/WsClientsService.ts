@@ -1,4 +1,4 @@
-import { stringIsJson, waitForResult } from '@cc/utils/dist/common/utils';
+import { stringIsJson, waitForResult } from '@cicy/utils/dist/common/utils';
 import url from 'url';
 import { WebSocketServer } from 'ws';
 const { v4: uuid } = require('uuid');

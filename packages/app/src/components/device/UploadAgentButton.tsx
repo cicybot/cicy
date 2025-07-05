@@ -30,16 +30,16 @@ export const UploadAgentButton = ({
                     const serverUrl = `ws://${serverIp}:3101/ws`;
 
                     await connector.dowloadUrl(
-                        `${httpServerUrl}/cc-agent-rust-${abi}`,
-                        `cc-agent-rust-${abi}`
+                        `${httpServerUrl}/cicy-agent-${abi}`,
+                        `cicy-agent-${abi}`
                     );
 
                     await connector.deviceAdbPush(
-                        `cc-agent-rust-${abi}`,
-                        '/data/local/tmp/cc-agent-rust'
+                        `cicy-agent-${abi}`,
+                        '/data/local/tmp/cicy-agent'
                     );
 
-                    await connector.deviceAdbShell('chmod +x /data/local/tmp/cc-agent-rust');
+                    await connector.deviceAdbShell('chmod +x /data/local/tmp/cicy-agent');
                     await connector.deviceAdbShell(
                         `echo ${serverUrl} > /data/local/tmp/config_server.txt`
                     );

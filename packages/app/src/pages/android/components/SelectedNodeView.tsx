@@ -14,7 +14,7 @@ import type { TabsProps } from 'antd';
 import { Tabs, Checkbox } from 'antd';
 import Loading from '../../../components/UI/Loading';
 import CCAgentClient, { DeviceInfo } from '../../../services/CCWSAgentClient';
-import { useLocalStorageState, useTimeoutLoop } from '@cc/utils';
+import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 
 export function SelectedNodeView(props: {
     inputText: any;

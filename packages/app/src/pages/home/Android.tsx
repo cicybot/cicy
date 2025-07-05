@@ -1,4 +1,4 @@
-import { useLocalStorageState, useTimeoutLoop } from '@cc/utils';
+import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 
 import { Breadcrumb, Divider, Select } from 'antd';
 

@@ -1,4 +1,4 @@
-name: CiCi CD
+name: CiCy CD
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.27
+  VERSION: 1.0.28
   VERSION_ANDROID_NDK: 27.2.12479018
   GH_TOKEN: ${{ github.token }}
 
@@ -66,12 +66,12 @@ jobs:
             echo "LIB=$NpcapPath\\Lib\\x64" | Out-File -Append $env:GITHUB_ENV
           }
 
-      - name: Build cici-server
+      - name: Build cicy-server
         shell: powershell
         env:
           TARGET: ${{ matrix.target }}
         run: |
-          $ARTIFACT_NAME = "cici-server"
+          $ARTIFACT_NAME = "cicy-server"
           cd apps-rust/$ARTIFACT_NAME
           cargo build --target $env:TARGET --release
           Set-Location "$env:GITHUB_WORKSPACE"
@@ -89,12 +89,12 @@ jobs:
           Copy-Item $BUILT_PATH $OUTPUT_NAME
           gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
-      - name: Build cc-connector-android
+      - name: Build cicy-connector
         shell: powershell
         env:
           TARGET: ${{ matrix.target }}
         run: |
-          $ARTIFACT_NAME = "cc-connector-android"
+          $ARTIFACT_NAME = "cicy-connector"
           cd apps-rust/$ARTIFACT_NAME
           cargo build --target $env:TARGET --release
           Set-Location "$env:GITHUB_WORKSPACE"
@@ -114,7 +114,7 @@ jobs:
           gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
   build_cc_agent_rust:
-    name: Build cc-agent-rust
+    name: Build cicy-agent
     runs-on: ubuntu-latest
     needs: build_server_client
     strategy:
@@ -189,7 +189,7 @@ jobs:
 
       - name: Build with cargo
         run: |
-          cd apps-rust/cc-agent-rust
+          cd apps-rust/cicy-agent
           cargo build --target=${{ matrix.target }} --release
           cd $GITHUB_WORKSPACE
 
@@ -206,8 +206,8 @@ jobs:
                 TARGET_NAME="x86_64"
               ;;
           esac
-          cp target/${{ matrix.target }}/release/cc-agent-rust target/${{ matrix.target }}/release/cc-agent-rust-v${{ env.VERSION }}-$TARGET_NAME
-          gh release upload ${{ github.ref_name }} target/${{ matrix.target }}/release/cc-agent-rust-v${{ env.VERSION }}-$TARGET_NAME
+          cp target/${{ matrix.target }}/release/cicy-agent target/${{ matrix.target }}/release/cicy-agent-v${{ env.VERSION }}-$TARGET_NAME
+          gh release upload ${{ github.ref_name }} target/${{ matrix.target }}/release/cicy-agent-v${{ env.VERSION }}-$TARGET_NAME
 
   # build_apk:
   #   name: Build APK
@@ -297,7 +297,7 @@ jobs:
           cd apps/desktop/public/static/assets
           gh release download ${{ github.ref_name }}
           cd $GITHUB_WORKSPACE
-          echo "export {App} from '@cc/app';" > apps/desktop/src/app/App.tsx
+          node -e "require('fs').writeFileSync('apps/desktop/src/app/App.tsx', \"export {App} from '@cicy/app';\")"
 
       - name: Run build distributive
         uses: borales/actions-yarn@v5
@@ -328,9 +328,9 @@ jobs:
 #       - name: Install Rust target
 #         run: rustup target add ${{ matrix.target }}
 
-#       - name: Build cici-server
+#       - name: Build cicy-server
 #         run: |
-#           ARTIFACT_NAME=cici-server
+#           ARTIFACT_NAME=cicy-server
 #           cd apps-rust/$ARTIFACT_NAME
 #           cargo build --target ${{ matrix.target }} --release
 #           cd ../../
@@ -351,9 +351,9 @@ jobs:
 #           cp "$BUILT_PATH" "$OUTPUT_NAME"
 #           gh release upload ${{ github.ref_name }} $OUTPUT_NAME
 
-#       - name: Build cc-connector-android
+#       - name: Build cicy-connector
 #         run: |
-#           ARTIFACT_NAME=cc-connector-android
+#           ARTIFACT_NAME=cicy-connector
 #           cd apps-rust/$ARTIFACT_NAME
 #           cargo build --target ${{ matrix.target }} --release
 #           cd ../../

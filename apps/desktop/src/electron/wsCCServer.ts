@@ -1,4 +1,4 @@
-import {CCServerWebSocket,initExpressServer} from "@cc/cc-ws"
+import {CCServerWebSocket,initExpressServer} from "@cicy/cicy-ws"
 
 export async function initCCServer(publicPath:string){
     const port = 3101

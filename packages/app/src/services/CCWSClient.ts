@@ -1,4 +1,4 @@
-import { waitForResult } from '@cc/utils';
+import { waitForResult } from '@cicy/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 export enum WsCloseCode {

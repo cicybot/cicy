@@ -78,7 +78,7 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
     }
 
     async agentRust(cmd: string) {
-        return this.deviceAdbShell(`/data/local/tmp/cc-agent-rust ${cmd}`);
+        return this.deviceAdbShell(`/data/local/tmp/cicy-agent ${cmd}`);
     }
 
     async agentRustDeviceInfo() {
