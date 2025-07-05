@@ -4,6 +4,7 @@ use tokio::sync::{broadcast, RwLock, oneshot};
 use uuid::Uuid;
 use serde_json::{json, Value};
 use tokio::time::{timeout, Duration};
+use sqlx::SqlitePool;
 
 #[derive(Debug, Clone)]
 pub struct ResponseTracker {
@@ -101,15 +102,17 @@ impl ClientManager {
 pub struct AppState {
     pub client_manager: ClientManager,
     pub global_tx: broadcast::Sender<String>,
+    pub db: SqlitePool,
     pub response_tracker: ResponseTracker,
 }
 
 impl AppState {
-    pub fn new() -> Self {
+    pub fn new(db: SqlitePool) -> Self {
         let (global_tx, _) = broadcast::channel(100);
         AppState {
             client_manager: ClientManager::new(),
             global_tx,
+            db,
             response_tracker: ResponseTracker::new(),
         }
     }

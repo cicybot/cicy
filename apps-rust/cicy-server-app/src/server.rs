@@ -38,6 +38,11 @@ pub fn create_app(state: Arc<AppState>,assets_dir:&str) -> Router {
         .route("/api/ws/info", get(crate::api::ws_info))
         .route("/api/ws/sendMsg", post(crate::api::ws_send_msg))
         .route("/api/ws/broadcastMsg", get(crate::api::broadcast_msg))
+        //
+        // .route("/api/contacts", get(crate::api::list_contacts))
+        // .route("/api/contacts", post(crate::api::save_contact))
+        // .route("/api/contacts/:model_id", get(crate::api::get_contact))
+
         // Swagger UI 页面
         .route("/doc", get(swagger_ui))
         // OpenAPI 规范端点

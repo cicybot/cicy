@@ -1,5 +1,5 @@
 [package]
-name = "cicy-server"
+name = "cicy-server-app"
 authors.workspace = true
 license.workspace = true
 repository.workspace = true

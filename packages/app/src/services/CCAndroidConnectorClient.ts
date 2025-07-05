@@ -1,6 +1,6 @@
 import CCBaseAgentClient from './CCBaseAgentClient';
 import { DeviceInfo } from './CCWSAgentClient';
-import {arrayBufferToBase64} from '../utils/utils'
+import { arrayBufferToBase64 } from '../utils/utils';
 
 export interface AdbDevice {
     id: string;
@@ -48,19 +48,24 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
             ccAgentMediaProjection,
             ccAgentRustHttpServer
         } = deviceInfo;
-        if (!ccAgentRustPid) {
-            await this.deviceAdbShell('screencap /data/local/tmp/screen.png');
-            const res = await this.deviceAdbShell('base64 -i /data/local/tmp/screen.png');
-            return `data:image/png;base64,${res}`;
-        } else if (ccAgentAppHttpServer && ccAgentMediaProjection) {
-            const res = await fetch(`http://${ipAddress}:${ccAgentAppHttpServer}/screen`);
-            const {result} = await res.json();
-            const {imgData} = result
-            return imgData
-        } else {
-            const res = await fetch(`http://${ipAddress}:${ccAgentRustHttpServer}/screen`);
-            const arrayBuffer = await res.arrayBuffer();
-            return `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
+        try {
+            if (!ccAgentRustPid) {
+                await this.deviceAdbShell('screencap /data/local/tmp/screen.png');
+                const res = await this.deviceAdbShell('base64 -i /data/local/tmp/screen.png');
+                return `data:image/png;base64,${res}`;
+            } else if (ccAgentAppHttpServer && ccAgentMediaProjection) {
+                const res = await fetch(`http://${ipAddress}:${ccAgentAppHttpServer}/screen`);
+                const { result } = await res.json();
+                const { imgData } = result;
+                return imgData;
+            } else {
+                const res = await fetch(`http://${ipAddress}:${ccAgentRustHttpServer}/screen`);
+                const arrayBuffer = await res.arrayBuffer();
+                return `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
+            }
+        } catch (e) {
+            console.error(e);
+            return '';
         }
     }
 

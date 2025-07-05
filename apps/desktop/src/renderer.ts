@@ -27,12 +27,9 @@
  */
 
 import { Buffer as BufferPolyfill } from 'buffer';
-import log from 'electron-log/renderer';
 import './react';
 
-declare var Buffer: typeof BufferPolyfill;
+declare let Buffer: typeof BufferPolyfill;
 globalThis.Buffer = BufferPolyfill;
 
-log.info('UI Start-up');
-Object.assign(console, log.functions);
 console.log('👋 This message is being logged by "renderer.js", included via webpack');

@@ -1,5 +1,15 @@
-// main.rs
-use clap::{arg, Parser};
+// src/main.rs
+mod server;
+mod utils;
+mod shared_state;
+mod websocket;
+mod api;
+mod swagger;
+mod model_contact;
+mod sqlite;
+mod aes_gcm_crypto;
+
+use clap::Parser;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, Record, WriteMode};
 use log::{debug, error, info};
 use std::process::Stdio;
@@ -9,22 +19,19 @@ use std::{
     thread,
 };
 use time::{format_description, UtcOffset};
-use reqwest;
-
+use rand_core::{OsRng, RngCore};
+use hex;
 #[cfg(unix)]
 use libc;
 use std::env;
-use std::env::current_exe;
 use std::process;
 use tokio::time::{sleep, Duration};
 
-mod file;
-mod message;
-mod shell;
-mod utils;
-mod ws_client;
+use std::sync::Arc;
+use crate::aes_gcm_crypto::AesGcmCrypto;
+use crate::utils::get_local_ip_address;
 
-const PID_FILE: &str = "daemon_connector.pid";
+const PID_FILE: &str = "daemon_server.pid";
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -45,52 +52,42 @@ struct Args {
     #[arg(long, default_value = "")]
     dir: String,
 
-    /// CC server host : ws://127.0.0.1:3101/ws
-    #[arg(long, default_value = "", value_name = "WS_SERVER")]
-    ws_server: String,
+    /// download assets dir
+    #[arg(long, default_value = "")]
+    assets_dir: String,
 
-    /// Client ID: CONNECTOR-MAC
-    #[arg(long, default_value = "", value_name = "CLIENT_ID")]
-    client_id: String,
+    /// Server IP address to bind to
+    #[arg(long, default_value = "0.0.0.0")]
+    ip: String,
 
-    /// Download Url
-    #[arg(long, default_value = "", value_name = "DOWNLOAD_URL")]
-    download_url: String,
-
-    /// Save Path
-    #[arg(long, default_value = "", value_name = "SAVE_PATH")]
-    save_path: String,
-
-    /// Config server file name, if not set ws_server , read this file
-    #[arg(long, default_value = "config_id.txt", value_name = "CONFIG_ID")]
-    config_id: String,
-
-    /// Config server file name, if not set ws_server , read this file
-    #[arg(long, default_value = "config_server.txt", value_name = "CONFIG_SERVER")]
-    config_server: String,
+    /// Server port to listen on
+    #[arg(long, default_value = "3101")]
+    port: u16,
 
     #[arg(long = "loop", hide = true)]
     loop_mode: bool,
+
+    #[arg(long)]
+    gen_key: bool,
 }
 
 fn is_loop_mode() -> bool {
     std::env::args().any(|a| a == "--loop")
 }
 
-fn run_daemon(args: &Args) {
+fn run_daemon(ip: &str, port: u16) {
     if fs::metadata(PID_FILE).is_ok() {
         info!("[*] Previous daemon detected. Stopping it first...");
         stop_daemon();
         thread::sleep(Duration::from_secs(1));
     }
 
-    info!("[+] Starting daemon... cmd: {:?}", std::env::current_exe().unwrap());
+    info!("[+] Starting daemon on {}:{}", ip, port);
 
     let mut command = Command::new(std::env::current_exe().unwrap());
     command.arg("--loop")
-        .arg("--dir").arg(args.dir.clone())
-        .arg("--ws-server").arg(args.ws_server.clone())
-        .arg("--client-id").arg(args.client_id.clone())
+        .arg("--ip").arg(ip)
+        .arg("--port").arg(port.to_string())
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
@@ -179,94 +176,83 @@ fn custom_format(
 }
 
 async fn daemon_loop(args: &Args) {
-    info!("WS Server: {}", args.ws_server);
-    info!("Client ID: {}", args.client_id);
-    info!("Config ID: {}", args.config_id);
-    info!("Client Server: {}", args.config_server);
-
-    let mut client_id = args.client_id.clone();
-    let mut ws_server = args.ws_server.clone();
-
-    if client_id.trim().is_empty() {
-        client_id = match fs::read_to_string(&args.config_id) {
-            Ok(s) => {
-                let trimmed = s.trim();
-                if trimmed.is_empty() {
-                    error!("[-] Config file {} is empty", &args.config_id);
-                    exit(1);
-                } else {
-                    trimmed.to_string()
-                }
+    let pid = process::id().to_string();
+    let db_url = if !args.dir.is_empty() {
+        let db_path = std::path::Path::new(&args.dir).join("server.db");
+        format!("sqlite:{}", db_path.display())
+    } else {
+        "sqlite:server.db".to_string()
+    };
+    // Initialize database connection pool and tables
+    let db_pool = match sqlite::init_sqlite_pool(&db_url).await {
+        Ok(pool) => {
+            if let Err(e) = model_contact::Contact::init_table(&pool).await {
+                error!("Failed to initialize contacts table: {}", e);
+                return;
             }
-            Err(e) => {
-                error!("[-] Failed to read client_id from {}: {}", &args.config_id, e);
-                exit(1);
-            }
-        };
-    }
+            pool
+        }
+        Err(e) => {
+            error!("Failed to initialize database: {}", e);
+            return;
+        }
+    };
 
-    if ws_server.trim().is_empty() {
-        ws_server = match fs::read_to_string(&args.config_server) {
-            Ok(s) => {
-                let trimmed = s.trim();
-                if trimmed.is_empty() {
-                    error!("[-] Config file {} is empty", &args.config_server);
-                    exit(1);
-                } else {
-                    trimmed.to_string()
-                }
-            }
-            Err(e) => {
-                error!("[-] Failed to read ws_server from {}: {}", &args.config_server, e);
-                exit(1);
-            }
-        };
-    }
+    // Create shared state
+    let state = Arc::new(shared_state::AppState::new(db_pool));
 
-    info!("[+] ws_server: {}", ws_server);
-    info!("[+] client_id: {}", client_id);
+    // Create the application router
+    let app = server::create_app(state,&args.assets_dir);
+
+    // Start the server with explicit SocketAddr type
+    let addr: std::net::SocketAddr = format!("{}:{}", args.ip, args.port)
+        .parse()
+        .expect("Invalid IP/Port");
+    info!("Server starting on {}", addr);
+
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
 
     // Platform-specific signal handling
     #[cfg(unix)]
-    let signal_handler = async {
+    let server = {
         use tokio::signal::unix::{signal, SignalKind};
         let mut sigterm = signal(SignalKind::terminate()).expect("Cannot listen SIGTERM");
         let mut sigint = signal(SignalKind::interrupt()).expect("Cannot listen SIGINT");
 
-        tokio::select! {
-            _ = sigterm.recv() => info!("Received SIGTERM, exiting gracefully"),
-            _ = sigint.recv() => info!("Received SIGINT, exiting gracefully"),
-        }
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async move {
+                tokio::select! {
+                    _ = sigterm.recv() => info!("Received SIGTERM, shutting down"),
+                    _ = sigint.recv() => info!("Received SIGINT, shutting down"),
+                }
+            })
     };
 
     #[cfg(windows)]
-    let signal_handler = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Failed to listen for Ctrl+C");
-        info!("Received Ctrl+C, exiting gracefully");
+    let server = {
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("Failed to listen for Ctrl+C");
+                info!("Received Ctrl+C, shutting down");
+            })
     };
 
-    let pid = process::id().to_string();
-    let ws_server_cloned = ws_server.clone();
-    let client_id_cloned = client_id.clone();
-    let ws_handle = tokio::spawn(async move {
-        ws_client::connect_cc_server_forever(&ws_server_cloned, &client_id_cloned).await;
-    });
-
     tokio::select! {
-        _ = signal_handler => {
-            info!("Shutting down daemon_loop");
+        _ = server => {
+            info!("Server stopped");
         }
         _ = async {
             loop {
                 sleep(Duration::from_secs(5)).await;
-                utils::get_memory_usage_cross_platform(&pid);
+                utils::get_memory_usage_cross_platform(&pid)
             }
         } => {}
     }
 
-    ws_handle.abort();
+    // Clean up PID file
+    fs::remove_file(PID_FILE).ok();
 }
 
 fn change_to_exe_dir(dir:&str) -> std::io::Result<()> {
@@ -281,6 +267,26 @@ fn change_to_exe_dir(dir:&str) -> std::io::Result<()> {
     Ok(())
 }
 
+fn load_or_generate_crypto_key() -> String {
+    let key_path = "key.txt";
+    let crypto_key = fs::read_to_string(key_path)
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| {
+            // Generate a new key if not present or empty
+            let mut key = [0u8; 32];
+            OsRng.fill_bytes(&mut key);
+            let hex_key = hex::encode(key);
+
+            // Save the key to the file
+            fs::write(key_path, &hex_key).expect("Unable to write key file");
+            hex_key
+        });
+
+    crypto_key
+}
+
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
@@ -288,6 +294,7 @@ async fn main() {
         eprintln!("Failed to change to executable directory: {}", e);
         return;
     }
+
     let log_level = if args.debug { "debug" } else { "info" };
 
     Logger::try_with_str(log_level)
@@ -296,7 +303,7 @@ async fn main() {
         .log_to_file(
             FileSpec::default()
                 .directory(".")
-                .basename("run_connector")
+                .basename("run_server")
                 .suffix("log")
                 .suppress_timestamp(),
         )
@@ -307,10 +314,17 @@ async fn main() {
         .start()
         .unwrap();
 
+
+    let crypto_key = load_or_generate_crypto_key();
+    info!("[+] Crypto key: {}", crypto_key);
+    AesGcmCrypto::init_encryption(&crypto_key).unwrap();
+
+
     debug!("Application starting with args: {:?}", args);
+    info!("Local_ip_address: {:?}", get_local_ip_address());
 
     if is_loop_mode() {
-        info!("[+] Daemon loop running...");
+        info!("[+] Daemon loop running on {}:{}", args.ip, args.port);
         daemon_loop(&args).await;
         exit(0);
     }
@@ -318,34 +332,23 @@ async fn main() {
     if args.stop {
         stop_daemon();
     } else if args.daemon {
-        run_daemon(&args);
-    } else if !args.download_url.is_empty() && !args.save_path.is_empty() {
-        info!("{}", &format!("current_exe: {}", current_exe().unwrap().display()));
-        let res = match reqwest::get(&args.download_url).await {
-            Ok(res) => res,
-            Err(e) => {
-                error!("[-] Failed to send request to daemon: {}", e);
-                exit(1)
-            }
-        };
+        run_daemon(&args.ip, args.port);
+    } else if args.gen_key {
+        println!("Generating secure AES-GCM key:");
 
-        info!("Response: {:?} {}", res.version(), res.status());
-        info!("Headers: {:#?}\n", res.headers());
+        // Generate random 32-byte key (64 hex chars)
+        let mut key = [0u8; 32];
+        OsRng.fill_bytes(&mut key);
 
-        let body = match res.bytes().await {
-            Ok(body) => body,
-            Err(e) => {
-                error!("[-] Failed to read response body: {}", e);
-                exit(1)
-            }
-        };
+        // Convert to hex string
+        let hex_key = hex::encode(key);
 
-        if let Err(e) = fs::write(&args.save_path, body) {
-            error!("[-] Failed to write to {}: {}", &args.save_path, e);
-            exit(1);
-        }
+        println!("Hex key (64 characters):");
+        println!("{}", hex_key);
 
-        info!("Saved to {} successfully!", &args.save_path);
+        // Also generate UUID if needed
+        println!("\nUUID for reference:");
+        println!("{}", uuid::Uuid::new_v4());
     } else {
         daemon_loop(&args).await;
     }

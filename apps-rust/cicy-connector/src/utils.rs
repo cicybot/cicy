@@ -1,6 +1,7 @@
 use log::{error, info};
 use std::process::Command;
 
+#[cfg(not(target_os = "windows"))]
 pub fn is_android_linux() -> bool {
     std::env::var("ANDROID_ASSETS").is_ok()
 }

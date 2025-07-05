@@ -3,12 +3,8 @@ mod server;
 mod utils;
 mod shared_state;
 mod websocket;
-
 mod api;
 mod swagger;
-mod model_contact;
-mod sqlite;
-mod aes_gcm_crypto;
 
 use clap::Parser;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, Record, WriteMode};
@@ -20,8 +16,6 @@ use std::{
     thread,
 };
 use time::{format_description, UtcOffset};
-use rand_core::{OsRng, RngCore};
-use hex;
 #[cfg(unix)]
 use libc;
 use std::env;
@@ -29,7 +23,7 @@ use std::process;
 use tokio::time::{sleep, Duration};
 
 use std::sync::Arc;
-use crate::aes_gcm_crypto::AesGcmCrypto;
+use crate::utils::get_local_ip_address;
 
 const PID_FILE: &str = "daemon_server.pid";
 
@@ -48,6 +42,14 @@ struct Args {
     #[arg(long)]
     debug: bool,
 
+    /// app run dir
+    #[arg(long, default_value = "")]
+    dir: String,
+
+    /// download assets dir
+    #[arg(long, default_value = "")]
+    assets_dir: String,
+
     /// Server IP address to bind to
     #[arg(long, default_value = "0.0.0.0")]
     ip: String,
@@ -57,17 +59,17 @@ struct Args {
     port: u16,
 
     #[arg(long = "loop", hide = true)]
-    loop_mode: bool,
-
-    #[arg(long)]
-    gen_key: bool,
+    loop_mode: bool
 }
 
 fn is_loop_mode() -> bool {
     std::env::args().any(|a| a == "--loop")
 }
 
-fn run_daemon(ip: &str, port: u16) {
+fn run_daemon(args: &Args) {
+    let ip = args.ip.clone();
+    let port = args.port;
+
     if fs::metadata(PID_FILE).is_ok() {
         info!("[*] Previous daemon detected. Stopping it first...");
         stop_daemon();
@@ -78,6 +80,8 @@ fn run_daemon(ip: &str, port: u16) {
 
     let mut command = Command::new(std::env::current_exe().unwrap());
     command.arg("--loop")
+        .arg("--dir").arg(args.dir.clone())
+        .arg("--assets-dir").arg(args.assets_dir.clone())
         .arg("--ip").arg(ip)
         .arg("--port").arg(port.to_string())
         .stdin(Stdio::null())
@@ -169,32 +173,19 @@ fn custom_format(
 
 async fn daemon_loop(args: &Args) {
     let pid = process::id().to_string();
- 
-    // Initialize database connection pool and tables
-    let db_pool = match sqlite::init_sqlite_pool("sqlite:data.db").await {
-        Ok(pool) => {
-            if let Err(e) = model_contact::Contact::init_table(&pool).await {
-                error!("Failed to initialize contacts table: {}", e);
-                return;
-            }
-            pool
-        }
-        Err(e) => {
-            error!("Failed to initialize database: {}", e);
-            return;
-        }
-    };
 
     // Create shared state
-    let state = Arc::new(shared_state::AppState::new(db_pool));
+    let state = Arc::new(shared_state::AppState::new());
 
     // Create the application router
-    let app = server::create_app(state);
+    let app = server::create_app(state,&args.assets_dir);
 
     // Start the server with explicit SocketAddr type
     let addr: std::net::SocketAddr = format!("{}:{}", args.ip, args.port)
         .parse()
         .expect("Invalid IP/Port");
+
+    info!("Application starting with args: {:?}", args);
     info!("Server starting on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
@@ -242,25 +233,27 @@ async fn daemon_loop(args: &Args) {
     fs::remove_file(PID_FILE).ok();
 }
 
-fn change_to_exe_dir() -> std::io::Result<()> {
-    let exe_path = env::current_exe()?;
-    if let Some(exe_dir) = exe_path.parent() {
-        env::set_current_dir(exe_dir)?;
+fn change_to_exe_dir(dir:&str) -> std::io::Result<()> {
+    if !dir.is_empty(){
+        println!("[+] Change to directory {}", dir);
+        env::set_current_dir(dir)?;
+    }else{
+        let exe_path = env::current_exe()?;
+        if let Some(exe_dir) = exe_path.parent() {
+            env::set_current_dir(exe_dir)?;
+        }
     }
     Ok(())
 }
 
 #[tokio::main]
 async fn main() {
-    if let Err(e) = change_to_exe_dir() {
+    let args = Args::parse();
+    println!("args: {:?}",args);
+    if let Err(e) = change_to_exe_dir(&args.dir) {
         eprintln!("Failed to change to executable directory: {}", e);
         return;
     }
-
-    let args = Args::parse();
-    const KEY: &str = "9067941512fcb28a0db7d1beb0e9ece001995bf3f66e36b157a384efbc6bdae4";
-    AesGcmCrypto::init_encryption(KEY).unwrap();
-
     let log_level = if args.debug { "debug" } else { "info" };
 
     Logger::try_with_str(log_level)
@@ -280,7 +273,9 @@ async fn main() {
         .start()
         .unwrap();
 
+
     debug!("Application starting with args: {:?}", args);
+    info!("Local_ip_address: {:?}", get_local_ip_address());
 
     if is_loop_mode() {
         info!("[+] Daemon loop running on {}:{}", args.ip, args.port);
@@ -291,23 +286,7 @@ async fn main() {
     if args.stop {
         stop_daemon();
     } else if args.daemon {
-        run_daemon(&args.ip, args.port);
-    } else if args.gen_key {
-        println!("Generating secure AES-GCM key:");
-
-        // Generate random 32-byte key (64 hex chars)
-        let mut key = [0u8; 32];
-        OsRng.fill_bytes(&mut key);
-
-        // Convert to hex string
-        let hex_key = hex::encode(key);
-
-        println!("Hex key (64 characters):");
-        println!("{}", hex_key);
-
-        // Also generate UUID if needed
-        println!("\nUUID for reference:");
-        println!("{}", uuid::Uuid::new_v4());
+        run_daemon(&args);
     } else {
         daemon_loop(&args).await;
     }

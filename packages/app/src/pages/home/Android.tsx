@@ -35,7 +35,7 @@ const Android = () => {
     }, []);
 
     const clients = (clientsData || [])
-        .filter((clientId: string) => clientId.startsWith('CONNECTOR-ADR-'))
+        .filter((clientId: string) => clientId.startsWith('CONNECTOR-'))
         .map((clientId: string) => {
             return {
                 value: clientId,
@@ -100,12 +100,12 @@ const Android = () => {
             setErr('');
         } catch (error) {
             //@ts-ignore
-            const {message} = error
-            if(message.indexOf("not found") > -1){
+            const { message } = error;
+            if (message.indexOf('not found') > -1) {
                 setErr('请上传Agent!');
                 setLoading(false);
-            }else{
-                console.error(error)
+            } else {
+                console.error(error);
                 setLoading(true);
             }
         }
@@ -155,7 +155,7 @@ const Android = () => {
         setLoading(false);
     }, 1000);
 
-    console.log("device",{deviceId, clientId },devices,deviceInfo);
+    console.log('device', { deviceId, clientId }, devices, deviceInfo);
 
     const Page = ({ children }: { children?: ReactNode }) => {
         return (

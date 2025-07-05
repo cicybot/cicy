@@ -12,7 +12,7 @@ import {
     isBrowserClient,
     isMainWebContent,
     isMainWindow,
-    isClientAdr
+    isConnector
 } from '../../utils/helper';
 
 export type TableListItem = {
@@ -40,7 +40,9 @@ const ClientsTable = () => {
                                 new BrowserService(
                                     location.href.replace(
                                         '#/clients',
-                                        `#/android/detail/${record.clientId.replace('-APP', '').replace('-MANAGE', '')}`
+                                        `#/android/detail/${record.clientId
+                                            .replace('-APP', '')
+                                            .replace('-MANAGE', '')}`
                                     )
                                 ).openWindow({ noWebview: true });
                             }}
@@ -87,7 +89,7 @@ const ClientsTable = () => {
                     tag = 'MainWebContent';
                 } else if (isMainWindow(record.clientId)) {
                     tag = 'MainWindow';
-                } else if (isClientAdr(record.clientId)) {
+                } else if (isConnector(record.clientId)) {
                     tag = '安卓连接器';
                 }
                 return <Tag>{tag}</Tag>;

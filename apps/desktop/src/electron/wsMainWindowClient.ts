@@ -4,6 +4,14 @@ import { MainWindow } from './mainWindow';
 import WebContentsRequest from './webContentsRequest';
 import { CCClientWebsocket } from '@cicy/cicy-ws';
 import { s3 } from './db';
+import { exec } from 'child_process';
+import util from 'util';
+import path from 'path';
+import { getAppInfo } from './info';
+declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+declare const DEV_URL: string;
+
+const execPromise = util.promisify(exec);
 
 const CURRENT_CLIENT_ID = 'MainWindow';
 
@@ -133,25 +141,25 @@ export const handleMsg = async (action: string, payload: any) => {
     try {
         switch (action) {
             case 'db': {
-                const {method,params} = payload||{}
-                switch(method){
-                    case "exec":{
+                const { method, params } = payload || {};
+                switch (method) {
+                    case 'exec': {
                         return s3().exec(params[0]);
                     }
-                    case "run":{
+                    case 'run': {
                         const stmt = s3().prepare(params[0]);
-                        return stmt.run(...params[1])
+                        return stmt.run(...params[1]);
                     }
-                    case "get":{
+                    case 'get': {
                         const stmt = s3().prepare(params[0]);
-                        return stmt.get(...params[1])
+                        return stmt.get(...params[1]);
                     }
-                    case "all":{
+                    case 'all': {
                         const stmt = s3().prepare(params[0]);
-                        return stmt.all(...params[1])
+                        return stmt.all(...params[1]);
                     }
-                    default:{
-                        break
+                    default: {
+                        break;
                     }
                 }
             }
@@ -483,10 +491,11 @@ export const handleMsg = async (action: string, payload: any) => {
                 if (windowOptions === undefined) {
                     windowOptions = {};
                 }
+                const url_home = DEV_URL ? DEV_URL : MAIN_WINDOW_WEBPACK_ENTRY;
                 MainWindow.createWindow({
                     openDevTools,
                     winId: windowId,
-                    url: noWebview ? url : `http://localhost:3173/#browser?windowId=${windowId}`,
+                    url: noWebview ? url : `${url_home}/#browser?windowId=${windowId}`,
                     windowOptions
                 }).catch(console.error);
                 break;
@@ -504,8 +513,8 @@ export const handleMsg = async (action: string, payload: any) => {
 export async function initCCClient() {
     CCClientWebsocket.configServer(serverUrl, CURRENT_CLIENT_ID, {
         onMessage: async (ws: WebSocket, data: string) => {
-            const { id, action,payload,from: fromClientId } = JSON.parse(data as string);
-            let res: any = handleMsg(action,payload);
+            const { id, action, payload: payload, from: fromClientId } = JSON.parse(data as string);
+            const res: any = handleMsg(action, payload);
 
             if (id && fromClientId) {
                 ws.send(
@@ -519,7 +528,37 @@ export async function initCCClient() {
             }
         }
     }).connectCCServer();
+    initConnector(serverUrl).catch(console.error);
 }
+
 export function setServerUrl(serverUrl: string) {
     CCClientWebsocket.setServerUrl(serverUrl);
+    initConnector(serverUrl).catch(console.error);
+}
+
+export async function initConnector(serverUrl: string) {
+    const platform = process.platform;
+    const arch = process.arch;
+    const prefix = platform === 'win32' ? '.exe' : '';
+    const { publicDir, userDataPath, version, isDev } = getAppInfo();
+    const ver = isDev ? '0.0.0' : version;
+
+    const connectorFile = `cicy-connector-${ver}-${platform}-${arch}${prefix}`;
+    const assetsDir = path.join(publicDir, 'static', 'assets');
+    const cmd = `${path.join(
+        assetsDir,
+        connectorFile
+    )} -d --dir "${userDataPath}" --ws-server ${serverUrl} --client-id CONNECTOR-ELECTRON`;
+
+    console.log('initConnector rust: ', {
+        platform,
+        publicDir,
+        arch,
+        assetsDir,
+        userDataPath,
+        serverUrl,
+        version,
+        cmd
+    });
+    await execPromise(cmd);
 }

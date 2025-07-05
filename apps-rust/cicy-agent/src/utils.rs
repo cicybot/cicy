@@ -6,7 +6,6 @@ pub fn is_android_linux() -> bool {
     std::env::var("ANDROID_ASSETS").is_ok()
 }
 
-
 #[cfg(target_os = "windows")]
 fn get_memory_usage_win(pid: &str) {
     let output = Command::new("tasklist")

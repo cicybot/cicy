@@ -1,8 +1,5 @@
-
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use std::str::FromStr;
-
-
 pub async fn init_sqlite_pool(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
     let connection_options = SqliteConnectOptions::from_str(database_url)?
         .create_if_missing(true)

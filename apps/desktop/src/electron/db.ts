@@ -5,17 +5,19 @@ let db: BetterSqlite3.Database;
 function boot() {
     db = s3();
 }
-export function connectSqlite3(dbName: string = 'data.db') {
-    console.log("[+] DbName:",dbName)
-    db = new DatabaseSqlite3(dbName, { verbose: ()=>{
-        // console.log(msg)
-    } });
+export function connectSqlite3(dbName = 'data.db') {
+    console.log('[+] DbName:', dbName);
+    db = new DatabaseSqlite3(dbName, {
+        verbose: () => {
+            // console.log(msg)
+        }
+    });
     db.pragma('journal_mode = WAL');
     boot();
 }
 
 //@ts-ignore
-export function s3():Database {
+export function s3(): Database {
     return db!;
 }
 process.on('SIGINT', () => {

@@ -14,9 +14,10 @@ import path from 'path';
 import { loadBounds, saveBounds } from './boundsSaver';
 import { delay } from './utils';
 import WebContentsRequest from './webContentsRequest';
-import { handleMsg, initCCClient,setServerUrl } from './wsMainWindowClient';
+import { handleMsg, initCCClient, setServerUrl } from './wsMainWindowClient';
 import { initCCServer } from './wsCCServer';
-import { connectSqlite3, s3 } from './db';
+import { connectSqlite3 } from './db';
+import { getAppInfo, setAppInfo } from './info';
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
@@ -71,11 +72,8 @@ export class MainWindow {
             }
         })();
     }
-    static getInfo(){
-        return {
-            publicDir,
-            userDataDir:app.getPath('userData')
-        }
+    static getInfo() {
+        return getAppInfo();
     }
     static getOptions() {
         const icon = this.getIcon();
@@ -127,7 +125,7 @@ export class MainWindow {
         openDevTools,
         winId,
         url,
-        windowOptions,
+        windowOptions
     }: {
         openDevTools?: boolean;
         winId: string;
@@ -146,22 +144,22 @@ export class MainWindow {
                     ...webPreferences,
                     ...(webPreferences1 || {})
                 },
-                x:savedBounds?.x || 50,
-                y:savedBounds?.y || 50,
-                width:savedBounds?.width || 1024,
-                height:savedBounds?.height || 768,
+                x: savedBounds?.x || 50,
+                y: savedBounds?.y || 50,
+                width: savedBounds?.width || 1024,
+                height: savedBounds?.height || 768,
                 ...props1
             });
 
             this.windows.set(winId, win);
-            
+
             win.on('close', (e: any) => {
                 let w = this.windows.get(winId);
                 if (w) {
                     saveBounds(winId, w.getBounds());
                     w = undefined;
                 }
-                
+
                 new WebContentsRequest(winId).clearRequests();
                 this.windowsReady.delete(winId);
                 this.windows.delete(winId);
@@ -169,7 +167,7 @@ export class MainWindow {
             url && win.loadURL(url);
             this.onWinEvent(win);
             this.handleFocusAndBlure(win);
-            new WebContentsRequest(winId).clearRequests()
+            new WebContentsRequest(winId).clearRequests();
         } else {
             if (win.isMinimized()) {
                 win.restore();
@@ -184,41 +182,47 @@ export class MainWindow {
     }
     static async openMainWindow() {
         if (this.mainWindow !== undefined && this.mainWindow !== null) return this.mainWindow;
-        const savedBounds = loadBounds("default");
+        const savedBounds = loadBounds('default');
         this.mainWindow = new BrowserWindow({
             ...this.getOptions(),
             autoHideMenuBar: false,
-            x:savedBounds?.x || 50,
-            y:savedBounds?.y || 50,
-            width:savedBounds?.width || 1024,
-            height:savedBounds?.height || 768,
+            x: savedBounds?.x || 50,
+            y: savedBounds?.y || 50,
+            width: savedBounds?.width || 1024,
+            height: savedBounds?.height || 768
         });
-        
+
         const userDataPath = app.getPath('userData');
-        console.log("DEV_URL",DEV_URL)
+        console.log('[+] DEV_URL', DEV_URL || 'null');
         console.log('[+] CurrentUrl:', this.currentUrl);
         console.log('[+] userDataPath:', userDataPath);
         console.log('[+] publicDir:', publicDir);
-        connectSqlite3(`${userDataPath}/data.db`)
+
         try {
             const data = fs.readFileSync(path.resolve(publicDir, 'opencv.js'), 'utf8');
             openCvData = data.trim();
+            connectSqlite3(`${userDataPath}/data.db`);
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
         }
-        if(DEV_URL){
-            this.currentUrl = DEV_URL
+        if (DEV_URL) {
+            this.currentUrl = DEV_URL;
         }
-        const version = app.getVersion();;
-        
-        initCCServer(publicDir,isDev ? "0.0.0":version,"0.0.0.0",4444,true).catch(console.error)
-        initCCClient().catch(console.error)
+        const version = app.getVersion();
+        setAppInfo({
+            publicDir,
+            userDataPath,
+            version,
+            isDev
+        });
 
-        this.mainWindow.loadURL(this.currentUrl);
-        
+        initCCServer('0.0.0.0', 4444, true).catch(console.error);
+        initCCClient().catch(console.error);
+
+        await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
-            const { action, payload } = message||{};
+            const { action, payload } = message || {};
             switch (action) {
                 case 'connectCCServer': {
                     setServerUrl(payload.serverUrl);
@@ -227,11 +231,11 @@ export class MainWindow {
                 case 'getOpenCv': {
                     return openCvData;
                 }
-                default:{
-                    return handleMsg(action,payload)
+                default: {
+                    return handleMsg(action, payload);
                 }
             }
-        })
+        });
         const menu = Menu.buildFromTemplate([
             {
                 label: 'Edit',
@@ -251,7 +255,7 @@ export class MainWindow {
         Menu.setApplicationMenu(menu);
 
         this.mainWindow.on('closed', () => {
-            saveBounds("default",this.mainWindow.getBounds())
+            saveBounds('default', this.mainWindow.getBounds());
             this.windows.forEach(win => {
                 win.close();
             });
@@ -366,8 +370,7 @@ export class MainWindow {
             });
         });
     }
-    
-    
+
     static getCurrentUrl() {
         return this.currentUrl;
     }

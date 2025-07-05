@@ -25,7 +25,7 @@ export const stringIsJson = (data: any) => {
     );
 };
 
-let __serverUrl = localStorage.getItem('serverUrl') || 'ws://127.0.0.1:3101/ws';
+let __serverUrl = localStorage.getItem('serverUrl') || 'ws://127.0.0.1:4444/ws';
 
 let __ws: WebSocket | null;
 
