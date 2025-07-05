@@ -2,8 +2,8 @@ name: CiCy CD
 
 on:
   push:
-    tags:
-      - v*
+    branches:
+      - dev
 
 env:
   VERSION_NODE: 20.11.1
