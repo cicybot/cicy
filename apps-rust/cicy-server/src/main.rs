@@ -169,10 +169,7 @@ fn custom_format(
 
 async fn daemon_loop(args: &Args) {
     let pid = process::id().to_string();
-    const KEY: &str = "9067941512fcb28a0db7d1beb0e9ece001995bf3f66e36b157a384efbc6bdae4";
-
-    AesGcmCrypto::init_encryption(KEY).unwrap();
-
+ 
     // Initialize database connection pool and tables
     let db_pool = match sqlite::init_sqlite_pool("sqlite:data.db").await {
         Ok(pool) => {
@@ -261,6 +258,9 @@ async fn main() {
     }
 
     let args = Args::parse();
+    const KEY: &str = "9067941512fcb28a0db7d1beb0e9ece001995bf3f66e36b157a384efbc6bdae4";
+    AesGcmCrypto::init_encryption(KEY).unwrap();
+
     let log_level = if args.debug { "debug" } else { "info" };
 
     Logger::try_with_str(log_level)

@@ -208,13 +208,14 @@ export class MainWindow {
         }
         if(DEV_URL){
             this.currentUrl = DEV_URL
-        }else{
-            //initCCServer(publicDir).catch(console.error)
         }
+        const version = app.getVersion();;
+        
+        initCCServer(publicDir,isDev ? "0.0.0":version,"0.0.0.0",4444,true).catch(console.error)
+        initCCClient().catch(console.error)
 
         this.mainWindow.loadURL(this.currentUrl);
         
-        initCCClient().catch(console.error)
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
             const { action, payload } = message||{};

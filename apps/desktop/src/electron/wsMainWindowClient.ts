@@ -6,7 +6,8 @@ import { CCClientWebsocket } from '@cicy/cicy-ws';
 import { s3 } from './db';
 
 const CURRENT_CLIENT_ID = 'MainWindow';
-const serverUrl = 'ws://127.0.0.1:3101/ws';
+
+const serverUrl = 'ws://127.0.0.1:4444/ws';
 
 const CaptureCache: Map<
     string,

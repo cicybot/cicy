@@ -4,4 +4,4 @@ set -ex
 cargo build --release
 chmod +x ../../target/release/cicy-connector
 
-cp ../../target/release/cicy-connector ../../apps/desktop/public/static/assets/cicy-connector-0.0.0-darwin-x86_64
+cp ../../target/release/cicy-connector ../../apps/desktop/public/static/assets/cicy-connector-0.0.0-darwin-x64
