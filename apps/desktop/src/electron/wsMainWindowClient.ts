@@ -550,11 +550,11 @@ export async function initConnector(serverUrl: string) {
     const { publicDir, userDataPath: userDataPath1, version, isDev } = getAppInfo();
     const ver = isDev ? '0.0.0' : version;
 
-    const name = `cicy-connector-${ver}-${platform}-${arch}${prefix}`;
+    const name = `cicy-connector-v${ver}-${platform}-${arch}${prefix}`;
     const assetsDir = path.join(publicDir, 'static', 'assets');
     const serverPath = path.join(assetsDir, name);
 
-    const userDataPath = platform === 'win32' ? userDataPath1 : path.join(os.homedir(), '.cicy');
+    const userDataPath = path.join(os.homedir(), '.cicy');
     const pathCmd = path.join(userDataPath, 'app', name);
 
     if (!fs.existsSync(path.join(userDataPath, 'app'))) {

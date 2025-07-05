@@ -12,15 +12,29 @@ import contextMenu from 'electron-context-menu';
 import isDev from 'electron-is-dev';
 import * as fs from 'fs';
 import path from 'path';
-import { initBoundsPath, loadBounds, saveBounds } from './boundsSaver';
+import { loadBounds, saveBounds } from './boundsSaver';
 import { delay } from './utils';
 import WebContentsRequest from './webContentsRequest';
 import { handleMsg, initCCClient, setServerUrl } from './wsMainWindowClient';
 import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
+import os from 'os';
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
+
+export function initDir() {
+    const { appDataPath } = getAppInfo();
+    if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
+        fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
+    }
+    if (!fs.existsSync(path.join(appDataPath, 'app'))) {
+        fs.mkdirSync(path.join(appDataPath, 'app'), { recursive: true });
+    }
+    if (!fs.existsSync(path.join(appDataPath, 'data'))) {
+        fs.mkdirSync(path.join(appDataPath, 'data'), { recursive: true });
+    }
+}
 
 export function t(key: string) {
     return key;
@@ -183,7 +197,19 @@ export class MainWindow {
     }
     static async openMainWindow() {
         if (this.mainWindow !== undefined && this.mainWindow !== null) return this.mainWindow;
-        initBoundsPath();
+        const userDataPath = app.getPath('userData');
+        const appDataPath = path.join(os.homedir(), '.cicy');
+        const version = app.getVersion();
+
+        setAppInfo({
+            appDataPath,
+            publicDir,
+            userDataPath,
+            version,
+            isDev
+        });
+
+        initDir();
         const savedBounds = loadBounds('default');
         this.mainWindow = new BrowserWindow({
             ...this.getOptions(),
@@ -193,9 +219,6 @@ export class MainWindow {
             width: savedBounds?.width || 1024,
             height: savedBounds?.height || 768
         });
-
-        const userDataPath = app.getPath('userData');
-
         console.log('[+] DEV_URL', DEV_URL || 'null');
         console.log('[+] CurrentUrl:', this.currentUrl);
         console.log('[+] userDataPath:', userDataPath);
@@ -204,21 +227,13 @@ export class MainWindow {
         try {
             const data = fs.readFileSync(path.resolve(publicDir, 'opencv.js'), 'utf8');
             openCvData = data.trim();
-            connectSqlite3(`${userDataPath}/data.db`);
+            connectSqlite3(path.join(appDataPath, 'data', 'app.db'));
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
         }
         if (DEV_URL) {
             this.currentUrl = DEV_URL;
         }
-        const version = app.getVersion();
-
-        setAppInfo({
-            publicDir,
-            userDataPath,
-            version,
-            isDev
-        });
         await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {

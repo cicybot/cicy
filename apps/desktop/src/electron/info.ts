@@ -2,6 +2,7 @@ import isDev from 'electron-is-dev';
 
 interface AppInfo {
     publicDir: string;
+    appDataPath: string;
     userDataPath: string;
     version: string;
     isDev: boolean;

@@ -27,10 +27,9 @@ export async function initCCServer(ip = '0.0.0.0', port = 4444, rust?: boolean) 
         const arch = process.arch;
         const prefix = platform === 'win32' ? '.exe' : '';
         const ver = isDev ? '0.0.0' : version;
-        const serverName = `cicy-server-${ver}-${platform}-${arch}${prefix}`;
+        const serverName = `cicy-server-v${ver}-${platform}-${arch}${prefix}`;
 
-        const userDataPath =
-            platform === 'win32' ? userDataPath1 : path.join(os.homedir(), '.cicy');
+        const userDataPath = path.join(os.homedir(), '.cicy');
 
         const assetsDir = path.join(publicDir, 'static', 'assets');
         const serverPath = path.join(assetsDir, serverName);
@@ -57,13 +56,5 @@ export async function initCCServer(ip = '0.0.0.0', port = 4444, rust?: boolean) 
             cmd
         });
         await execPromise(cmd);
-        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-        //@ts-ignore
-        while (true) {
-            if (await isPortOnline(port)) {
-                break;
-            }
-            await sleep(100);
-        }
     }
 }

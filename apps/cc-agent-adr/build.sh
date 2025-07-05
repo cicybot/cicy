@@ -55,5 +55,5 @@ cd $PROJECT_DIR/apps/cc-agent-web
 yarn build
 cd $PROJECT_DIR/apps/cc-agent-adr
 ./gradlew assembleDebug
-rm -rf $PROJECT_DIR/apps/desktop/public/static/assets/app-0.0.0.apk
-mv app/build/outputs/apk/debug/app-debug.apk $PROJECT_DIR/apps/desktop/public/static/assets/app-0.0.0.apk
+rm -rf $PROJECT_DIR/apps/desktop/public/static/assets/app-v0.0.0.apk
+mv app/build/outputs/apk/debug/app-debug.apk $PROJECT_DIR/apps/desktop/public/static/assets/app-v0.0.0.apk
