@@ -32,10 +32,6 @@ jobs:
           cd apps/desktop/public/static/assets
           gh release download v1.0.31
           ls ../../../../../
-          if ("${{ matrix.os }}" -eq "i686-pc-windows-msvc") {
-            echo "LIB=$NpcapPath\\Lib" | Out-File -Append $env:GITHUB_ENV
-          } else {
-            echo "LIB=$NpcapPath\\Lib\\x64" | Out-File -Append $env:GITHUB_ENV
-          }
-          echo $GITHUB_WORKSPACE
+          node tools/fix-app.js
+          
           
