@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.31
+  VERSION: 1.0.28
   VERSION_ANDROID_NDK: 27.2.12479018
   GH_TOKEN: ${{ github.token }}
 
@@ -333,7 +333,7 @@ jobs:
           ARTIFACT_NAME=cicy-server
           cd apps-rust/$ARTIFACT_NAME
           cargo build --target ${{ matrix.target }} --release
-          cd ../../
+          cd $GITHUB_WORKSPACE
           BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
           
           PLATFORM=$(echo ${{ matrix.target }} | sed 's/.*-//')
@@ -356,7 +356,7 @@ jobs:
           ARTIFACT_NAME=cicy-connector
           cd apps-rust/$ARTIFACT_NAME
           cargo build --target ${{ matrix.target }} --release
-          cd ../../
+          cd $GITHUB_WORKSPACE
           BUILT_PATH=target/${{ matrix.target }}/release/$ARTIFACT_NAME
           PLATFORM=$(echo ${{ matrix.target }} | sed 's/.*-//')
 
