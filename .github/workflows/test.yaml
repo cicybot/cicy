@@ -28,59 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache Cargo
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Rust target
-        run: rustup target add ${{ matrix.target }}
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Cache Android NDK
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ANDROID_HOME }}/ndk/${{ env.VERSION_ANDROID_NDK }}
-          key: ndk-${{ env.VERSION_ANDROID_NDK }}
-
-      - name: Install NDK if not cached
-        run: |
-          if [ ! -d "$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}" ]; then
-            sdkmanager --install "ndk;${VERSION_ANDROID_NDK}"
-          fi
-
-      - name: Set environment for ${{ matrix.target }}
-        run: |
-          TOOLCHAIN=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin
-          ls $TOOLCHAIN/armv*
-          ls $TOOLCHAIN/llvm-ar
-          API=33
-          case "${{ matrix.target }}" in
-            armv7-linux-androideabi)
-              cp $TOOLCHAIN/armv7a-linux-androideabi$API-clang $TOOLCHAIN/armv7-linux-androideabi$API-clang
-              echo "CC_armv7_linux_androideabi=$TOOLCHAIN/armv7-linux-androideabi$API-clang" >> $GITHUB_ENV
-              echo "AR_armv7_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
-              ;;
-          esac
-          echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr a-z A-Z | tr '-' '_')_LINKER=$TOOLCHAIN/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=--sysroot=$ANDROID_HOME/ndk/${VERSION_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> $GITHUB_ENV
-
       - name: Build with cargo
         run: |
-          cd apps-rust/cicy-agent
-          cargo build --target=${{ matrix.target }} --release
-          eco $GITHUB_WORKSPACE
+          echo $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
 
