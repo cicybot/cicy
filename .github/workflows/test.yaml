@@ -5,6 +5,7 @@ on:
     branches:
       - dev
 
+
 env:
   VERSION_NODE: 20.11.1
   VERSION: 1.0.32
@@ -69,8 +70,8 @@ jobs:
           case "${{ matrix.target }}" in
             armv7-linux-androideabi)
               cp $TOOLCHAIN/armv7a-linux-androideabi$API-clang $TOOLCHAIN/armv7-linux-androideabi$API-clang
-              echo "CC_armv7a_linux_androideabi=$TOOLCHAIN/armv7a-linux-androideabi$API-clang" >> $GITHUB_ENV
-              echo "AR_armv7a_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
+              echo "CC_armv7_linux_androideabi=$TOOLCHAIN/armv7-linux-androideabi$API-clang" >> $GITHUB_ENV
+              echo "AR_armv7_linux_androideabi=$TOOLCHAIN/llvm-ar" >> $GITHUB_ENV
               ;;
           esac
           echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr a-z A-Z | tr '-' '_')_LINKER=$TOOLCHAIN/${{ matrix.target }}$API-clang" >> $GITHUB_ENV
