@@ -19,7 +19,7 @@ export const AndroidConnector = () => {
         });
 
     useTimeoutLoop(async () => {
-        refetchClients(true);
+        await refetchClients(true);
     }, 2000);
     if (clients.length === 0) {
         return (

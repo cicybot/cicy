@@ -49,7 +49,7 @@ export const AndroidConnectorInner = ({
             };
             setDevices(r => {
                 if (r.length === 0 && devices.length === 0) {
-                    return r;
+                    return [];
                 }
                 // console.log(diffDeivces(devices, r));
                 if (diffDeivces(devices, r) || r.length === 0) {
