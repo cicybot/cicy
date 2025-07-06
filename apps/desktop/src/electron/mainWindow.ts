@@ -2,10 +2,8 @@ import {
     app,
     BrowserWindow,
     BrowserWindowConstructorOptions,
-    globalShortcut,
     ipcMain,
     shell,
-    Menu,
     Tray
 } from 'electron';
 import contextMenu from 'electron-context-menu';
@@ -15,7 +13,7 @@ import path from 'path';
 import { loadBounds, saveBounds } from './boundsSaver';
 import { delay } from './utils';
 import WebContentsRequest from './webContentsRequest';
-import { handleMsg, initCCClient, initConnector, setServerUrl } from './wsMainWindowClient';
+import { handleMsg, initConnector, setServerUrl } from './wsMainWindowClient';
 import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
@@ -58,8 +56,6 @@ declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 declare const DEV_URL: string;
 
-let focusedWin: BrowserWindow | undefined = undefined;
-
 let openCvData = '';
 
 export class MainWindow {
@@ -68,13 +64,6 @@ export class MainWindow {
     static windowsReady: Map<string, boolean> = new Map();
     static currentUrl: string = MAIN_WINDOW_WEBPACK_ENTRY;
     static tray: Tray | undefined = undefined;
-    static shortcutKeys: string[] = [
-        'Cmd+Shift+W',
-        'CommandOrControl+F',
-        'CommandOrControl+W',
-        'Escape'
-    ];
-
     static getIcon() {
         return (() => {
             switch (process.platform) {
@@ -170,18 +159,16 @@ export class MainWindow {
 
             win.on('close', (e: any) => {
                 let w = this.windows.get(winId);
+                new WebContentsRequest(winId).clearRequests();
+                this.windowsReady.delete(winId);
+                this.windows.delete(winId);
+
                 if (w) {
                     saveBounds(winId, w.getBounds());
                     w = undefined;
                 }
-
-                new WebContentsRequest(winId).clearRequests();
-                this.windowsReady.delete(winId);
-                this.windows.delete(winId);
             });
             url && win.loadURL(url);
-            this.onWinEvent(win);
-            this.handleFocusAndBlure(win);
             new WebContentsRequest(winId).clearRequests();
         } else {
             if (win.isMinimized()) {
@@ -227,7 +214,7 @@ export class MainWindow {
         try {
             const data = fs.readFileSync(path.resolve(publicDir, 'opencv.js'), 'utf8');
             openCvData = data.trim();
-            // connectSqlite3(path.join(appDataPath, 'data', 'app.db'));
+            connectSqlite3(path.join(appDataPath, 'data', 'app.db'));
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
         }
@@ -267,25 +254,7 @@ export class MainWindow {
                 }
             }
         });
-        // const menu = Menu.buildFromTemplate([
-        //     {
-        //         label: 'Edit',
-        //         submenu: [
-        //             { role: 'undo' },
-        //             { role: 'redo' },
-        //             { type: 'separator' },
-        //             { role: 'cut' },
-        //             { role: 'copy' },
-        //             { role: 'reload' },
-        //             { role: 'paste' },
-        //             { role: 'selectAll' }
-        //         ]
-        //     }
-        // ]);
-
-        // Menu.setApplicationMenu(menu);
-
-        this.mainWindow.on('closed', () => {
+        this.mainWindow.on('close', () => {
             saveBounds('default', this.mainWindow.getBounds());
             this.windows.forEach(win => {
                 win.close();
@@ -299,11 +268,6 @@ export class MainWindow {
 
             this.mainWindow = undefined;
         });
-        this.handleFocusAndBlure(this.mainWindow);
-        setInterval(() => {
-            this.checkShortcutKeys();
-        }, 2000);
-        this.onWinEvent(this.mainWindow);
         this.createTray();
         this.mainWindow.show();
 
@@ -321,87 +285,6 @@ export class MainWindow {
         await initCCServer('0.0.0.0', 4444, true);
         await delay(500);
         return this.mainWindow;
-    }
-    static onWinEvent(win: BrowserWindow) {
-        win.on('enter-full-screen', () => {
-            win.webContents.send('onMainMessage', {
-                action: 'onFullScreen',
-                payload: {
-                    isFullScreen: true
-                }
-            });
-        });
-
-        win.on('leave-full-screen', () => {
-            win.webContents.send('onMainMessage', {
-                action: 'onFullScreen',
-                payload: {
-                    isFullScreen: false
-                }
-            });
-        });
-    }
-    static isWinFocused(window?: BrowserWindow) {
-        return window && !window.isDestroyed() && window.isVisible() && window.isFocused();
-    }
-    static checkShortcutKeys() {
-        let focusedWin1: BrowserWindow | undefined = undefined;
-        const { shortcutKeys } = this;
-        [...Array.from(this.windows).map(row => row[1]), this.mainWindow].forEach(window => {
-            if (this.isWinFocused(window)) {
-                focusedWin1 = window;
-            }
-        });
-        if (!focusedWin1) {
-            focusedWin = undefined;
-            // console.log("===>> shortcutKeys unregister")
-            shortcutKeys.forEach(key => {
-                if (globalShortcut.isRegistered(key)) {
-                    globalShortcut.unregister(key);
-                }
-            });
-        } else {
-            if (focusedWin1 === focusedWin) {
-                return;
-            }
-            shortcutKeys.forEach(key => {
-                if (globalShortcut.isRegistered(key)) {
-                    globalShortcut.unregister(key);
-                }
-            });
-            focusedWin = focusedWin1;
-            // console.log("===>> shortcutKeys onMainMessage",shortcutKeys,this.isWinFocused(focusedWin))
-            shortcutKeys.forEach(key => {
-                if (globalShortcut.isRegistered(key)) {
-                    return;
-                }
-                globalShortcut.register(key, () => {
-                    if (this.isWinFocused(focusedWin)) {
-                        console.log('onShortcut');
-                        focusedWin.webContents.send('onMainMessage', {
-                            action: 'onShortcut',
-                            payload: { key }
-                        });
-                    }
-                });
-            });
-        }
-    }
-
-    static handleFocusAndBlure(win: BrowserWindow) {
-        win.on('blur', () => {
-            win.webContents.send('onMainMessage', {
-                action: 'onBlur',
-                payload: {}
-            });
-        });
-
-        win.on('focus', () => {
-            win.webContents.send('onMainMessage', {
-                action: 'onFocus',
-                payload: {}
-            });
-        });
     }
 
     static getCurrentUrl() {
