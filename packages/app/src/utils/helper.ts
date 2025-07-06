@@ -24,7 +24,7 @@ export const isMainWindow = (clientId: string) => {
 };
 
 export const isMainWebContent = (clientId: string) => {
-    return clientId === ClientIds.MainWebContent;
+    return clientId === ClientIds.MainWebContent || clientId.startsWith(ClientIds.MainWebContent);
 };
 
 export const isConnector = (clientId: string) => {

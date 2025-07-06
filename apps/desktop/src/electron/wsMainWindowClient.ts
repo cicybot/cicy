@@ -523,7 +523,7 @@ export const handleMsg = async (action: string, payload: any) => {
                 MainWindow.createWindow({
                     openDevTools,
                     winId: windowId,
-                    url: noWebview ? url : `${url_home}/#browser?windowId=${windowId}`,
+                    url: noWebview ? url : `${url_home}#browser?windowId=${windowId}`,
                     windowOptions
                 }).catch(console.error);
                 break;

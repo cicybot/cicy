@@ -1,6 +1,7 @@
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Tag } from 'antd';
+import { Button, Dropdown, Tag } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 
 import { useWsClients } from '../../hooks/ws';
 import BrowserService from '../../services/BrowserService';
@@ -15,6 +16,8 @@ import {
     isConnector
 } from '../../utils/helper';
 import { onEvent } from '../../utils/utils';
+import { useState } from 'react';
+import { useLocalStorageState } from '@cicy/utils';
 
 export type TableListItem = {
     key: string;
@@ -97,13 +100,51 @@ const ClientsTable = () => {
             }
         }
     ];
-    const dataSource = clients.map((clientId: string) => {
+    const [clientType, setClientType] = useLocalStorageState('clientType', 'android');
+    const ClientTypes: any = {
+        all: '全部',
+        android: '安卓',
+        browser: '浏览器',
+        connector: '连接器',
+        else: '其他'
+    };
+    const ClientTypesList = Object.keys(ClientTypes).map(key => {
         return {
-            clientId,
-            key: clientId
+            key,
+            label: ClientTypes[key]
         };
     });
 
+    const dataSource = clients
+        .filter(clientId => {
+            if (clientType === 'all') {
+                return true;
+            }
+            if (clientType === 'android') {
+                return (
+                    isAdroidAgentClient(clientId) ||
+                    isAdroidAgentRustClient(clientId) ||
+                    isAdroidAgentManageClient(clientId)
+                );
+            }
+            if (clientType === 'browser') {
+                return isBrowserClient(clientId);
+            }
+            if (clientType === 'connector') {
+                return isConnector(clientId);
+            }
+
+            if (clientType === 'else') {
+                return isMainWindow(clientId) || isMainWebContent(clientId);
+            }
+            return false;
+        })
+        .map((clientId: string) => {
+            return {
+                clientId,
+                key: clientId
+            };
+        });
     return (
         <ProTable<TableListItem>
             dataSource={dataSource as TableListItem[]}
@@ -115,6 +156,21 @@ const ClientsTable = () => {
             search={false}
             options={false}
             toolBarRender={() => [
+                <Dropdown
+                    key="menu"
+                    trigger={['click']}
+                    menu={{
+                        onClick: e => {
+                            setClientType(e.key);
+                        },
+                        items: ClientTypesList
+                    }}
+                >
+                    <Button>
+                        {ClientTypes[clientType]}
+                        <DownOutlined />
+                    </Button>
+                </Dropdown>,
                 <Button
                     size="small"
                     type="primary"

@@ -13,10 +13,10 @@ const Home = () => {
         if (window.backgroundApi) {
             clientId = ClientIds.MainWebContent;
         } else {
-            clientId = localStorage.getItem('MasterWebContentClientId') || '';
+            clientId = sessionStorage.getItem('MasterWebContentClientId') || '';
             if (!clientId) {
                 clientId = 'MasterWebContent-' + Date.now();
-                localStorage.setItem('MasterWebContentClientId', clientId);
+                sessionStorage.setItem('MasterWebContentClientId', clientId);
             }
         }
         connectCCServer(clientId, {

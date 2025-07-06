@@ -116,7 +116,8 @@ const SiteAccountsTable = ({
                 </a>,
 
                 <Tooltip key="delete" title={record.is_deleted ? '可见' : '隐藏'}>
-                    <a onClick={async () => {
+                    <a
+                        onClick={async () => {
                             changeAccounts(site, accounts, {
                                 ...record,
                                 is_deleted: !record.is_deleted ? true : false
@@ -130,7 +131,6 @@ const SiteAccountsTable = ({
         }
     ];
     const dataSource = isAll ? accounts : accounts.filter(row => !row.is_deleted);
-    console.log({ isAll, dataSource });
     return (
         <>
             <ProTable<SiteAccountInfo>

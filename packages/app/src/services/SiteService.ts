@@ -175,18 +175,16 @@ export class SiteService {
         }
     }
     async getAccountState(): Promise<SiteAccountStateInfo> {
-        const state = await this.siteAccountStateDb.getData(
-            `acc_${this.siteId}_${this.accountIndex}`
-        );
-        return state;
+        const state = sessionStorage.getItem(`acc_${this.siteId}_${this.accountIndex}`);
+        return state ? JSON.parse(state) : {};
     }
     async saveAccounts(accounts: SiteAccountInfo[]) {
         return CacheService.set(`site_accounts_${this.siteId}`, accounts);
     }
     async saveAccountState(accountState: SiteAccountStateInfo) {
-        await this.siteAccountStateDb.putData(
+        sessionStorage.setItem(
             `acc_${this.siteId}_${this.accountIndex}`,
-            accountState
+            JSON.stringify(accountState)
         );
     }
     static getIdByUrl(url: string) {
