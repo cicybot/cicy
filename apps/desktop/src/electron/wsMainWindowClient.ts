@@ -519,7 +519,7 @@ export const handleMsg = async (action: string, payload: any) => {
                 if (windowOptions === undefined) {
                     windowOptions = {};
                 }
-                const url_home = DEV_URL ? DEV_URL : 'https://cicy.pages.dev';
+                const url_home = DEV_URL ? DEV_URL : MainWindow.getCurrentUrl();
                 MainWindow.createWindow({
                     openDevTools,
                     winId: windowId,

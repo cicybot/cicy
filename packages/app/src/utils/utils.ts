@@ -26,7 +26,7 @@ export function checkIsUrl(url: string): boolean {
 }
 
 export function onEvent(
-    action: string | 'showLoding' | 'hideLoading',
+    action: string | 'showLoading' | 'hideLoading',
     payload?: any,
     timeout?: number
 ) {
@@ -48,11 +48,43 @@ export async function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> 
     const bytes = new Uint8Array(buffer);
     const chunkSize = 0x8000; // 32k chunks
     const chunks = [];
-    
+
     for (let i = 0; i < bytes.length; i += chunkSize) {
         const chunk = bytes.subarray(i, i + chunkSize);
         chunks.push(String.fromCharCode.apply(null, Array.from(chunk)));
     }
-    
+
     return btoa(chunks.join(''));
 }
+
+export const diffObj = (a: any, b: any) => {
+    const keys = Object.keys(a);
+    const keys1 = Object.keys(b);
+
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (keys1.indexOf(key) === -1) {
+            return true;
+        }
+    }
+    for (let i = 0; i < keys1.length; i++) {
+        const key = keys1[i];
+        if (keys.indexOf(key) === -1) {
+            return true;
+        }
+    }
+    for (let i = 0; i < keys1.length; i++) {
+        const key = keys1[i];
+        if (a[key] !== b[key]) {
+            return true;
+        }
+    }
+
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (a[key] !== b[key]) {
+            return true;
+        }
+    }
+    return false;
+};

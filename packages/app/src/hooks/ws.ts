@@ -28,8 +28,7 @@ export const useWsClients = () => {
             if (!noLoading) {
                 onEvent('showLoading');
             }
-
-            getData().finally(() => onEvent('hideLoading'));
+            getData();
         }
     };
 };

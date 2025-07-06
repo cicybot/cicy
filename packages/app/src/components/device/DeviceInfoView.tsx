@@ -8,9 +8,9 @@ import { useState } from 'react';
 import Loading from '../UI/Loading';
 import { useTimeoutLoop } from '@cicy/utils';
 import { CCWSClient } from '../../services/CCWSClient';
+import { onEvent } from '../../utils/utils';
 
-export const DeviceInfo = ({
-    refetchClients,
+export const DeviceInfoView = ({
     deviceInfo,
     connector,
     serverIp,
@@ -22,7 +22,6 @@ export const DeviceInfo = ({
     appInfo: any;
     deviceInfo: any;
     fetchDeviceInfo: any;
-    refetchClients: any;
 }) => {
     const serverUrl = CCWSClient.getServerUrl(serverIp);
     const [screen, setScreen] = useState('');
@@ -31,7 +30,6 @@ export const DeviceInfo = ({
         setScreen(img);
     };
     useTimeoutLoop(async () => {
-        console.log('fetchScreen');
         await fetchScreen();
     }, 500);
     const { size } = deviceInfo;
@@ -41,7 +39,7 @@ export const DeviceInfo = ({
 
     return (
         <View ml12 mr12 flx column>
-            <View w100p rowVCenter borderBox mb12 jEnd pr12>
+            <View w100p rowVCenter borderBox mb12 jEnd pr12 mt12>
                 <View>
                     <UploadAgentButton
                         serverIp={serverIp}
@@ -71,8 +69,9 @@ export const DeviceInfo = ({
                         size="small"
                         type="primary"
                         onClick={() => {
-                            refetchClients();
+                            onEvent('showLoading');
                             fetchDeviceInfo();
+                            onEvent('hideLoading');
                         }}
                     >
                         刷新
@@ -118,16 +117,6 @@ export const DeviceInfo = ({
                         </ProDescriptions>
                         <Divider></Divider>
                         <ProDescriptions column={2}>
-                            <ProDescriptions.Item label="Rust Port">
-                                <ProField text={deviceInfo.ccAgentRustHttpServer} mode="read" />
-                            </ProDescriptions.Item>
-
-                            <ProDescriptions.Item label="App Port">
-                                <ProField text={deviceInfo.ccAgentAppHttpServer} mode="read" />
-                            </ProDescriptions.Item>
-                        </ProDescriptions>
-                        <Divider></Divider>
-                        <ProDescriptions column={2}>
                             <ProDescriptions.Item label="Agent Rust" tooltip="提供底层执行命令">
                                 <ProField text={deviceInfo.ccAgentRustPid} mode="read" />
                                 <View ml12>
@@ -137,8 +126,10 @@ export const DeviceInfo = ({
                                                 message.warning('请输入服务端地址');
                                                 return;
                                             }
+                                            onEvent('showLoading');
                                             await connector.agentRustStartLoop();
                                             setTimeout(() => {
+                                                onEvent('hideLoading');
                                                 fetchDeviceInfo();
                                             }, 1000);
                                         }}
@@ -169,18 +160,7 @@ export const DeviceInfo = ({
                                 <View ml12 hide={!deviceInfo.ccAgentRustPid}>
                                     <Button
                                         onClick={async () => {
-                                            let { version, isDev } = appInfo;
-                                            if (isDev) {
-                                                version = '0.0.0';
-                                            }
-                                            const name = `app-v${version}.apk`;
-                                            const url = `${CCWSClient.getHttpUrl(
-                                                serverIp
-                                            )}/static/assets/${name}`;
-                                            console.log('cicy-agent url', url);
-
-                                            await connector.agentRustDownload(url, 'app.apk');
-
+                                            onEvent('showLoading');
                                             if (deviceInfo.ccAgentAppInstalled) {
                                                 await connector.deviceAdbShell(
                                                     'pm uninstall --user 0 com.cc.agent.adr'
@@ -193,7 +173,7 @@ export const DeviceInfo = ({
                                                     'pm install -r /data/local/tmp/app.apk'
                                                 );
                                             }
-
+                                            onEvent('hideLoading');
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
                                             }, 1000);
@@ -221,6 +201,7 @@ export const DeviceInfo = ({
                                 <View ml12 hide={!deviceInfo.ccAgentAppInstalled}>
                                     <Button
                                         onClick={async () => {
+                                            onEvent('showLoading');
                                             if (deviceInfo.ccAgentAppRunning) {
                                                 await connector.deviceAdbShell(
                                                     'am force-stop com.cc.agent.adr'
@@ -233,6 +214,7 @@ export const DeviceInfo = ({
                                                     'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
                                                 );
                                             }
+                                            onEvent('hideLoading');
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
                                             }, 1000);

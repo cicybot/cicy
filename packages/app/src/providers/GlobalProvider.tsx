@@ -1,4 +1,12 @@
-import { createContext, useContext, useReducer, ReactNode, Dispatch, useEffect, useState } from 'react';
+import {
+    createContext,
+    useContext,
+    useReducer,
+    ReactNode,
+    Dispatch,
+    useEffect,
+    useState
+} from 'react';
 import Loading from '../components/UI/Loading';
 import View from '../components/View';
 
@@ -47,27 +55,26 @@ const reducer = (state: GlobalState, action: GlobalAction): GlobalState => {
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const { Provider } = GlobalContext;
     const [state, dispatch] = useReducer(reducer, initialState);
-    const [loading,setLoading] = useState(false)
-    useEffect(()=>{
-        const onEvent = (e:any)=>{
-            const {action} = e.detail;
-            switch(action){
-                case "showLoading":{
-                    setLoading(true)
-                    break
+    const [loading, setLoading] = useState(false);
+    useEffect(() => {
+        const onEvent = (e: any) => {
+            const { action } = e.detail;
+            switch (action) {
+                case 'showLoading': {
+                    setLoading(true);
+                    break;
                 }
-                case "hideLoading":{
-                    setTimeout(()=>setLoading(false),800)
-                    break
+                case 'hideLoading': {
+                    setTimeout(() => setLoading(false), 800);
+                    break;
                 }
             }
-            
-        }
-        window.addEventListener("onEvent",onEvent)
-        return(()=>{
-            window.removeEventListener("onEvent",onEvent)
-        })
-    },[])
+        };
+        window.addEventListener('onEvent', onEvent);
+        return () => {
+            window.removeEventListener('onEvent', onEvent);
+        };
+    }, []);
     return (
         <Provider value={{ state, dispatch }}>
             <>

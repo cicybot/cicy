@@ -6,11 +6,9 @@ export interface DeviceInfo {
     agentRustVersion: string;
     brand: string;
     ccAgentAccessibility: boolean;
-    ccAgentAppHttpServer: string;
     ccAgentAppInstalled: boolean;
     ccAgentMediaProjection: boolean;
     ccAgentAppRunning: boolean;
-    ccAgentRustHttpServer: boolean;
     ccAgentRustPid: string;
     ccAgentAppUploaded: boolean;
     clientId: string;
@@ -31,8 +29,8 @@ export default class CCWSAgentClient extends CCWSClient {
         this.accessibility = false;
         this.mediaProjection = false;
     }
-    setDeviceInfo(deviceInfo:DeviceInfo){
-        this.deviceInfo = deviceInfo
+    setDeviceInfo(deviceInfo: DeviceInfo) {
+        this.deviceInfo = deviceInfo;
     }
     isAccessibilityEnabled() {
         return (
@@ -139,27 +137,20 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async getScreen() {
+        const { ipAddress, ccAgentMediaProjection, ccAgentAppRunning } = this.deviceInfo!;
 
-        const {
-            ipAddress,
-            ccAgentAppHttpServer,
-            ccAgentMediaProjection,
-            ccAgentRustHttpServer
-        } = this.deviceInfo!;
-
-        if(ccAgentAppHttpServer && ccAgentMediaProjection) {
-            const res = await fetch(`http://${ipAddress}:${ccAgentAppHttpServer}/screen`);
-            const {result} = await res.json();
-            const {imgData,xml: hierarchy } = result
-            return {imgData,
-                hierarchy}
+        if (ccAgentAppRunning && ccAgentMediaProjection) {
+            const res = await fetch(`http://${ipAddress}:4448/screen`);
+            const { result } = await res.json();
+            const { imgData, xml: hierarchy } = result;
+            return { imgData, hierarchy };
         } else {
-            const res = await fetch(`http://${ipAddress}:${ccAgentRustHttpServer}/screen`);
+            const res = await fetch(`http://${ipAddress}:4447/screen`);
             const arrayBuffer = await res.arrayBuffer();
             const imgData = `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
             return {
                 imgData,
-                hierarchy:""
+                hierarchy: ''
             };
         }
     }

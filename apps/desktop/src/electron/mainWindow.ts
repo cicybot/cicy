@@ -210,7 +210,7 @@ export class MainWindow {
         if (DEV_URL) {
             this.currentUrl = DEV_URL;
         } else {
-            this.currentUrl = 'https://cicy.pages.dev';
+            // this.currentUrl = 'https://cicy.pages.dev';
         }
 
         console.log('[+] CurrentUrl:', this.currentUrl);

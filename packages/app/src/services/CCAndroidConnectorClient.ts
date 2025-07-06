@@ -45,28 +45,25 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
     }
 
     async deviceScreenShot(deviceInfo: DeviceInfo) {
-        const {
-            ccAgentRustPid,
-            ipAddress,
-            ccAgentAppHttpServer,
-            ccAgentMediaProjection,
-            ccAgentRustHttpServer
-        } = deviceInfo;
+        const { ccAgentRustPid, ccAgentAppRunning, ipAddress, ccAgentMediaProjection } = deviceInfo;
         try {
-            if (ccAgentAppHttpServer && ccAgentMediaProjection) {
-                const res = await fetch(`http://${ipAddress}:${ccAgentAppHttpServer}/screen`);
-                const { result } = await res.json();
-                const { imgData } = result;
-                return imgData;
-            } else if (ccAgentRustHttpServer) {
-                const res = await fetch(`http://${ipAddress}:${ccAgentRustHttpServer}/screen`);
-                const arrayBuffer = await res.arrayBuffer();
-                return `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
-            } else {
-                await this.deviceAdbShell('screencap /data/local/tmp/screen.png');
-                const res = await this.deviceAdbShell('base64 -i /data/local/tmp/screen.png');
-                return `data:image/png;base64,${res}`;
-            }
+            // if (ccAgentAppRunning && ccAgentMediaProjection) {
+            //     const res = await fetch(`http://${ipAddress}:4448/screen`);
+            //     const { result } = await res.json();
+            //     const { imgData } = result;
+            //     return imgData;
+            // } else if (ccAgentRustPid) {
+            //     const res = await fetch(`http://${ipAddress}:4447/screen`);
+            //     const arrayBuffer = await res.arrayBuffer();
+            //     return `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
+            // } else {
+            //     await this.deviceAdbShell('screencap /data/local/tmp/screen.png');
+            //     const res = await this.deviceAdbShell('base64 -i /data/local/tmp/screen.png');
+            //     return `data:image/png;base64,${res}`;
+            // }
+            await this.deviceAdbShell('screencap /data/local/tmp/screen.png');
+            const res = await this.deviceAdbShell('base64 -i /data/local/tmp/screen.png');
+            return `data:image/png;base64,${res}`;
         } catch (e) {
             console.error(e);
             return '';

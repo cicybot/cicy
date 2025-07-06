@@ -1,11 +1,9 @@
 import View from '../../components/View';
+import { AndroidConnector } from '../../components/device/AndroidConnector';
 const Android = () => {
     return (
         <View wh100p>
-            <webview
-                style={{ width: '100%', height: '100%' }}
-                src={'/#/androidConnector'}
-            ></webview>
+            <AndroidConnector></AndroidConnector>
         </View>
     );
 };
