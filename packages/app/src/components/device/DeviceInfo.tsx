@@ -4,7 +4,7 @@ import BrowserService from '../../services/BrowserService';
 import View from '../View';
 import CCAndroidConnectorClient from '../../services/CCAndroidConnectorClient';
 import { UploadAgentButton } from './UploadAgentButton';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Loading from '../UI/Loading';
 import { useTimeoutLoop } from '@cicy/utils';
 import { CCWSClient } from '../../services/CCWSClient';
@@ -118,6 +118,16 @@ export const DeviceInfo = ({
                         </ProDescriptions>
                         <Divider></Divider>
                         <ProDescriptions column={2}>
+                            <ProDescriptions.Item label="Rust Port">
+                                <ProField text={deviceInfo.ccAgentRustHttpServer} mode="read" />
+                            </ProDescriptions.Item>
+
+                            <ProDescriptions.Item label="App Port">
+                                <ProField text={deviceInfo.ccAgentAppHttpServer} mode="read" />
+                            </ProDescriptions.Item>
+                        </ProDescriptions>
+                        <Divider></Divider>
+                        <ProDescriptions column={2}>
                             <ProDescriptions.Item label="Agent Rust" tooltip="提供底层执行命令">
                                 <ProField text={deviceInfo.ccAgentRustPid} mode="read" />
                                 <View ml12>
@@ -156,17 +166,19 @@ export const DeviceInfo = ({
                                     ]}
                                 />
 
-                                <View ml12 hide={!deviceInfo.ccAgentAppUploaded}>
+                                <View ml12 hide={!deviceInfo.ccAgentRustPid}>
                                     <Button
                                         onClick={async () => {
                                             let { version, isDev } = appInfo;
                                             if (isDev) {
                                                 version = '0.0.0';
                                             }
+                                            const name = `app-v${version}.apk`;
                                             const url = `${CCWSClient.getHttpUrl(
                                                 serverIp
-                                            )}/static/assets/app-${version}.apk`;
+                                            )}/static/assets/${name}`;
                                             console.log('cicy-agent url', url);
+
                                             await connector.agentRustDownload(url, 'app.apk');
 
                                             if (deviceInfo.ccAgentAppInstalled) {

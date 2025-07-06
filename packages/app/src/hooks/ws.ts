@@ -8,11 +8,11 @@ export const useWsClients = () => {
     const getData = async () => {
         return new CCWSClient('').getClients().then(res => {
             try {
-                setData((r)=>{
-                    if(JSON.stringify(r) === JSON.stringify(res.clients)){
-                        return r
+                setData(r => {
+                    if (JSON.stringify(r) === JSON.stringify(res.clients)) {
+                        return r;
                     }
-                    return res.clients
+                    return res.clients;
                 });
             } catch (error) {
                 setData([]);
@@ -24,11 +24,11 @@ export const useWsClients = () => {
     }, []);
     return {
         clients,
-        refetch: (noLoading?:boolean) => {
-            if(!noLoading){
+        refetch: (noLoading?: boolean) => {
+            if (!noLoading) {
                 onEvent('showLoading');
             }
-            
+
             getData().finally(() => onEvent('hideLoading'));
         }
     };
@@ -38,7 +38,11 @@ export const useSites = () => {
     const [sites, setData] = useState<SiteInfo[]>([]);
     const getData = async () => {
         return SiteService.getAllSite().then(res => {
-            setData(res || []);
+            try {
+                setData(res.map(row => row) || []);
+            } catch (e) {
+                console.error('site map error:', e, '[res]:', res);
+            }
         });
     };
     useEffect(() => {

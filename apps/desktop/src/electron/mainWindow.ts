@@ -85,7 +85,7 @@ export class MainWindow {
             resizable: true,
             icon: icon,
             width: 1024,
-            height: 780,
+            height: 820,
             webPreferences: {
                 partition: 'persist:default',
                 allowRunningInsecureContent: false,
@@ -148,10 +148,10 @@ export class MainWindow {
                     ...webPreferences,
                     ...(webPreferences1 || {})
                 },
-                x: savedBounds?.x || 50 + 100,
-                y: savedBounds?.y || 50 + 100,
+                x: savedBounds?.x || 50 + 60,
+                y: savedBounds?.y || 50 + 60,
                 width: savedBounds?.width || 1024,
-                height: savedBounds?.height || 768,
+                height: savedBounds?.height || 820,
                 ...props1
             });
 
@@ -206,7 +206,13 @@ export class MainWindow {
             width: savedBounds?.width || 1024,
             height: savedBounds?.height || 768
         });
-        console.log('[+] DEV_URL', DEV_URL || 'null');
+
+        if (DEV_URL) {
+            this.currentUrl = DEV_URL;
+        } else {
+            this.currentUrl = 'https://cicy.pages.dev';
+        }
+
         console.log('[+] CurrentUrl:', this.currentUrl);
         console.log('[+] userDataPath:', userDataPath);
         console.log('[+] publicDir:', publicDir);
@@ -217,9 +223,6 @@ export class MainWindow {
             connectSqlite3(path.join(appDataPath, 'data', 'app.db'));
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
-        }
-        if (DEV_URL) {
-            this.currentUrl = DEV_URL;
         }
         await this.mainWindow.loadURL(this.currentUrl);
 

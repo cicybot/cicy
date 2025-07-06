@@ -24,13 +24,6 @@ use crate::swagger::{openapi_spec, swagger_ui};
 static STATIC_DIR: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/public");
 
 pub fn create_app(state: Arc<AppState>,assets_dir:&str) -> Router {
-    let static_assets_layer = tower::ServiceBuilder::new()
-        .layer(SetResponseHeaderLayer::overriding(
-            header::CACHE_CONTROL,
-            header::HeaderValue::from_static("public, max-age=31536000, immutable"),
-        ))
-        // Enable compression
-        .layer(CompressionLayer::new());
 
     Router::new()
         // API endpoints
@@ -65,7 +58,6 @@ pub fn create_app(state: Arc<AppState>,assets_dir:&str) -> Router {
         .route("/*path", get(serve_static_file))
 
         // Apply middleware
-        .layer(static_assets_layer)
         .fallback(handler_404)
         .layer(
             TraceLayer::new_for_http()

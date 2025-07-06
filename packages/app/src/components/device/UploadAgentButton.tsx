@@ -38,13 +38,11 @@ export const UploadAgentButton = ({
 
                     const serverUrl = CCWSClient.getServerUrl(serverIp);
                     const name = 'cicy-agent';
-                    const url = `${CCWSClient.getHttpUrl(
-                        serverIp
-                    )}/static/assets/${name}-${version}-${abi}`;
+                    const name1 = `${name}-v${version}-${abi}`;
+                    const url = `${CCWSClient.getHttpUrl(serverIp)}/static/assets/${name1}`;
                     console.log('cicy-agent url', url);
-                    await connector.dowloadUrl(url, name);
-
-                    await connector.deviceAdbPush(name, '/data/local/tmp/' + name);
+                    await connector.dowloadUrl(url, name1);
+                    await connector.deviceAdbPush(name1, '/data/local/tmp/' + name);
                     await connector.deviceAdbShell('chmod +x /data/local/tmp/' + name);
                     await connector.deviceAdbShell(
                         `echo ${serverUrl} > /data/local/tmp/config_server.txt`

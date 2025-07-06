@@ -38,6 +38,29 @@ pub fn handle_file_call(
     params: &Option<serde_json::Value>,
 ) -> (Option<String>, serde_json::Value) {
     match method {
+        "exists" => {
+            if let Some(serde_json::Value::Array(arr)) = params {
+                if let Some(serde_json::Value::String(file_path)) = arr.get(0) {
+                    match file::path_exists(file_path) {
+                        Ok(output) => (None, serde_json::json!(output)),
+                        Err(e) => (
+                            Some(format!("{:?}", e).to_string()),
+                            serde_json::Value::Null,
+                        ),
+                    }
+                } else {
+                    (
+                        Some("First param must be string".to_string()),
+                        serde_json::Value::Null,
+                    )
+                }
+            } else {
+                (
+                    Some("Params must be an array".to_string()),
+                    serde_json::Value::Null,
+                )
+            }
+        }
         "read" => {
             if let Some(serde_json::Value::Array(arr)) = params {
                 if let Some(serde_json::Value::String(file_path)) = arr.get(0) {

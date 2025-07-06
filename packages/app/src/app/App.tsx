@@ -19,6 +19,10 @@ const router = createHashRouter([
         Component: AndroidDetail
     },
     {
+        path: '/androidConnector',
+        element: <>androidConnector</>
+    },
+    {
         path: '/browser',
         Component: WebviewBrowser
     },
