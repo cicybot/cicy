@@ -227,7 +227,7 @@ export class MainWindow {
         try {
             const data = fs.readFileSync(path.resolve(publicDir, 'opencv.js'), 'utf8');
             openCvData = data.trim();
-            connectSqlite3(path.join(appDataPath, 'data', 'app.db'));
+            // connectSqlite3(path.join(appDataPath, 'data', 'app.db'));
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
         }
