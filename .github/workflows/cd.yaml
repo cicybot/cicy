@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.48
+  VERSION: 1.0.50
   VERSION_ANDROID_NDK: 27.2.12479018
   GH_TOKEN: ${{ github.token }}
 
@@ -73,7 +73,7 @@ jobs:
           gh release download ${{ github.ref_name }}
           ls
           cd ../../../../../
-          node tools/fix-app.js
+#          node tools/fix-app.js
 
       - name: Run build distributive
         uses: borales/actions-yarn@v5
@@ -84,8 +84,8 @@ jobs:
       - name: Release Upload assets on Win32
         if: runner.os == 'Windows'
         run: |
-          $BUILT_PATH = "${env:MAKE_OUT_DIR}/squirrel.windows/x64/${env:PROJECT_NAME}-${env:VERSION} Setup.exe"
-          $OUTPUT_NAME = "${env:MAKE_OUT_DIR}/squirrel.windows/x64/${env:PROJECT_NAME}-${env:VERSION}-win32-x64 Setup.exe"
+          $BUILT_PATH = "${env:MAKE_OUT_DIR}/squirrel.windows/x64/${env:PROJECT_NAME}-v${env:VERSION} Setup.exe"
+          $OUTPUT_NAME = "${env:MAKE_OUT_DIR}/squirrel.windows/x64/${env:PROJECT_NAME}-v${env:VERSION}-win32-x64 Setup.exe"
 
           Write-Host "BUILT_PATH: $BUILT_PATH"
           Write-Host "OUTPUT_NAME: $OUTPUT_NAME"

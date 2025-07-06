@@ -224,6 +224,7 @@ export class MainWindow {
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
         }
+
         await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {

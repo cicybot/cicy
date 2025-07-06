@@ -122,6 +122,7 @@ const SitesTable = () => {
                             }
                             const service = new BrowserService(url);
                             await service.openWindow();
+                            ele.value = '';
                             refetch();
                         }}
                     >
