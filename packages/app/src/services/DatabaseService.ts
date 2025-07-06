@@ -1,7 +1,16 @@
+import { CCWSMainWindowClient } from './CCWSMainWindowClient';
+
 export default class DatabaseService {
     constructor() {}
+    async _message(msg: any) {
+        if (window.backgroundApi) {
+            return window.backgroundApi.message(msg);
+        } else {
+            return new CCWSMainWindowClient().send(msg);
+        }
+    }
     async exec(sql: string) {
-        await window.backgroundApi.message({
+        await this._message({
             action: 'db',
             payload: {
                 method: 'exec',
@@ -11,7 +20,7 @@ export default class DatabaseService {
     }
 
     async get(sql: string, params?: any[]): Promise<any> {
-        return window.backgroundApi.message({
+        return this._message({
             action: 'db',
             payload: {
                 method: 'get',
@@ -21,7 +30,7 @@ export default class DatabaseService {
     }
 
     async all(sql: string, params?: any[]): Promise<any[]> {
-        return window.backgroundApi.message({
+        return this._message({
             action: 'db',
             payload: {
                 method: 'all',
@@ -31,7 +40,7 @@ export default class DatabaseService {
     }
 
     async run(sql: string, params?: any[]): Promise<any> {
-        return window.backgroundApi.message({
+        return this._message({
             action: 'db',
             payload: {
                 method: 'run',

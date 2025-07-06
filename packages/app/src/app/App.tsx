@@ -52,10 +52,12 @@ const router = createHashRouter([
 
 const App = () => {
     useEffectOnce(() => {
-        (async () => {
-            SiteService.initDb();
-            CacheService.initDb();
-        })();
+        if (window.backgroundApi) {
+            (async () => {
+                await SiteService.initDb();
+                await CacheService.initDb();
+            })();
+        }
     }, []);
     return (
         <GlobalProvider>
