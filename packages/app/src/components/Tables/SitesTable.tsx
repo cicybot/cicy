@@ -1,4 +1,4 @@
-import { ExportOutlined,WindowsOutlined, EditOutlined,DeleteOutlined } from '@ant-design/icons';
+import { ExportOutlined, WindowsOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Avatar, Button, Popconfirm, Drawer, Input, message } from 'antd';
@@ -10,16 +10,15 @@ import { SiteInfo, SiteService } from '../../services/SiteService';
 
 const SitesTable = () => {
     const { sites, refetch } = useSites();
-    console.log({sites})
     const [detail, setDetail] = useState<SiteInfo | null>(null);
     const columns: ProColumns<SiteInfo>[] = [
         {
             title: 'Logo',
             width: 44,
             dataIndex: 'icon',
-            render: (dom) => {
-                if(dom === "-"){
-                    return <Avatar icon={<WindowsOutlined/>}></Avatar>
+            render: dom => {
+                if (dom === '-') {
+                    return <Avatar icon={<WindowsOutlined />}></Avatar>;
                 }
                 return <Avatar src={dom}></Avatar>;
             }
@@ -47,7 +46,7 @@ const SitesTable = () => {
                 <a
                     key="editable"
                     onClick={async () => {
-                        setDetail(record)
+                        setDetail(record);
                     }}
                     style={{ marginRight: 8 }}
                 >

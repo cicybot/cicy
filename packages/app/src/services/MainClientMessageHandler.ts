@@ -26,7 +26,9 @@ export class MainClientMessageHandler {
                 break;
             }
             default:
-                res = await window.backgroundApi.message({ action, payload });
+                if (window.backgroundApi) {
+                    res = await window.backgroundApi.message({ action, payload });
+                }
                 break;
         }
         if (id && fromClientId) {

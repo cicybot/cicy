@@ -41,7 +41,8 @@
         "start": "vite dev",
         "preview": "vite preview",
         "build": "tsc && vite build",
-        "build:web": "yarn build"
+        "build:web": "yarn build",
+        "deploy": "wrangler pages deploy ./dist --project-name cicy --commit-dirty=true"
     },
     "browserslist": {
         "production": [
