@@ -9,7 +9,7 @@ export enum WsCloseCode {
 
 export enum ClientIds {
     MainWebContent = 'MainWebContent',
-    MainWindow = 'MainWindow'
+    MainWindow = 'MainWebContent'
 }
 
 export const isString = (data: any) => {
@@ -124,8 +124,8 @@ export class CCWSClient {
         );
     }
 
-    static getServerUrl(serverIp: string) {
-        return __serverUrl.replace('127.0.0.1', serverIp);
+    static getServerUrl(serverIp?: string) {
+        return __serverUrl.replace('127.0.0.1', serverIp || '127.0.0.1');
     }
 
     static getHttpUrl(serverIp: string) {

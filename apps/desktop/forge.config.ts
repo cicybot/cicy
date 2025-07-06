@@ -81,10 +81,11 @@ const config: ForgeConfig = {
                 name: 'CiCy',
                 authors: 'CiCy Group',
                 description: 'Your desktop web3 explorer on The Open Network',
-                iconUrl: 'https://raw.githubusercontent.com/TonStockFi/web3-explorer/refs/heads/main/apps/desktop/public/icon.ico',
+                iconUrl:
+                    'https://raw.githubusercontent.com/TonStockFi/web3-explorer/refs/heads/main/apps/desktop/public/icon.ico',
                 setupIcon: path.join(process.cwd(), 'public', 'icon.ico'),
                 loadingGif: path.join(process.cwd(), 'public', 'install.gif'),
-                remoteReleases: 'https://github.com/TonStockFi/web3-explorer'
+                remoteReleases: 'https://github.com/cicybot/cicy'
             },
             ['win32']
         ),

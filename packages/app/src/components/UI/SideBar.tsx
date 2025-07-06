@@ -1,4 +1,4 @@
-import { AndroidOutlined, WindowsOutlined,LinkOutlined } from '@ant-design/icons';
+import { AndroidOutlined, WindowsOutlined, LinkOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
 import React from 'react';
@@ -17,9 +17,9 @@ const SizeBar: React.FC = () => {
     let location = useLocation();
     return (
         <Menu
-            defaultSelectedKeys={[location.pathname === "/"?"/android":location.pathname]}
+            defaultSelectedKeys={[location.pathname === '/' ? '/android' : location.pathname]}
             mode="inline"
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: '100%', height: '100%', paddingInline: 12, paddingTop: 24 }}
             onSelect={({ key }: { key: string }) => {
                 switch (key) {
                     default:

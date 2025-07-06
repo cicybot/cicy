@@ -55,6 +55,7 @@ export async function initCCServer(ip = '0.0.0.0', port = 4444, rust?: boolean) 
             ver,
             cmd
         });
-        await execPromise(cmd);
+        const res = await execPromise(cmd);
+        console.log(res);
     }
 }

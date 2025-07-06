@@ -25,7 +25,7 @@ const CaptureCache: Map<
         windowId: string;
         imgData: string;
         rect: {
-            widht: number;
+            width: number;
             height: number;
             x: number;
             y: number;
@@ -142,6 +142,27 @@ export const handleMsg = async (action: string, payload: any) => {
     let res: any = { err: '' };
     try {
         switch (action) {
+            case 'utils': {
+                const { method, params } = payload || {};
+                switch (method) {
+                    case 'fetch': {
+                        const { url, method, body, headers, isText } = params || {};
+                        const res = await fetch(url, {
+                            method: method || 'GET',
+                            body: body ? body : undefined,
+                            headers
+                        });
+                        if (isText) {
+                            return await res.text();
+                        }
+                        return await res.json();
+                    }
+                    case 'shell': {
+                        return await execPromise(params[0]);
+                    }
+                }
+                break;
+            }
             case 'db': {
                 const { method, params } = payload || {};
                 switch (method) {
@@ -547,7 +568,7 @@ export async function initConnector(serverUrl: string) {
     const platform = process.platform;
     const arch = process.arch;
     const prefix = platform === 'win32' ? '.exe' : '';
-    const { publicDir, userDataPath: userDataPath1, version, isDev } = getAppInfo();
+    const { publicDir, version, isDev } = getAppInfo();
     const ver = isDev ? '0.0.0' : version;
 
     const name = `cicy-connector-v${ver}-${platform}-${arch}${prefix}`;
@@ -568,7 +589,7 @@ export async function initConnector(serverUrl: string) {
         }
     }
 
-    const cmd = `"${pathCmd}" --ws-server ${serverUrl} --client-id CONNECTOR-ELECTRON`;
+    const cmd = `"${pathCmd}" -d --ws-server ${serverUrl} --client-id CONNECTOR-ELECTRON`;
 
     console.log('initConnector rust: ', {
         platform,
@@ -581,5 +602,7 @@ export async function initConnector(serverUrl: string) {
         version,
         cmd
     });
-    await execPromise(cmd);
+    const res = await execPromise(cmd);
+    console.log(res);
+    return res;
 }

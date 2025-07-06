@@ -11,6 +11,7 @@ import {
 
 import { delay } from './electron/utils';
 import WebContentsRequest from './electron/webContentsRequest';
+import { s3 } from './electron/db';
 
 app.setName('CiCy');
 
@@ -34,12 +35,12 @@ app.on('ready', async () => {
 
 app.on('web-contents-created', (_event, contents) => {
     const session = contents.session;
-   
+
     session.webRequest.onBeforeSendHeaders((details, callback) => {
-        if(WebContentsRequest.fromWebContentsId(details.webContentsId)){
-            WebContentsRequest.fromWebContentsId(details.webContentsId).process(details)
+        if (WebContentsRequest.fromWebContentsId(details.webContentsId)) {
+            WebContentsRequest.fromWebContentsId(details.webContentsId).process(details);
         }
-        
+
         callback(details);
     });
 });
@@ -51,7 +52,7 @@ app.on('before-quit', async e => {
     if (process.platform !== 'linux') {
         powerMonitor.off('unlock-screen', onUnLock);
     }
-
+    s3() && s3().close();
     await delay(100);
     app.exit();
 });

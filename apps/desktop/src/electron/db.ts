@@ -16,10 +16,6 @@ export function connectSqlite3(dbName = 'data.db') {
     boot();
 }
 
-//@ts-ignore
 export function s3(): Database {
     return db!;
 }
-process.on('SIGINT', () => {
-    db && db.close();
-});

@@ -15,7 +15,7 @@ import path from 'path';
 import { loadBounds, saveBounds } from './boundsSaver';
 import { delay } from './utils';
 import WebContentsRequest from './webContentsRequest';
-import { handleMsg, initCCClient, setServerUrl } from './wsMainWindowClient';
+import { handleMsg, initCCClient, initConnector, setServerUrl } from './wsMainWindowClient';
 import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
@@ -159,8 +159,8 @@ export class MainWindow {
                     ...webPreferences,
                     ...(webPreferences1 || {})
                 },
-                x: savedBounds?.x || 50,
-                y: savedBounds?.y || 50,
+                x: savedBounds?.x || 50 + 100,
+                y: savedBounds?.y || 50 + 100,
                 width: savedBounds?.width || 1024,
                 height: savedBounds?.height || 768,
                 ...props1
@@ -259,28 +259,31 @@ export class MainWindow {
                 case 'getAppInfo': {
                     return getAppInfo();
                 }
+                case 'initConnector': {
+                    return await initConnector(payload.serverUrl);
+                }
                 default: {
                     return handleMsg(action, payload);
                 }
             }
         });
-        const menu = Menu.buildFromTemplate([
-            {
-                label: 'Edit',
-                submenu: [
-                    { role: 'undo' },
-                    { role: 'redo' },
-                    { type: 'separator' },
-                    { role: 'cut' },
-                    { role: 'copy' },
-                    { role: 'reload' },
-                    { role: 'paste' },
-                    { role: 'selectAll' }
-                ]
-            }
-        ]);
+        // const menu = Menu.buildFromTemplate([
+        //     {
+        //         label: 'Edit',
+        //         submenu: [
+        //             { role: 'undo' },
+        //             { role: 'redo' },
+        //             { type: 'separator' },
+        //             { role: 'cut' },
+        //             { role: 'copy' },
+        //             { role: 'reload' },
+        //             { role: 'paste' },
+        //             { role: 'selectAll' }
+        //         ]
+        //     }
+        // ]);
 
-        Menu.setApplicationMenu(menu);
+        // Menu.setApplicationMenu(menu);
 
         this.mainWindow.on('closed', () => {
             saveBounds('default', this.mainWindow.getBounds());
@@ -316,7 +319,6 @@ export class MainWindow {
         });
 
         await initCCServer('0.0.0.0', 4444, true);
-        initCCClient().catch(console.error);
         await delay(500);
         return this.mainWindow;
     }
