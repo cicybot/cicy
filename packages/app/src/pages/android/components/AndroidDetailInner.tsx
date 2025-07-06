@@ -1,6 +1,11 @@
-import type { TreeDataNode, TreeProps } from 'antd';
+import { Drawer, TreeDataNode, TreeProps } from 'antd';
 import { Button, message } from 'antd';
-import { HomeOutlined, ArrowLeftOutlined, WindowsOutlined } from '@ant-design/icons';
+import {
+    HomeOutlined,
+    ArrowLeftOutlined,
+    WindowsOutlined,
+    SettingOutlined
+} from '@ant-design/icons';
 import { useEffect, useRef, useState } from 'react';
 import View from '../../../components/View';
 
@@ -17,9 +22,12 @@ import CCAgentClient, { DeviceInfo } from '../../../services/CCWSAgentClient';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import { InspectView } from './InspectView';
 import { AiView } from './AiView';
+import SiteDetail from '../../../components/Tables/SiteDetail';
+import { MobileInfoView } from './MobileInfoView';
 
 function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInfo }) {
     const [img, setImg] = useState('');
+    const [settingDrawer, showSettingDawer] = useState(false);
     const [autoScreen, setAutoScreen] = useLocalStorageState('autoScreen', false);
     const [isInspect, setInspect] = useState(false);
     const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(deviceInfo_);
@@ -40,12 +48,14 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
 
     const [treeData, setTreeData] = useState<TreeDataNode[]>([]);
     const [selectedNode, setSelectedNode] = useState<null | any>(null);
-    useEffect(()=>{
-        console.log({selectedNode,nodesMap})
-        if(selectedNode && !nodesMap[selectedNode.nodeKey]){
-            setSelectedNode(null)
+    useEffect(() => {
+        if (!isInspect) {
+            return;
         }
-    },[selectedNode,nodesMap])
+        if (selectedNode && !nodesMap[selectedNode.nodeKey]) {
+            setSelectedNode(null);
+        }
+    }, [selectedNode, nodesMap, isInspect]);
     const agent = new CCAgentClient(deviceInfo.clientId);
     agent.setDeviceInfo(deviceInfo);
     const fetchDeviceInfo = () =>
@@ -57,10 +67,10 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
     const getScreenImage = async () => {
         const { imgData, hierarchy } = await agent.getScreen();
         setImg(imgData);
-        if(hierarchy && hierarchy.startsWith("<error")){
-            message.error(hierarchy)
+        if (hierarchy && hierarchy.startsWith('<error')) {
+            message.error(hierarchy);
         }
-        if (hierarchy && !hierarchy.startsWith("<error")) {
+        if (hierarchy && !hierarchy.startsWith('<error')) {
             const { treeData, nodesMap, nodeBoundsMap } = await convertXmlToTreeData(hierarchy);
             // console.log('nodesMap', nodesMap);
             setTreeData(treeData);
@@ -109,7 +119,12 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
         const screenY = Math.round((pageY - rect.top) / scale);
 
         if (!isInspect) {
-            agent.click(screenX, screenY);
+            if (agent.isNotRootAndNoAccessibilityEnabled()) {
+                message.error('非root设置没有开启无障碍辅助');
+            } else {
+                agent.click(screenX, screenY);
+            }
+
             return;
         }
 
@@ -217,7 +232,11 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                         icon={<HomeOutlined></HomeOutlined>}
                         size="small"
                         onClick={() => {
-                            agent.pressKey('home');
+                            if (agent.isNotRootAndNoAccessibilityEnabled()) {
+                                message.error('非root设置没有开启无障碍辅助');
+                            } else {
+                                agent.pressKey('home');
+                            }
                         }}
                     ></Button>
                     <Button
@@ -225,7 +244,11 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                         size="small"
                         style={{ marginTop: 12 }}
                         onClick={() => {
-                            agent.pressKey('back');
+                            if (agent.isNotRootAndNoAccessibilityEnabled()) {
+                                message.error('非root设置没有开启无障碍辅助');
+                            } else {
+                                agent.pressKey('back');
+                            }
                         }}
                     ></Button>
                     <Button
@@ -233,7 +256,19 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                         size="small"
                         style={{ marginTop: 12 }}
                         onClick={() => {
-                            agent.pressKey('recent');
+                            if (agent.isNotRootAndNoAccessibilityEnabled()) {
+                                message.error('非root设置没有开启无障碍辅助');
+                            } else {
+                                agent.pressKey('recent');
+                            }
+                        }}
+                    ></Button>
+                    <Button
+                        icon={<SettingOutlined></SettingOutlined>}
+                        size="small"
+                        style={{ marginTop: 12 }}
+                        onClick={() => {
+                            showSettingDawer(true);
                         }}
                     ></Button>
                 </View>
@@ -259,8 +294,8 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                         style={{ marginLeft: 12 }}
                         checked={isInspect}
                         onChange={e => {
-                            if(e.target.checked){
-                                if(!agent.isAccessibilityEnabled()){
+                            if (e.target.checked) {
+                                if (!agent.isAccessibilityEnabled()) {
                                     message.error('请先打开无障碍服务');
                                     return;
                                 }
@@ -318,13 +353,12 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                 relative
                 ml={8}
             >
-                <View hide={!isInspect} wh100p>
+                <View hide={isInspect} wh100p>
                     <AiView></AiView>
                 </View>
                 {isInspect && (
                     <InspectView
                         {...{
-                            
                             agent,
                             onSelect,
                             treeData,
@@ -338,6 +372,18 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                     ></InspectView>
                 )}
             </View>
+
+            <Drawer
+                width={'50%'}
+                title={'Settings'}
+                closable={{ 'aria-label': 'Close Button' }}
+                onClose={() => {
+                    showSettingDawer(false);
+                }}
+                open={settingDrawer}
+            >
+                {settingDrawer && <MobileInfoView deviceInfo={deviceInfo} />}
+            </Drawer>
         </View>
     );
 }

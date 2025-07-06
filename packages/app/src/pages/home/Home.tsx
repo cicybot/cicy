@@ -9,27 +9,34 @@ import Loading from '../../components/UI/Loading';
 const Home = () => {
     const [wsConnected, setWsConnected] = useState(false);
     useEffect(() => {
-        connectCCServer(
-            window.backgroundApi ? ClientIds.MainWebContent : 'MasterWebContent-' + Date.now(),
-            {
-                onOpen: () => {
-                    setWsConnected(true);
-                    window.backgroundApi &&
-                        window.backgroundApi.message({
-                            action: 'initConnector',
-                            payload: {
-                                serverUrl: CCWSClient.getServerUrl()
-                            }
-                        });
-                },
-                onMessage: message => {
-                    MainClientMessageHandler.handleMsg(message);
-                },
-                onClose: () => {
-                    setWsConnected(false);
-                }
+        let clientId = '';
+        if (window.backgroundApi) {
+            clientId = ClientIds.MainWebContent;
+        } else {
+            clientId = localStorage.getItem('MasterWebContentClientId') || '';
+            if (!clientId) {
+                clientId = 'MasterWebContent-' + Date.now();
+                localStorage.setItem('MasterWebContentClientId', clientId);
             }
-        );
+        }
+        connectCCServer(clientId, {
+            onOpen: () => {
+                setWsConnected(true);
+                window.backgroundApi &&
+                    window.backgroundApi.message({
+                        action: 'initConnector',
+                        payload: {
+                            serverUrl: CCWSClient.getServerUrl()
+                        }
+                    });
+            },
+            onMessage: message => {
+                MainClientMessageHandler.handleMsg(message);
+            },
+            onClose: () => {
+                setWsConnected(false);
+            }
+        });
     }, []);
 
     if (!wsConnected) {

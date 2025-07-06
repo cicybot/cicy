@@ -1,15 +1,11 @@
-import { DownOutlined } from '@ant-design/icons';
-import { ProDescriptions, ProField } from '@ant-design/pro-components';
-import type { TreeDataNode, TreeProps } from 'antd';
-import { Button, Input, Tree } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import View from '../../components/View';
 import { connectCCServer } from '../../services/CCWSClient';
 
 import Loading from '../../components/UI/Loading';
-import CCAgentClient, { DeviceInfo } from '../../services/CCWSAgentClient';
-import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
+import CCAgentClient from '../../services/CCWSAgentClient';
+import { useTimeoutLoop } from '@cicy/utils';
 import AndroidDetailWrap from './components/AndroidDetailWrap';
 
 const AndroidDetail = () => {
@@ -38,6 +34,7 @@ const AndroidDetail = () => {
             }
         });
     }, [clientId]);
+    console.log({ wsConnected, isOnline });
     useTimeoutLoop(async () => {
         if (wsConnected && !isOnline) {
             const res = await agent.isOnline();

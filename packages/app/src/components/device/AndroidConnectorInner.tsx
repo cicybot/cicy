@@ -5,7 +5,6 @@ import { AndroidConnectorPage } from './AndroidConnectorPage';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import CCAndroidConnectorClient, { AdbDevice } from '../../services/CCAndroidConnectorClient';
 import { Select } from 'antd';
-import { onEvent } from '../../utils/utils';
 import { AndroidConnectorDetail } from './AndroidConnectorDetail';
 
 export const AndroidConnectorInner = ({

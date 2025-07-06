@@ -39,6 +39,12 @@ export default class CCWSAgentClient extends CCWSClient {
             this.deviceInfo.ccAgentAccessibility
         );
     }
+    isRoot() {
+        return this.deviceInfo && this.deviceInfo.isRoot;
+    }
+    isNotRootAndNoAccessibilityEnabled() {
+        return !this.isRoot() && !this.isAccessibilityEnabled();
+    }
 
     isMediaProjectionEnabled() {
         return (

@@ -9,6 +9,9 @@ export const useWsClients = () => {
         return new CCWSClient('').getClients().then(res => {
             try {
                 setData(r => {
+                    if (!res) {
+                        return [];
+                    }
                     if (JSON.stringify(r) === JSON.stringify(res.clients)) {
                         return r;
                     }
@@ -24,11 +27,11 @@ export const useWsClients = () => {
     }, []);
     return {
         clients,
-        refetch: (noLoading?: boolean) => {
+        refetch: async (noLoading?: boolean) => {
             if (!noLoading) {
                 onEvent('showLoading');
             }
-            getData();
+            await getData();
         }
     };
 };

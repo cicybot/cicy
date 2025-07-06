@@ -14,6 +14,7 @@ import {
     isMainWindow,
     isConnector
 } from '../../utils/helper';
+import { onEvent } from '../../utils/utils';
 
 export type TableListItem = {
     key: string;
@@ -114,7 +115,15 @@ const ClientsTable = () => {
             search={false}
             options={false}
             toolBarRender={() => [
-                <Button size="small" type="primary" key="primary" onClick={() => refetch()}>
+                <Button
+                    size="small"
+                    type="primary"
+                    key="primary"
+                    onClick={async () => {
+                        await refetch();
+                        onEvent('hideLoading');
+                    }}
+                >
                     刷新
                 </Button>
             ]}

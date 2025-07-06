@@ -57,7 +57,7 @@ export class CCWSClient {
     }
 
     async isOnline(clientId: string) {
-        const { isOnline } = await this.send({
+        const { isOnline, ...other } = await this.send({
             clientId: '',
             action: '__isOnline',
             payload: { clientId }

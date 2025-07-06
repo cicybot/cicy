@@ -45,7 +45,6 @@ export const AndroidConnectorDetail = ({
     }
     useEffect(() => {
         if (devices.length > 0 && !devices.find(device => device.transport_id === deviceId)) {
-            debugger;
             setDeviceId('');
         }
         if (devices.length === 0) {
@@ -77,7 +76,7 @@ export const AndroidConnectorDetail = ({
                     <Select
                         size="small"
                         onChange={onChangeDevice}
-                        defaultValue={deviceId}
+                        value={deviceId}
                         style={{ width: 180 }}
                         options={deviceOptions}
                     />
@@ -115,7 +114,7 @@ export const AndroidConnectorDetail = ({
                 <Select
                     size="small"
                     onChange={onChangeDevice}
-                    defaultValue={deviceId}
+                    value={deviceId}
                     style={{ width: 180 }}
                     options={deviceOptions}
                 />
