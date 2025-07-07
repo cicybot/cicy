@@ -173,6 +173,10 @@ export const DeviceInfoView = ({
                                                     'pm install -r /data/local/tmp/app.apk'
                                                 );
                                             }
+
+                                            await connector.deviceAdbShell(
+                                                'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                            );
                                             onEvent('hideLoading');
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
@@ -198,22 +202,16 @@ export const DeviceInfoView = ({
                                     ]}
                                 />
 
-                                <View ml12 hide={!deviceInfo.ccAgentAppInstalled}>
+                                <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
                                     <Button
                                         onClick={async () => {
                                             onEvent('showLoading');
-                                            if (deviceInfo.ccAgentAppRunning) {
-                                                await connector.deviceAdbShell(
-                                                    'am force-stop com.cc.agent.adr'
-                                                );
-                                                await connector.deviceAdbShell(
-                                                    'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
-                                                );
-                                            } else {
-                                                await connector.deviceAdbShell(
-                                                    'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
-                                                );
-                                            }
+                                            await connector.deviceAdbShell(
+                                                'am force-stop com.cc.agent.adr'
+                                            );
+                                            await connector.deviceAdbShell(
+                                                'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                            );
                                             onEvent('hideLoading');
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
@@ -222,7 +220,24 @@ export const DeviceInfoView = ({
                                         type={!deviceInfo.ccAgentAppRunning ? 'primary' : undefined}
                                         size="small"
                                     >
-                                        {deviceInfo.ccAgentAppRunning ? '重启' : '启动'}
+                                        重启
+                                    </Button>
+                                </View>
+                                <View ml12 hide={!deviceInfo.ccAgentAppInstalled}>
+                                    <Button
+                                        onClick={async () => {
+                                            onEvent('showLoading');
+                                            await connector.deviceAdbShell(
+                                                'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                            );
+                                            onEvent('hideLoading');
+                                            setTimeout(() => {
+                                                fetchDeviceInfo();
+                                            }, 1000);
+                                        }}
+                                        size="small"
+                                    >
+                                        启动
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
@@ -268,8 +283,8 @@ export const DeviceInfoView = ({
                                     mode={'read'}
                                     valueType="select"
                                     request={async () => [
-                                        { label: '运行中', value: 'true' },
-                                        { label: '未运行', value: 'false' }
+                                        { label: '已开启', value: 'true' },
+                                        { label: '未开启', value: 'false' }
                                     ]}
                                 />
                                 <View ml12 hide={!deviceInfo.ccAgentAppRunning}>

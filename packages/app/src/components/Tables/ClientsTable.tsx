@@ -7,9 +7,10 @@ import { useWsClients } from '../../hooks/ws';
 import BrowserService from '../../services/BrowserService';
 import { SiteService } from '../../services/SiteService';
 import {
-    isAdroidAgentRustClient,
-    isAdroidAgentClient,
-    isAdroidAgentManageClient,
+    isAndroidAgentRustClient,
+    isAndroidAgentClient,
+    isAndroidChatClient,
+    isAndroidAgentManageClient,
     isBrowserClient,
     isMainWebContent,
     isMainWindow,
@@ -35,9 +36,10 @@ const ClientsTable = () => {
             dataIndex: 'clientId',
             render: (_, record) => {
                 if (
-                    isAdroidAgentRustClient(record.clientId) ||
-                    isAdroidAgentClient(record.clientId) ||
-                    isAdroidAgentManageClient(record.clientId)
+                    isAndroidChatClient(record.clientId) ||
+                    isAndroidAgentClient(record.clientId) ||
+                    isAndroidAgentRustClient(record.clientId) ||
+                    isAndroidAgentManageClient(record.clientId)
                 ) {
                     return (
                         <a
@@ -82,12 +84,14 @@ const ClientsTable = () => {
             dataIndex: 'key',
             render: (_, record) => {
                 let tag = '其他';
-                if (isAdroidAgentRustClient(record.clientId)) {
-                    tag = 'Agent Rust';
-                } else if (isAdroidAgentClient(record.clientId)) {
-                    tag = 'Agent Agent';
-                } else if (isAdroidAgentManageClient(record.clientId)) {
-                    tag = 'Agent Manage';
+                if (isAndroidAgentRustClient(record.clientId)) {
+                    tag = 'Agent';
+                } else if (isAndroidAgentClient(record.clientId)) {
+                    tag = 'Agent';
+                } else if (isAndroidAgentManageClient(record.clientId)) {
+                    tag = 'Agent';
+                } else if (isAndroidChatClient(record.clientId)) {
+                    tag = 'Agent';
                 } else if (isBrowserClient(record.clientId)) {
                     tag = 'Browser';
                 } else if (isMainWebContent(record.clientId)) {
@@ -125,9 +129,10 @@ const ClientsTable = () => {
             }
             if (clientType === 'android') {
                 return (
-                    isAdroidAgentClient(clientId) ||
-                    isAdroidAgentRustClient(clientId) ||
-                    isAdroidAgentManageClient(clientId)
+                    isAndroidAgentClient(clientId) ||
+                    isAndroidAgentRustClient(clientId) ||
+                    isAndroidChatClient(clientId) ||
+                    isAndroidAgentManageClient(clientId)
                 );
             }
             if (clientType === 'browser') {

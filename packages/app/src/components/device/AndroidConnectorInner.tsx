@@ -26,7 +26,7 @@ export const AndroidConnectorInner = ({
     useTimeoutLoop(async () => {
         try {
             const devices = await connector.getDeviceList();
-            const diffDeivces = (aa: any, bb: any) => {
+            const diffDevices = (aa: any, bb: any) => {
                 aa.sort(
                     (b: AdbDevice, a: AdbDevice) =>
                         parseInt(a.transport_id) - parseInt(b.transport_id)
@@ -51,8 +51,8 @@ export const AndroidConnectorInner = ({
                 if (r.length === 0 && devices.length === 0) {
                     return [];
                 }
-                // console.log(diffDeivces(devices, r));
-                if (diffDeivces(devices, r) || r.length === 0) {
+                // console.log(diffDevices(devices, r));
+                if (diffDevices(devices, r) || r.length === 0) {
                     return devices;
                 } else {
                     return r;

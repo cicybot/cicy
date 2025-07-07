@@ -6,7 +6,6 @@ import { useSearchParams } from 'react-router';
 import View from '../../components/View';
 import { useGlobalContext } from '../../providers/GlobalProvider';
 import { connectCCServer } from '../../services/CCWSClient';
-import { CCWSMainWindowClient } from '../../services/CCWSMainWindowClient';
 import { SiteService } from '../../services/SiteService';
 import { BLANK_URL, WebveiwEventType } from '../../utils/webview';
 import MenuBtn from './MenuBtn';
@@ -26,7 +25,6 @@ const WebviewBrowser = () => {
     const accountIndex = windowId.split('-')[0];
     const siteId = windowId.split('-')[1];
     const siteService = new SiteService(siteId, parseInt(accountIndex));
-    const mainWindowWsClient = new CCWSMainWindowClient();
     const partition = `persist:account_${accountIndex || 0}`;
     const webviewRef = useRef(null);
     const [error, setError] = useState<BrowserError | null>(null);
@@ -216,8 +214,8 @@ const WebviewBrowser = () => {
     }, [webviewRef]);
     let userAgent =
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) W/1.0.80 Chrome/126.0.6478.36 E/31.0.1 Safari/537.36';
-    userAgent =
-        'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) W/1.0.80 Chrome/126.0.6478.36 E/31.0.1 Safari/537.36';
+    // userAgent =
+    //     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) W/1.0.80 Chrome/126.0.6478.36 E/31.0.1 Safari/537.36';
     return (
         <View style={{ height: '100vh' }}>
             <View style={{ height: 'calc(100vh - 32px)' }}>

@@ -1,4 +1,3 @@
-import { Html5Cache } from '@cicy/utils';
 import md5 from 'md5';
 import DatabaseService from './DatabaseService';
 import { CacheService } from './CacheService';
@@ -40,14 +39,10 @@ export interface SiteAccountStateInfo {
 export class SiteService {
     private siteId: string;
     private accountIndex: number;
-    siteAccountStateDb: Html5Cache;
-    siteAccountDb: Html5Cache;
 
     constructor(siteId: string, accountIndex?: number) {
         this.siteId = siteId;
         this.accountIndex = accountIndex || 0;
-        this.siteAccountStateDb = new Html5Cache().init(`accoutsState`);
-        this.siteAccountDb = new Html5Cache().init(`accouts`);
     }
 
     static addAccount(accounts: SiteAccountInfo[]) {

@@ -228,11 +228,11 @@ async fn daemon_loop(args: &Args) {
                 break;
             }
             _ = sleep(Duration::from_secs(5)) => {
-                if utils::is_android_linux(){
-                    let device_info = device::get_device_info_min();
-                    info!("deviceInfo:{}",device_info);
-                }
-                utils::get_memory_usage_cross_platform(&pid)
+                // if utils::is_android_linux(){
+                //     let device_info = device::get_device_info_min();
+                //     info!("deviceInfo:{}",device_info);
+                // }
+                // utils::get_memory_usage_cross_platform(&pid)
             }
         }
     }

@@ -1,16 +1,23 @@
 import { ClientIds } from '../services/CCWSClient';
 
-export const isAdroidAgentRustClient = (clientId: string) => {
+export const isAndroidAgentRustClient = (clientId: string) => {
     return (
-        clientId.startsWith('ADR-') && !clientId.endsWith('-APP') && !clientId.endsWith('-MANAGE')
+        clientId.startsWith('ADR-') &&
+        !clientId.endsWith('-APP') &&
+        !clientId.endsWith('-MANAGE') &&
+        !clientId.endsWith('-CHAT')
     );
 };
 
-export const isAdroidAgentClient = (clientId: string) => {
+export const isAndroidAgentClient = (clientId: string) => {
     return clientId.startsWith('ADR-') && clientId.endsWith('-APP');
 };
 
-export const isAdroidAgentManageClient = (clientId: string) => {
+export const isAndroidChatClient = (clientId: string) => {
+    return clientId.startsWith('ADR-') && clientId.endsWith('-CHAT');
+};
+
+export const isAndroidAgentManageClient = (clientId: string) => {
     return clientId.startsWith('ADR-') && clientId.endsWith('-MANAGE');
 };
 export const isBrowserClient = (clientId: string) => {

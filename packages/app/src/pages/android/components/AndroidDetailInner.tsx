@@ -22,11 +22,13 @@ import CCAgentClient, { DeviceInfo } from '../../../services/CCWSAgentClient';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import { InspectView } from './InspectView';
 import { AiView } from './AiView';
-import SiteDetail from '../../../components/Tables/SiteDetail';
 import { MobileInfoView } from './MobileInfoView';
+import { CCWSMainWindowClient } from '../../../services/CCWSMainWindowClient';
 
 function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInfo }) {
     const [img, setImg] = useState('');
+    const [appInfo, setAppInfo] = useState(null);
+
     const [settingDrawer, showSettingDawer] = useState(false);
     const [autoScreen, setAutoScreen] = useLocalStorageState('autoScreen', false);
     const [isInspect, setInspect] = useState(false);
@@ -48,7 +50,11 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
 
     const [treeData, setTreeData] = useState<TreeDataNode[]>([]);
     const [selectedNode, setSelectedNode] = useState<null | any>(null);
+
     useEffect(() => {
+        new CCWSMainWindowClient().mainWindowInfo().then(res => {
+            setAppInfo(res.result);
+        });
         if (!isInspect) {
             return;
         }
@@ -57,6 +63,7 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
         }
     }, [selectedNode, nodesMap, isInspect]);
     const agent = new CCAgentClient(deviceInfo.clientId);
+    agent.setAppInfo(appInfo);
     agent.setDeviceInfo(deviceInfo);
     const fetchDeviceInfo = () =>
         agent.getDeviceInfo().then(res => {
@@ -268,6 +275,7 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                         size="small"
                         style={{ marginTop: 12 }}
                         onClick={() => {
+                            fetchDeviceInfo();
                             showSettingDawer(true);
                         }}
                     ></Button>
@@ -353,7 +361,7 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                 relative
                 ml={8}
             >
-                <View hide={isInspect} wh100p>
+                <View hide={isInspect} wh100p borderBox px12>
                     <AiView></AiView>
                 </View>
                 {isInspect && (
@@ -382,7 +390,7 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                 }}
                 open={settingDrawer}
             >
-                {settingDrawer && <MobileInfoView deviceInfo={deviceInfo} />}
+                {settingDrawer && <MobileInfoView agent={agent} deviceInfo={deviceInfo} />}
             </Drawer>
         </View>
     );

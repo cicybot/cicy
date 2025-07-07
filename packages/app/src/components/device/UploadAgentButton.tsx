@@ -21,7 +21,7 @@ export const UploadAgentButton = ({
             type="primary"
             onClick={async () => {
                 onEvent('showLoading');
-                let { version, isWin, isDev.publicDir } = appInfo;
+                let { version, isWin, isDev, publicDir } = appInfo;
                 if (isDev) {
                     version = '0.0.0';
                 }
@@ -62,6 +62,15 @@ export const UploadAgentButton = ({
                         await connector.dowloadUrl(url, nameApkVer);
                     }
                     await connector.deviceAdbPush(nameApkVer, '/data/local/tmp/' + nameApk);
+                    await connector.deviceAdbShell('pm install -r /data/local/tmp/' + nameApk);
+                    try {
+                        await connector.deviceAdbShell(
+                            'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                        );
+                    } catch (e) {
+                        console.error(e);
+                    }
+
                     await connector.agentRustStartLoop();
                     await fetchDeviceInfo();
                     onEvent('hideLoading');

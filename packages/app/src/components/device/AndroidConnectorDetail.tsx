@@ -1,13 +1,10 @@
 import View from '../View';
-import { useEffect, useState } from 'react';
-import { useWsClients } from '../../hooks/ws';
+import { useEffect } from 'react';
 import { AndroidIcon } from '../Icons';
 import { AndroidConnectorPage } from './AndroidConnectorPage';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import CCAndroidConnectorClient, { AdbDevice } from '../../services/CCAndroidConnectorClient';
 import { Select } from 'antd';
-import { onEvent } from '../../utils/utils';
-import Loading from '../UI/Loading';
 import { AndroidConnectorDetailInfo } from './AndroidConnectorDetailInfo';
 
 export const AndroidConnectorDetail = ({

@@ -21,29 +21,28 @@ export const AiView = () => {
     };
     console.log(msgList.length, messageListHeight);
     return (
-        <View relative wh100p borderBox pl12>
-            <View abs xx0 top={32} bottom={height + 12} overflowHidden borderBox pr={32}>
+        <View relative wh100p borderBox>
+            <View abs xx0 top={32} bottom={height + 12} overflowHidden borderBox>
                 <ViewWithSize
                     onChangeSize={onChangeSize}
                     absFull
-                    right={24}
                     style={{ display: msgList.length > 0 ? undefined : 'none' }}
                 >
                     <MessagesView msgList={msgList} height={messageListHeight}></MessagesView>
                 </ViewWithSize>
 
                 <View wh100p aStart column jSpaceBetween hide={msgList.length > 0}>
-                    <View mr={36} ml={12}>
+                    <View mr={12} ml={12}>
                         <Welcome
                             icon="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*s5sNRo5LjfQAAAAAAAAAAAAADgCCAQ/fmt.webp"
                             title="Hello, I'm CiCy X"
-                            description="Base on Ant Design, AGI product interface solution, create a better intelligent vision~"
+                            description="AGI product interface solution, create a better intelligent vision~"
                         />
                     </View>
-                    <PromptsView></PromptsView>
+                    <View px={24}>{/*<PromptsView></PromptsView>*/}</View>
                 </View>
             </View>
-            <View abs bottom0 xx0 h={height} borderBox pr={32}>
+            <View abs bottom0 xx0 h={height} borderBox px12>
                 <SuggestionView setMsg={setMsg}></SuggestionView>
             </View>
         </View>

@@ -1,6 +1,7 @@
 interface AppInfo {
     publicDir: string;
     isWin: boolean;
+    ip: string;
     appDataPath: string;
     userDataPath: string;
     version: string;

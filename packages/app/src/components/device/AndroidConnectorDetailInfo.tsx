@@ -29,6 +29,9 @@ export const AndroidConnectorDetailInfo = ({
 
         new CCWSMainWindowClient().getServerInfo().then(res => {
             setServerIp(res.ip);
+            if (res.ip === '127.0.0.1') {
+                setErr('本机没有局域网联网');
+            }
         });
     }, []);
     async function fetchDeviceInfo() {

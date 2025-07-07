@@ -1,4 +1,6 @@
 import { arrayBufferToBase64 } from '../utils/utils';
+import { sleep } from '@cicy/utils';
+
 import { CCWSClient } from './CCWSClient';
 
 export interface DeviceInfo {
@@ -24,10 +26,14 @@ export default class CCWSAgentClient extends CCWSClient {
     accessibility: boolean;
     mediaProjection: boolean;
     deviceInfo?: DeviceInfo;
+    appInfo?: any;
     constructor(clientId: string) {
         super(clientId);
         this.accessibility = false;
         this.mediaProjection = false;
+    }
+    setAppInfo(appInfo: any) {
+        this.appInfo = appInfo;
     }
     setDeviceInfo(deviceInfo: DeviceInfo) {
         this.deviceInfo = deviceInfo;
@@ -91,6 +97,26 @@ export default class CCWSAgentClient extends CCWSClient {
         return this.jsonrpc('shell', [cmd]);
     }
 
+    async startMediaProjection() {
+        return this.jsonrpcApp('startMediaProjection');
+    }
+
+    async startAccessibility() {
+        return this.jsonrpcApp('startAccessibility');
+    }
+
+    async startAgentApp() {
+        return this.jsonrpcApp('');
+    }
+
+    async stopAgentApp() {
+        await this.shell('am force-stop com.cc.agent.adr');
+    }
+    async restartAgentApp() {
+        await this.stopAgentApp();
+        await this.startAgentApp();
+    }
+
     async shellInput(args: string) {
         const cmd = `input ${args}`;
         return this.jsonrpc('shell', [cmd]);
@@ -141,23 +167,46 @@ export default class CCWSAgentClient extends CCWSClient {
         const res = await this.shell('base64 -i /data/local/tmp/screen.png');
         return `data:image/png;base64,${res}`;
     }
-
+    isIpTheSaveSection(ip1: string, ip2: string) {
+        const sectionIp = (ip: string) => {
+            const t = ip.split('.');
+            return `${t[0]}.${t[1]}`;
+        };
+        return sectionIp(ip1) === sectionIp(ip2);
+    }
     async getScreen() {
+        const { ip } = this.appInfo || {};
         const { ipAddress, ccAgentMediaProjection, ccAgentAppRunning } = this.deviceInfo!;
-
-        if (ccAgentAppRunning && ccAgentMediaProjection) {
-            const res = await fetch(`http://${ipAddress}:4448/screen`);
-            const { result } = await res.json();
-            const { imgData, xml: hierarchy } = result;
-            return { imgData, hierarchy };
+        if (this.isIpTheSaveSection(ip, ipAddress)) {
+            if (ccAgentAppRunning && ccAgentMediaProjection) {
+                const res = await fetch(`http://${ipAddress}:4448/screen`);
+                const { result } = await res.json();
+                const { imgData, xml: hierarchy } = result;
+                return { imgData, hierarchy };
+            } else {
+                const res = await fetch(`http://${ipAddress}:4447/screen`);
+                const arrayBuffer = await res.arrayBuffer();
+                const imgData = `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
+                return {
+                    imgData,
+                    hierarchy: ''
+                };
+            }
         } else {
-            const res = await fetch(`http://${ipAddress}:4447/screen`);
-            const arrayBuffer = await res.arrayBuffer();
-            const imgData = `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
-            return {
-                imgData,
-                hierarchy: ''
-            };
+            if (ccAgentAppRunning && ccAgentMediaProjection) {
+                let { imgData, imgLen, xml: hierarchy } = await this.jsonrpcApp('screenWithXml');
+                if (imgLen === 0) {
+                    imgData = '';
+                }
+                return { imgData, hierarchy };
+            } else {
+                const imgData = await this.getScreenFromScreencap();
+                await sleep(200);
+                return {
+                    imgData,
+                    hierarchy: ''
+                };
+            }
         }
     }
 

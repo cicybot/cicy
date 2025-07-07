@@ -18,6 +18,7 @@ import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
 import os from 'os';
+import { getLocalIPAddress } from '@cicy/cicy-ws';
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
@@ -187,8 +188,9 @@ export class MainWindow {
         const userDataPath = app.getPath('userData');
         const appDataPath = path.join(os.homedir(), '.cicy');
         const version = app.getVersion();
-
+        const ip = getLocalIPAddress();
         setAppInfo({
+            ip: ip ? ip.adr : '127.0.0.1',
             isWin: process.platform === 'win32',
             appDataPath,
             publicDir,

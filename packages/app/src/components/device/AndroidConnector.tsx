@@ -1,5 +1,4 @@
 import View from '../View';
-import { useEffect } from 'react';
 import { useWsClients } from '../../hooks/ws';
 import { AndroidIcon } from '../Icons';
 import { AndroidConnectorPage } from './AndroidConnectorPage';

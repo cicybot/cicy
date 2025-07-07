@@ -16,6 +16,10 @@ export function formatNumber(num: number): string {
     return num.toLocaleString('en', { useGrouping: true }).replace(/,/g, ' ');
 }
 
+export function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function generateDeviceId(IS_DEV: boolean): string {
     let groups = [1, 3, 3, 3, 3];
     if (IS_DEV) {
@@ -94,7 +98,6 @@ export function deepDiff(obj1: any, obj2: any): boolean {
     return hasDifference;
 }
 
-
 export const isString = (data: any) => {
     return typeof data === 'string';
 };
@@ -141,4 +144,3 @@ export function waitForResult(
         checkReply();
     });
 }
-
