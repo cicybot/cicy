@@ -60,19 +60,6 @@ export const MobileInfoView = ({
             </ProDescriptions>
             <Divider />
             <View rowVCenter mt12>
-                <View mr12 hide={!deviceInfo.ccAgentAppRunning}>
-                    <Button
-                        onClick={async () => {
-                            onEvent('showLoading');
-                            await agent.restartAgentApp();
-                            onEvent('hideLoading');
-                        }}
-                        size="small"
-                    >
-                        重启App
-                    </Button>
-                </View>
-
                 <View mr12 hide={!deviceInfo.ccAgentAppInstalled}>
                     <Button
                         onClick={async () => {

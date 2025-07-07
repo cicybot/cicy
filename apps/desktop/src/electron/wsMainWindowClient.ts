@@ -10,6 +10,7 @@ import path from 'path';
 import { getAppInfo } from './info';
 import fs from 'fs';
 import os from 'os';
+import axio from 'axios';
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const DEV_URL: string;
 
@@ -145,6 +146,29 @@ export const handleMsg = async (action: string, payload: any) => {
             case 'utils': {
                 const { method, params } = payload || {};
                 switch (method) {
+                    case 'axios': {
+                        const { url, method, data, proxy, timeout, headers, ...other } =
+                            params || {};
+                        try {
+                            const res = await axio.request({
+                                url,
+                                method,
+                                params,
+                                timeout,
+                                data,
+                                proxy,
+                                headers,
+                                ...other
+                            });
+                            return {
+                                result: res.data
+                            };
+                        } catch (e) {
+                            return {
+                                err: e.message
+                            };
+                        }
+                    }
                     case 'fetch': {
                         const { url, method, body, headers, isText } = params || {};
                         const res = await fetch(url, {

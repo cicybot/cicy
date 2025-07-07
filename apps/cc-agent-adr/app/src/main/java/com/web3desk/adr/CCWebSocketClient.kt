@@ -22,7 +22,6 @@ interface WsOptions {
     fun onClose(webSocket: WebSocket, code: Int)
     fun onFailure(webSocket: WebSocket, t: Throwable)
 }
-
 class CCWebSocketClient(private val clientId: String, private val options: WsOptions? = null) {
     private val tag = "CCWebSocketClient"
     private var webSocket: WebSocket? = null
@@ -33,7 +32,6 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
     private val client = OkHttpClient.Builder()
         .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive
         .build()
-
 
     private fun readServerUrlFromFile(): String? {
         return try {
@@ -80,6 +78,9 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
                     isConnecting.set(false)
                     Log.d(tag, "[+] Connected to $url")
                     options?.onOpen(webSocket)
+
+                    // Start sending ping every 5 seconds after successful connection
+                    startSendingPing()
                 }
 
                 override fun onMessage(webSocket: WebSocket, text: String) {
@@ -93,6 +94,8 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
                             if (action == "callback" && id.isNotEmpty()) {
                                 // Handle callback logic here
                                 // MsgResult[id] = payload
+                            } else if (action == "pong") {
+                                Log.d(tag, "pp-pong!")
                             } else {
                                 options?.onMessage(webSocket, text)
                             }
@@ -129,6 +132,16 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
             Log.e(tag, "connectCCServer error", e)
             if (shouldReconnect.get()) {
                 scheduleReconnect()
+            }
+        }
+    }
+
+    // Start sending ping message every 5 seconds
+    private fun startSendingPing() {
+        CoroutineScope(Dispatchers.IO).launch {
+            while (webSocket?.send("{\"action\":\"ping\"}") == true) {
+                Log.d(tag, "pp-ping!")
+                delay(10000) // Send ping every 5 seconds
             }
         }
     }

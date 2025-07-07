@@ -1,7 +1,7 @@
 {
     "name": "@cicy/desktop",
     "license": "Apache-2.0",
-    "version": "1.0.66",
+    "version": "1.0.67",
     "description": "CiCy desktop",
     "main": ".webpack/main",
     "repository": {
@@ -67,6 +67,7 @@
     "dependencies": {
         "@cicy/app": "1.0.0",
         "@cicy/cicy-ws": "1.0.0",
+        "axios": "^1.10.0",
         "better-sqlite3": "^11.10.0",
         "buffer": "^6.0.3",
         "copy-to-clipboard": "^3.3.3",

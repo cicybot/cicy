@@ -1,20 +1,23 @@
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use tokio::time::{sleep, Duration};
 use url::Url;
-use log::{info, error};
+use log::{info, debug,error};
 use futures_util::{StreamExt, SinkExt};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value};
 use serde_json::json;
 use crate::jsonrpc_server::handle_method_call;
+use tokio::sync::Mutex;
+use std::sync::Arc;
+use tokio::task;
 
 #[derive(Deserialize)]
 struct IncomingMessage {
     id: Option<String>,
     from: Option<String>,
     action: String,
-    payload: serde_json::Value,
+    payload: Option<serde_json::Value>,
 }
 
 #[derive(Serialize)]
@@ -43,7 +46,6 @@ fn make_call_res(id: &Option<String>,from: &Option<String>, result: JsonRpcRespo
         msg.to_string()
     })
 }
-
 pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
     loop {
         let url_str = format!(
@@ -74,7 +76,23 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
 
         info!("[+] Connected to {}", url);
 
-        let (mut write, mut read) = ws_stream.split();
+        let (write, mut read) = ws_stream.split();
+        let write = Arc::new(Mutex::new(write));
+
+        // Send ping every 5 seconds in a separate task
+        let write_ping = write.clone(); // Clone the Arc to pass it into the task
+        let ping_task = task::spawn(async move {
+            loop {
+                sleep(Duration::from_secs(10)).await;
+                let ping_msg = json!({ "action": "ping" }).to_string();
+                let mut write_lock = write_ping.lock().await;
+                if let Err(e) = write_lock.send(Message::Text(ping_msg)).await {
+                    error!("Failed to send ping: {}", e);
+                    break;
+                }
+                debug!("Sent ping");
+            }
+        });
 
         loop {
             match read.next().await {
@@ -82,8 +100,8 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
                     match msg {
                         Message::Text(txt) => {
                             info!("Received text: {}", txt);
-                            // 这里传写入端 &mut write，并处理错误返回
-                            if let Err(e) = handle_msg(&txt, &mut write).await {
+                            let mut write_lock = write.lock().await;
+                            if let Err(e) = handle_msg(&txt, &mut *write_lock).await { // Dereference here
                                 error!("handle_msg error: {}", e);
                                 break; // 出错重连
                             }
@@ -100,7 +118,8 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
                             break;
                         }
                         Message::Ping(p) => {
-                            if let Err(e) = write.send(Message::Pong(p)).await {
+                            let mut write_lock = write.lock().await;
+                            if let Err(e) = write_lock.send(Message::Pong(p)).await {
                                 error!("Failed to send pong: {}", e);
                                 break;
                             }
@@ -120,10 +139,14 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
             }
         }
 
-        info!("[*] Connection closed, retrying in 5 seconds...");
-        sleep(Duration::from_secs(5)).await;
+        // Wait for the ping task to finish (though it should run indefinitely)
+        ping_task.abort();
+
+        info!("[*] Connection closed, retrying in 1 second...");
+        sleep(Duration::from_secs(1)).await;
     }
 }
+
 
 pub async fn handle_msg<S>(text: &str, ws_sender: &mut S) -> Result<(), Box<dyn std::error::Error>>
 where
@@ -134,27 +157,34 @@ where
     match msg {
         Ok(incoming) => {
             if incoming.action == "jsonrpc" {
-                let rpc: Result<JsonRpcPayload, _> = serde_json::from_value(incoming.payload);
-                match rpc {
-                    Ok(rpc_payload) => {
-                        info!("Received jsonrpc method: {}", rpc_payload.method);
-                        let (err, result) = handle_method_call(&rpc_payload.method, &rpc_payload.params);
+                if let Some(payload) = incoming.payload {
+                    let rpc: Result<JsonRpcPayload, _> = serde_json::from_value(payload);
+                    match rpc {
+                        Ok(rpc_payload) => {
+                            debug!("Received jsonrpc method: {}", rpc_payload.method);
+                            let (err, result) = handle_method_call(&rpc_payload.method, &rpc_payload.params);
 
-                        let resp = JsonRpcResponse {
-                            jsonrpc: "2.0".to_string(),
-                            err,
-                            result,
-                            id: incoming.id.clone().map(serde_json::Value::String),
-                        };
+                            let resp = JsonRpcResponse {
+                                jsonrpc: "2.0".to_string(),
+                                err,
+                                result,
+                                id: incoming.id.clone().map(serde_json::Value::String),
+                            };
 
-                        if let Some(reply) = make_call_res(&incoming.id,&incoming.from ,resp) {
-                            ws_sender.send(Message::Text(reply)).await?;
+                            if let Some(reply) = make_call_res(&incoming.id,&incoming.from ,resp) {
+                                ws_sender.send(Message::Text(reply)).await?;
+                            }
+                        }
+                        Err(e) => {
+                            error!("Failed to parse JSON-RPC payload: {}", e);
                         }
                     }
-                    Err(e) => {
-                        error!("Failed to parse JSON-RPC payload: {}", e);
-                    }
+                } else {
+                    error!("Payload missing, skipping.");
                 }
+
+            } else if incoming.action == "pong" {
+                println!("pong!");
             } else {
                 info!("Unknown action: {}", incoming.action);
             }
@@ -179,27 +209,33 @@ mod tests {
         match msg {
             Ok(incoming) => {
                 if incoming.action == "jsonrpc" {
-                    let rpc: Result<JsonRpcPayload, _> = serde_json::from_value(incoming.payload);
-                    match rpc {
-                        Ok(rpc_payload) => {
-                            println!("Received jsonrpc method: {}", rpc_payload.method);
-                            let (err, result) = handle_method_call(&rpc_payload.method, &rpc_payload.params);
+                    if let Some(payload) = incoming.payload {
+                        let rpc: Result<JsonRpcPayload, _> = serde_json::from_value(payload);
+                        match rpc {
+                            Ok(rpc_payload) => {
+                                println!("Received jsonrpc method: {}", rpc_payload.method);
+                                let (err, result) = handle_method_call(&rpc_payload.method, &rpc_payload.params);
 
-                            let resp = JsonRpcResponse {
-                                jsonrpc: "2.0".to_string(),
-                                err,
-                                result,
-                                id: incoming.id.clone().map(serde_json::Value::String),
-                            };
+                                let resp = JsonRpcResponse {
+                                    jsonrpc: "2.0".to_string(),
+                                    err,
+                                    result,
+                                    id: incoming.id.clone().map(serde_json::Value::String),
+                                };
 
-                            if let Some(reply) = make_call_res(&incoming.id,&incoming.from ,resp) {
-                                println!("reply: {}", reply);
+                                if let Some(reply) = make_call_res(&incoming.id,&incoming.from ,resp) {
+                                    println!("reply: {}", reply);
+                                }
+                            }
+                            Err(e) => {
+                                println!("Failed to parse JSON-RPC payload: {}", e);
                             }
                         }
-                        Err(e) => {
-                            println!("Failed to parse JSON-RPC payload: {}", e);
-                        }
+                    } else {
+                        error!("Payload missing, skipping.");
                     }
+                } else if incoming.action == "pong" {
+                    println!("pong!");
                 } else {
                     println!("Unknown action: {}", incoming.action);
                 }

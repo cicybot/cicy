@@ -17,7 +17,7 @@ import java.util.Locale
 const val LOCAL_SERVER_PORT = 4448
 const val VERSION = "1.0.1"
 
-//const val HOME_URL = "http://localhost:4448/?v=1"
+const val HOME_URL_LOCAL = "http://localhost:4448/?v=1"
 const val HOME_URL = "http://192.168.196.244:5173/?v=1"
 
 

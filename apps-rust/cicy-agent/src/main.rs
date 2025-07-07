@@ -210,7 +210,7 @@ async fn daemon_loop(args: &Args) {
     let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate()).expect("Cannot listen SIGTERM");
     let mut sigint = tokio::signal::unix::signal(SignalKind::interrupt()).expect("Cannot listen SIGINT");
 
-    let pid = process::id().to_string();
+    // let pid = process::id().to_string();
 
     let ws_server_cloned = ws_server.clone();
     let ws_handle = tokio::spawn(async move {

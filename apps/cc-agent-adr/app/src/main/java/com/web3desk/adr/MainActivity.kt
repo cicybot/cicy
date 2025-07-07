@@ -17,6 +17,9 @@ import android.os.IBinder
 import android.util.Log
 import android.view.WindowManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -60,11 +63,51 @@ class MainActivity : AppCompatActivity() {
         webView.settings.allowFileAccessFromFileURLs =
             true // Allow access to other file URLs from file
         webView.settings.domStorageEnabled = true
-        webView.webViewClient = WebViewClient()
+        webView.webViewClient = CustomWebViewClient()
         webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(WebAppInterface(this), "__AndroidAPI")
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(messageReceiver, IntentFilter("WebViewMessage"))
+        loadHomePage()
+    }
+    // Custom WebViewClient to handle errors and redirect to LOCAL URL on failure
+    inner class CustomWebViewClient : WebViewClient() {
+        override fun onReceivedError(
+            view: WebView,
+            request: WebResourceRequest?,
+            error: WebResourceError?
+        ) {
+            super.onReceivedError(view, request, error)
+            // Log the error for debugging purposes
+            Log.e(logTag, "Error loading page: ${error?.description}")
+
+            // If the main URL fails, try loading the local URL
+            if (request?.url.toString() == HOME_URL) {
+                Log.d(logTag, "Main URL failed, falling back to local URL")
+                view.loadUrl(HOME_URL_LOCAL)
+            }
+        }
+
+        override fun onReceivedHttpError(
+            view: WebView,
+            request: WebResourceRequest?,
+            errorResponse: WebResourceResponse?
+        ) {
+            super.onReceivedHttpError(view, request, errorResponse)
+            // Log the HTTP error for debugging purposes
+            Log.e(logTag, "HTTP Error loading page: ${errorResponse?.statusCode}")
+
+            // If the main URL fails, try loading the local URL
+            if (request?.url.toString() == HOME_URL) {
+                Log.d(logTag, "Main URL HTTP error, falling back to local URL")
+                view.loadUrl(HOME_URL_LOCAL)
+            }
+        }
+    }
+
+    // Function to load the home page URL initially
+    private fun loadHomePage() {
+        Log.d(logTag, "Loading URL: $HOME_URL")
         webView.loadUrl(HOME_URL)
     }
 

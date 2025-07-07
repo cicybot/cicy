@@ -150,8 +150,7 @@ pub async fn run_jsonrpc_server(addr: &str) {
 
     loop {
         match listener.accept().await {
-            Ok((mut socket, addr)) => {
-                info!("Accepted connection from {}", addr);
+            Ok((mut socket, _)) => {
                 tokio::spawn(async move {
                     if let Err(e) = handle_connection(&mut socket).await {
                         error!("Connection error: {}", e);
@@ -189,7 +188,6 @@ async fn handle_connection(socket: &mut TcpStream) -> tokio::io::Result<()> {
         .and_then(|line| line.split_whitespace().nth(1))
         .unwrap_or("/");
 
-    info!("Parsed path: {}", url_path);
     if url_path == "/deviceInfo" {
         let resp =  JsonRpcResponse::success(device::get_device_info(), Some(json!(1)));
         write_json_response(socket, &resp, "200 OK").await?;
