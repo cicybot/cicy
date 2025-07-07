@@ -67,6 +67,7 @@ cd $PROJECT_DIR/tools
 node fix-version.js $TAG ../apps-rust/cicy-agent/Cargo.toml
 node fix-version.js $TAG ../apps-rust/cicy-connector/Cargo.toml
 node fix-version.js $TAG ../apps-rust/cicy-server/Cargo.toml
+
 cd $PROJECT_DIR
 
 node tools/fix-version.js

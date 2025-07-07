@@ -1,8 +1,8 @@
 const fs = require('fs');
 const version = process.argv[2];
 const filePath = process.argv[3];
-let fileContent = fs.readFileSync(filePath, 'utf-8');
 console.log({ version, filePath });
+let fileContent = fs.readFileSync(filePath, 'utf-8');
 // Regular expression to match the version field inside the [package] section
 const packageVersionRegex = /\[package\][\s\S]*?version\s*=\s*"\d+\.\d+\.\d+"/;
 // Replace the version line inside the [package] section with the new version
