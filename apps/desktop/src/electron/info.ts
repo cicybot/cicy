@@ -1,7 +1,6 @@
-import isDev from 'electron-is-dev';
-
 interface AppInfo {
     publicDir: string;
+    isWin: boolean;
     appDataPath: string;
     userDataPath: string;
     version: string;

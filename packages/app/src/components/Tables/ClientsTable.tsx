@@ -13,7 +13,8 @@ import {
     isBrowserClient,
     isMainWebContent,
     isMainWindow,
-    isConnector
+    isConnector,
+    isMasterWebContent
 } from '../../utils/helper';
 import { onEvent } from '../../utils/utils';
 import { useState } from 'react';
@@ -91,6 +92,8 @@ const ClientsTable = () => {
                     tag = 'Browser';
                 } else if (isMainWebContent(record.clientId)) {
                     tag = 'MainWebContent';
+                } else if (isMasterWebContent(record.clientId)) {
+                    tag = 'MainWebContent';
                 } else if (isMainWindow(record.clientId)) {
                     tag = 'MainWindow';
                 } else if (isConnector(record.clientId)) {
@@ -135,7 +138,11 @@ const ClientsTable = () => {
             }
 
             if (clientType === 'else') {
-                return isMainWindow(clientId) || isMainWebContent(clientId);
+                return (
+                    isMainWindow(clientId) ||
+                    isMainWebContent(clientId) ||
+                    isMasterWebContent(clientId)
+                );
             }
             return false;
         })
@@ -167,7 +174,7 @@ const ClientsTable = () => {
                     }}
                 >
                     <Button>
-                        {ClientTypes[clientType]}
+                        {ClientTypes[clientType]} ({dataSource.length} / {clients.length})
                         <DownOutlined />
                     </Button>
                 </Dropdown>,

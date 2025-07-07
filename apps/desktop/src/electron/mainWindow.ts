@@ -189,6 +189,7 @@ export class MainWindow {
         const version = app.getVersion();
 
         setAppInfo({
+            isWin: process.platform === 'win32',
             appDataPath,
             publicDir,
             userDataPath,

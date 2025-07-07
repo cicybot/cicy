@@ -24,8 +24,8 @@ export const stringIsJson = (data: any) => {
         (data.startsWith('{') && data.endsWith('}')) || (data.startsWith('[') && data.endsWith(']'))
     );
 };
-
-let __serverUrl = localStorage.getItem('serverUrl') || 'ws://127.0.0.1:4444/ws';
+export const DEFAULT_SERVER_URL = 'ws://127.0.0.1:4444/ws';
+let __serverUrl = localStorage.getItem('serverUrl') || DEFAULT_SERVER_URL;
 
 let __ws: WebSocket | null;
 
@@ -78,6 +78,7 @@ export class CCWSClient {
             clientId: ''
         });
     }
+
     async send(
         msg: {
             action: string;
@@ -126,6 +127,10 @@ export class CCWSClient {
 
     static getServerUrl(serverIp?: string) {
         return __serverUrl.replace('127.0.0.1', serverIp || '127.0.0.1');
+    }
+
+    static isLocalServer() {
+        return DEFAULT_SERVER_URL === __serverUrl;
     }
 
     static getHttpUrl(serverIp: string) {

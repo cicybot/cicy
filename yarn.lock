@@ -5980,6 +5980,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "cc-agent-web@workspace:apps/cc-agent-web"
   dependencies:
+    "@cicy/app": "npm:1.0.0"
     "@eslint/js": "npm:^9.25.0"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
