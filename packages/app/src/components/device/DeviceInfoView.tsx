@@ -1,13 +1,13 @@
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import { Button, Divider, message } from 'antd';
-import BrowserService from '../../services/BrowserService';
+import BrowserService from '../../services/cicy/BrowserService';
 import View from '../View';
-import CCAndroidConnectorClient from '../../services/CCAndroidConnectorClient';
+import CCAndroidConnectorClient from '../../services/cicy/CCAndroidConnectorClient';
 import { UploadAgentButton } from './UploadAgentButton';
 import { useState } from 'react';
 import Loading from '../UI/Loading';
 import { useTimeoutLoop } from '@cicy/utils';
-import { CCWSClient } from '../../services/CCWSClient';
+import { CCWSClient } from '../../services/cicy/CCWSClient';
 import { onEvent } from '../../utils/utils';
 
 export const DeviceInfoView = ({

@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router';
 import SizeBar from '../../components/UI/SideBar';
 import View from '../../components/View';
-import { connectCCServer, ClientIds, CCWSClient } from '../../services/CCWSClient';
-import { MainClientMessageHandler } from '../../services/MainClientMessageHandler';
+import { CCWSClient, ClientIds, connectCCServer } from '../../services/cicy/CCWSClient';
+import { MainClientMessageHandler } from '../../services/cicy/MainClientMessageHandler';
 import Loading from '../../components/UI/Loading';
+import { MainWindowProvider } from '../../providers/MainWindowProvider';
 
 const Home = () => {
     const [wsConnected, setWsConnected] = useState(false);
@@ -49,14 +50,16 @@ const Home = () => {
     const sideBarWidth = 220;
 
     return (
-        <View wh100p>
-            <View h100vh w={sideBarWidth} borderBox>
-                <SizeBar></SizeBar>
+        <MainWindowProvider>
+            <View wh100p>
+                <View h100vh w={sideBarWidth} borderBox>
+                    <SizeBar></SizeBar>
+                </View>
+                <View absFull left={sideBarWidth}>
+                    <Outlet></Outlet>
+                </View>
             </View>
-            <View absFull left={sideBarWidth}>
-                <Outlet></Outlet>
-            </View>
-        </View>
+        </MainWindowProvider>
     );
 };
 

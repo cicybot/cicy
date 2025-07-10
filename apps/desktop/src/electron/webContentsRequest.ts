@@ -3,6 +3,8 @@ import { OnBeforeSendHeadersListenerDetails } from 'electron';
 const Filters: Map<string, string[]> = new Map();
 const Requests: Map<string, any> = new Map();
 const IdMap: Map<number, string> = new Map();
+const IdMap1: Map<string, number> = new Map();
+
 let counter = 0;
 export default class WebContentsRequest {
     windowId: string;
@@ -22,7 +24,11 @@ export default class WebContentsRequest {
     }
     setWebContentsId(id: number) {
         IdMap.set(id, this.windowId);
+        IdMap1.set(this.windowId, id);
         return this;
+    }
+    getWebContentsId() {
+        return IdMap1.get(this.windowId);
     }
     checkFilter(url: string) {
         const filters = this.getFilters();
@@ -39,7 +45,7 @@ export default class WebContentsRequest {
     process(detail: OnBeforeSendHeadersListenerDetails) {
         const { url, method, requestHeaders } = detail;
         if (this.getFilters().length > 0) {
-            console.log(this.getFilters(), detail.url);
+            //console.log(this.getFilters(), detail.url);
         }
         if (!this.checkFilter(url)) {
             return;
@@ -53,8 +59,12 @@ export default class WebContentsRequest {
                 requestHeaders
             }
         });
+        // console.log('getRequests', this.getRequests());
     }
     clearRequests() {
+        const webContentsId = this.getWebContentsId();
+        IdMap.delete(webContentsId);
+        IdMap1.delete(this.windowId);
         Requests.delete(this.windowId);
     }
     getRequests() {

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import View from '../../components/View';
-import { connectCCServer } from '../../services/CCWSClient';
+import { connectCCServer } from '../../services/cicy/CCWSClient';
 
 import Loading from '../../components/UI/Loading';
-import CCAgentClient from '../../services/CCWSAgentClient';
+import CCAgentClient from '../../services/cicy/CCWSAgentClient';
 import { useTimeoutLoop } from '@cicy/utils';
 import AndroidDetailWrap from './components/AndroidDetailWrap';
 

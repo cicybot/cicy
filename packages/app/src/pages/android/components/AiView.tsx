@@ -1,9 +1,6 @@
-import { Button, Tree } from 'antd';
 import View from '../../../components/View';
-import { Bubble } from '@ant-design/x';
-import SuggestionView from './SuggestionView';
-import PromptsView from './PromptsView';
 import { Welcome } from '@ant-design/x';
+import SuggestionView from './SuggestionView';
 import MessagesView, { AiMsgItem } from './MessagesView';
 import { ViewWithSize } from '../../../components/View/ViewWithSize';
 import { useState } from 'react';

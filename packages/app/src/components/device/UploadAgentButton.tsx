@@ -1,8 +1,7 @@
 import { Button, message } from 'antd';
-import CCAndroidConnectorClient from '../../services/CCAndroidConnectorClient';
+import CCAndroidConnectorClient from '../../services/cicy/CCAndroidConnectorClient';
 import { onEvent } from '../../utils/utils';
-import { CCWSClient } from '../../services/CCWSClient';
-import { DeviceInfo } from '../../services/CCWSAgentClient';
+import { CCWSClient } from '../../services/cicy/CCWSClient';
 
 export const UploadAgentButton = ({
     appInfo,

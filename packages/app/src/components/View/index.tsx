@@ -1,6 +1,7 @@
 import { CSSProperties, JSXElementConstructor, ReactElement, ReactNode } from 'react';
 
 export interface UtilsProps {
+    json?: Object | any;
     transX?: number;
     transY?: number;
     miniScrollBar?: boolean;
@@ -637,12 +638,19 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
 }
 
 const View = ({ children, ...props }: ViewProps) => {
-    const { empty, hide, ...props_ } = props;
+    const { empty, hide, json, ...props_ } = props;
     if (hide) {
         return null;
     }
     if (empty) {
         return <>{children}</>;
+    }
+    if (json) {
+        return (
+            <div {...handleProps(props_)}>
+                <pre>{JSON.stringify(json, null, 2)}</pre>
+            </div>
+        );
     }
     return <div {...handleProps(props_)}>{children || ''}</div>;
 };

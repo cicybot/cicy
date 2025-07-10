@@ -1,10 +1,11 @@
 import { Breadcrumb, Divider } from 'antd';
 import View from '../../components/View';
 import { useEffect, useState } from 'react';
-import { CCWSMainWindowClient } from '../../services/CCWSMainWindowClient';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
-import axios from 'axios';
-import { CCWSClient } from '../../services/CCWSClient';
+import { CCWSClient } from '../../services/cicy/CCWSClient';
+import { BackgroundApi } from '../../services/common/BackgroundApi';
+import { useMainWindowContext } from '../../providers/MainWindowProvider';
+
 function extractIPAndLocation(html: string) {
     // Regular expression to extract IP address and location
     const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
@@ -21,38 +22,21 @@ function extractIPAndLocation(html: string) {
     // Return an array with the IP and location
     return [ip, location];
 }
-const Setting = () => {
-    const [appInfo, setAppInfo] = useState(null);
-    const [serverIp, setServerIp] = useState(null);
-    const [publicIpInfo, setPublicIpInfo] = useState([null, null]);
-    useEffect(() => {
-        if (window.backgroundApi) {
-            window.backgroundApi
-                .message({
-                    action: 'utils',
-                    payload: {
-                        method: 'axios',
-                        params: {
-                            url: 'https://2025.ip138.com/'
-                        }
-                    }
-                })
-                .then(res => {
-                    const { err, result } = res as any;
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        const ipInfo = extractIPAndLocation(result as string);
-                        setPublicIpInfo(ipInfo as any);
-                    }
-                });
-        }
-        new CCWSMainWindowClient().mainWindowInfo().then(res => {
-            setAppInfo(res.result);
-        });
 
-        new CCWSMainWindowClient().getServerInfo().then(res => {
-            setServerIp(res.ip);
+const Setting = () => {
+    const { appInfo, serverIp } = useMainWindowContext();
+    const [publicIpInfo, setPublicIpInfo] = useState([null, null, null]);
+
+    useEffect(() => {
+        let startTime = Date.now();
+        new BackgroundApi().axios('https://2025.ip138.com/').then((res: any) => {
+            const { err, result } = res as any;
+            if (err) {
+                console.error(err);
+            } else {
+                const ipInfo = extractIPAndLocation(result as string);
+                setPublicIpInfo([...(ipInfo as any), Date.now() - startTime]);
+            }
         });
     }, []);
     return (
@@ -72,20 +56,23 @@ const Setting = () => {
             <View>
                 <View p12>
                     <ProDescriptions column={3}>
-                        <ProDescriptions.Item label={'CiCy Server IP'}>
+                        <ProDescriptions.Item label={'CiCy Ser IP'}>
                             <ProField text={serverIp} mode="read" />
                         </ProDescriptions.Item>
-                        <ProDescriptions.Item label={'CiCy Server URL'}>
+                        <ProDescriptions.Item label={'CiCy Ser Url'}>
                             <ProField text={CCWSClient.getServerUrl()} mode="read" />
                         </ProDescriptions.Item>
                     </ProDescriptions>
                     <Divider />
-                    <ProDescriptions column={2}>
-                        <ProDescriptions.Item label={'PublicIp'}>
+                    <ProDescriptions column={3}>
+                        <ProDescriptions.Item label={'墙内IP'}>
                             <ProField text={publicIpInfo[0]} mode="read" />
                         </ProDescriptions.Item>
-                        <ProDescriptions.Item label={'Location'}>
+                        <ProDescriptions.Item label={'墙内地址'}>
                             <ProField text={publicIpInfo[1]} mode="read" />
+                        </ProDescriptions.Item>
+                        <ProDescriptions.Item label={'延时'}>
+                            <ProField text={publicIpInfo[2]} mode="read" />
                         </ProDescriptions.Item>
                     </ProDescriptions>
 

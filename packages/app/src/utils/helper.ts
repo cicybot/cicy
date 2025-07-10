@@ -1,4 +1,4 @@
-import { ClientIds } from '../services/CCWSClient';
+import { ClientIds } from '../services/cicy/CCWSClient';
 
 export const isAndroidAgentRustClient = (clientId: string) => {
     return (

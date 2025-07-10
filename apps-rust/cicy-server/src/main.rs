@@ -59,7 +59,8 @@ struct Args {
     port: u16,
 
     #[arg(long = "loop", hide = true)]
-    loop_mode: bool
+    loop_mode: bool,
+
 }
 
 fn is_loop_mode() -> bool {

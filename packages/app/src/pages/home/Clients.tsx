@@ -4,16 +4,16 @@ import View from '../../components/View';
 
 const Clients = () => {
     return (
-        <View  relative>
+        <View relative>
             <View pl12 mt12 mb12>
-                 <Breadcrumb
+                <Breadcrumb
                     items={[
-                    {
-                        title: 'Home',
-                    },
-                    {
-                        title: 'Clients',
-                    },
+                        {
+                            title: 'Home'
+                        },
+                        {
+                            title: 'Clients'
+                        }
                     ]}
                 />
             </View>

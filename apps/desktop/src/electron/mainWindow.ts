@@ -19,11 +19,14 @@ import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
 import os from 'os';
 import { getLocalIPAddress } from '@cicy/cicy-ws';
+import util from 'util';
+import { exec } from 'child_process';
+const execPromise = util.promisify(exec);
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
 export function initDir() {
-    const { appDataPath } = getAppInfo();
+    const { appDataPath, meta } = getAppInfo();
     if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
         fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
     }
@@ -33,6 +36,10 @@ export function initDir() {
     if (!fs.existsSync(path.join(appDataPath, 'data'))) {
         fs.mkdirSync(path.join(appDataPath, 'data'), { recursive: true });
     }
+    if (!fs.existsSync(path.join(appDataPath, 'meta'))) {
+        fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
+    }
+    execPromise(`chmod +x "${meta.bin}"`).catch(console.error);
 }
 
 export function t(key: string) {
@@ -189,10 +196,18 @@ export class MainWindow {
         const appDataPath = path.join(os.homedir(), '.cicy');
         const version = app.getVersion();
         const ip = getLocalIPAddress();
+        const isWin = process.platform === 'win32';
+        const sep = isWin ? '\\' : '/';
+
         setAppInfo({
             ip: ip ? ip.adr : '127.0.0.1',
-            isWin: process.platform === 'win32',
+            isWin,
             appDataPath,
+            meta: {
+                configPath: path.join(appDataPath, 'meta', 'config.yaml'),
+                dataDir: path.join(publicDir, 'static', 'meta', 'data'),
+                bin: path.join(publicDir, 'static', 'meta', 'bin', `meta${isWin ? '.exe' : ''}`)
+            },
             publicDir,
             userDataPath,
             version,
@@ -227,7 +242,6 @@ export class MainWindow {
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
         }
-
         await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {

@@ -2,6 +2,11 @@ interface AppInfo {
     publicDir: string;
     isWin: boolean;
     ip: string;
+    meta: {
+        configPath: string;
+        dataDir: string;
+        bin: string;
+    };
     appDataPath: string;
     userDataPath: string;
     version: string;

@@ -1,6 +1,5 @@
 import { Button, Drawer } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
-
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { CCWSClient, AiView, View, connectCCServer } from '@cicy/app';

@@ -1,5 +1,5 @@
 import View from '../../../components/View';
-import CCAgentClient, { DeviceInfo } from '../../../services/CCWSAgentClient';
+import CCAgentClient, { DeviceInfo } from '../../../services/cicy/CCWSAgentClient';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import { Button, Divider } from 'antd';
 import { onEvent } from '../../../utils/utils';
@@ -23,6 +23,7 @@ export const MobileInfoView = ({
     const [rustOnline, setRustOnline] = useState(false);
     const [appOnline, setAppOnline] = useState(false);
     const [chatOnline, setChatOnline] = useState(false);
+
     async function getOnline() {
         return agent.getClients().then(res => {
             const { clientId } = deviceInfo;
@@ -32,6 +33,7 @@ export const MobileInfoView = ({
             setChatOnline(clients.indexOf(clientId + '-CHAT') > -1);
         });
     }
+
     useEffect(() => {
         getOnline();
     }, []);

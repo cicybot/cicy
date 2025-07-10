@@ -1,10 +1,9 @@
-import { Drawer, TreeDataNode, TreeProps } from 'antd';
-import { Button, message } from 'antd';
+import { Button, Checkbox, Drawer, message, TreeDataNode, TreeProps } from 'antd';
 import {
-    HomeOutlined,
     ArrowLeftOutlined,
-    WindowsOutlined,
-    SettingOutlined
+    HomeOutlined,
+    SettingOutlined,
+    WindowsOutlined
 } from '@ant-design/icons';
 import { useEffect, useRef, useState } from 'react';
 import View from '../../../components/View';
@@ -16,14 +15,13 @@ import {
     type Rect,
     type XmlNode
 } from './../utils';
-import { Checkbox } from 'antd';
 import Loading from '../../../components/UI/Loading';
-import CCAgentClient, { DeviceInfo } from '../../../services/CCWSAgentClient';
+import CCAgentClient, { DeviceInfo } from '../../../services/cicy/CCWSAgentClient';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import { InspectView } from './InspectView';
 import { AiView } from './AiView';
 import { MobileInfoView } from './MobileInfoView';
-import { CCWSMainWindowClient } from '../../../services/CCWSMainWindowClient';
+import { CCWSMainWindowClient } from '../../../services/cicy/CCWSMainWindowClient';
 
 function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInfo }) {
     const [img, setImg] = useState('');

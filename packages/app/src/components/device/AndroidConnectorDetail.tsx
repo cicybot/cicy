@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { AndroidIcon } from '../Icons';
 import { AndroidConnectorPage } from './AndroidConnectorPage';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
-import CCAndroidConnectorClient, { AdbDevice } from '../../services/CCAndroidConnectorClient';
+import CCAndroidConnectorClient, { AdbDevice } from '../../services/cicy/CCAndroidConnectorClient';
 import { Select } from 'antd';
 import { AndroidConnectorDetailInfo } from './AndroidConnectorDetailInfo';
 

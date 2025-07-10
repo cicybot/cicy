@@ -5,26 +5,31 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import View from '../../components/View';
 import { useGlobalContext } from '../../providers/GlobalProvider';
-import { connectCCServer } from '../../services/CCWSClient';
-import { SiteService } from '../../services/SiteService';
+import { connectCCServer } from '../../services/cicy/CCWSClient';
+import { SiteService } from '../../services/model/SiteService';
 import { BLANK_URL, WebveiwEventType } from '../../utils/webview';
 import MenuBtn from './MenuBtn';
+import { BackgroundApi } from '../../services/common/BackgroundApi';
+import ProxyService from '../../services/common/ProxyService';
+import { BrowserAccount } from '../../services/model/BrowserAccount';
+import { waitForResult } from '@cicy/utils';
 
 export let currentWebContentsId = 0;
+
 export interface BrowserError {
     validatedURL: string;
     errorDescription: string;
 }
+
 let _favIcon = '';
 
-const WebviewBrowser = () => {
+const WebviewBrowserInner = ({ userAgent }: { userAgent: string }) => {
     const { state } = useGlobalContext();
     let searchParams = useSearchParams();
     const windowId = searchParams[0].get('windowId') as string;
-
-    const accountIndex = windowId.split('-')[0];
+    const accountIndex = parseInt(windowId.split('-')[0]);
     const siteId = windowId.split('-')[1];
-    const siteService = new SiteService(siteId, parseInt(accountIndex));
+    const siteService = new SiteService(siteId, accountIndex);
     const partition = `persist:account_${accountIndex || 0}`;
     const webviewRef = useRef(null);
     const [error, setError] = useState<BrowserError | null>(null);
@@ -36,6 +41,7 @@ const WebviewBrowser = () => {
         if (!webviewRef.current) {
             return;
         }
+
         const webview = webviewRef.current as WebviewTag;
         const onEvent = async (eventType: WebveiwEventType, evt?: any) => {
             const webview = evt.target as WebviewTag;
@@ -63,13 +69,70 @@ const WebviewBrowser = () => {
                     if (currentUrl.startsWith(BLANK_URL)) {
                         console.log(`[+] webContentsId`, webview.getWebContentsId());
                         const site = await siteService.getSiteInfo();
-                        console.log('[+] site', site);
+                        const proxyPort = ProxyService.getMetaAccountProxyPort(accountIndex);
+                        const isPortOnline = await new BackgroundApi().isPortOnline(proxyPort);
+                        const windowInfoRes = await new BackgroundApi().send({
+                            action: 'mainWindowInfo'
+                        });
+                        const {
+                            configPath: metaConfigPath,
+                            bin,
+                            dataDir
+                        } = windowInfoRes.result.meta;
+                        if (!isPortOnline.result) {
+                            await ProxyService.intMetaAccountConfig(accountIndex, metaConfigPath);
+                            try {
+                                await ProxyService.testConfig(
+                                    bin,
+                                    ProxyService.getMetaAccountConfigPath(
+                                        accountIndex,
+                                        metaConfigPath
+                                    )
+                                );
+                            } catch (e) {
+                                alert(e);
+                                return;
+                            }
+                            await ProxyService.startServer(
+                                bin,
+                                dataDir,
+                                ProxyService.getMetaAccountConfigPath(accountIndex, metaConfigPath),
+                                ProxyService.getMetaAccountProxyPort(accountIndex)
+                            );
+                            await waitForResult(async () => {
+                                const res = await new BackgroundApi().isPortOnline(proxyPort);
+                                return res.result;
+                            });
+                        }
+                        const account = await siteService.getAccount();
+
                         connectCCServer(windowId, {
-                            onOpen: () => {
+                            onOpen: async () => {
                                 currentWebContentsId = webview.getWebContentsId();
-                                webview.executeJavaScript(`(()=>{
-                                    location.href = "${site.url}"
-                                })()`);
+                                let requestFilters: undefined | string[] = undefined;
+                                if (
+                                    account &&
+                                    account.config &&
+                                    account.config.requestFilters &&
+                                    account.config.requestFilters.length > 0
+                                ) {
+                                    requestFilters = account.config.requestFilters;
+                                }
+                                await new BackgroundApi().setWebContentConfig(
+                                    windowId,
+                                    currentWebContentsId,
+                                    {
+                                        proxyRules: `http://127.0.0.1:${ProxyService.getMetaAccountProxyPort(
+                                            accountIndex
+                                        )}`,
+                                        requestFilters
+                                    }
+                                );
+                                if (site.url) {
+                                    webview.executeJavaScript(`(()=>{
+                                        location.href = "${site.url}"
+                                    })()`);
+                                }
                             }
                         });
                     } else {
@@ -212,10 +275,7 @@ const WebviewBrowser = () => {
             }
         };
     }, [webviewRef]);
-    let userAgent =
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) W/1.0.80 Chrome/126.0.6478.36 E/31.0.1 Safari/537.36';
-    // userAgent =
-    //     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) W/1.0.80 Chrome/126.0.6478.36 E/31.0.1 Safari/537.36';
+
     return (
         <View style={{ height: '100vh' }}>
             <View style={{ height: 'calc(100vh - 32px)' }}>
@@ -305,6 +365,45 @@ const WebviewBrowser = () => {
             </View>
         </View>
     );
+};
+
+const WebviewBrowser = () => {
+    let searchParams = useSearchParams();
+
+    const windowId = searchParams[0].get('windowId') as string;
+    const accountIndex = parseInt(windowId.split('-')[0]);
+    const browserAccount = new BrowserAccount(accountIndex);
+
+    const [userAgent, setUserAgent] = useState<null | string>(null);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const browserAccountInfo = await browserAccount.get();
+                if (!browserAccountInfo) {
+                    await BrowserAccount.add();
+                } else {
+                    if (browserAccountInfo.config.userAgent) {
+                        setUserAgent(browserAccountInfo.config!.userAgent!);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            setUserAgent('');
+        })();
+    }, []);
+
+    if (userAgent === null) {
+        return null;
+    }
+    //'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) W/1.0.80 Chrome/126.0.6478.36 E/31.0.1 Safari/537.36';
+    let __userAgent =
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.36 Safari/537.36';
+
+    const userAgent1 = userAgent === '' ? __userAgent : userAgent;
+    return <WebviewBrowserInner userAgent={userAgent1}></WebviewBrowserInner>;
 };
 
 export default WebviewBrowser;

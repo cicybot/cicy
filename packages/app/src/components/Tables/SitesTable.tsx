@@ -1,12 +1,13 @@
-import { ExportOutlined, WindowsOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, ExportOutlined, WindowsOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Avatar, Button, Popconfirm, Drawer, Input, message } from 'antd';
+import { Avatar, Button, Drawer, Input, message, Popconfirm } from 'antd';
 import { useState } from 'react';
 import { useSites } from '../../hooks/ws';
-import BrowserService from '../../services/BrowserService';
+import BrowserService from '../../services/cicy/BrowserService';
 import SiteDetail from './SiteDetail';
-import { SiteInfo, SiteService } from '../../services/SiteService';
+import { SiteInfo, SiteService } from '../../services/model/SiteService';
+import { onEvent } from '../../utils/utils';
 
 const SitesTable = () => {
     const { sites, refetch } = useSites();
@@ -135,7 +136,27 @@ const SitesTable = () => {
             />
             <Drawer
                 width={'50%'}
-                title={detail?.title}
+                title={
+                    <Input
+                        onChange={e => {
+                            if (detail) {
+                                setDetail({
+                                    ...detail,
+                                    title: e.target.value
+                                });
+                            }
+                        }}
+                        onBlur={async e => {
+                            if (detail) {
+                                onEvent('showLoading');
+                                await new SiteService(detail?.site_id).saveSiteInfo(detail);
+                                await refetch();
+                                onEvent('hideLoading');
+                            }
+                        }}
+                        value={detail?.title}
+                    />
+                }
                 closable={{ 'aria-label': 'Close Button' }}
                 onClose={() => {
                     setDetail(null);

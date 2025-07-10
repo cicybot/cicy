@@ -1,10 +1,10 @@
 import {
     createContext,
-    useContext,
-    useReducer,
-    ReactNode,
     Dispatch,
+    ReactNode,
+    useContext,
     useEffect,
+    useReducer,
     useState
 } from 'react';
 import Loading from '../components/UI/Loading';
@@ -17,6 +17,7 @@ export interface SiteInfo {
     icon: string;
     updatedAt: number;
 }
+
 interface GlobalState {
     siteLoading: boolean;
     currentSite: SiteInfo | null;

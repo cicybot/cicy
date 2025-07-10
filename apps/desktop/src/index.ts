@@ -40,7 +40,6 @@ app.on('web-contents-created', (_event, contents) => {
         if (WebContentsRequest.fromWebContentsId(details.webContentsId)) {
             WebContentsRequest.fromWebContentsId(details.webContentsId).process(details);
         }
-
         callback(details);
     });
 });

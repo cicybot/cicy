@@ -1,8 +1,8 @@
 import { UserOutlined } from '@ant-design/icons';
-import { Bubble } from '@ant-design/x';
 import type { BubbleProps } from '@ant-design/x';
-import { Button, Flex, Switch } from 'antd';
+import { Bubble } from '@ant-design/x';
 import type { GetProp, GetRef } from 'antd';
+import { Button, Flex } from 'antd';
 import React from 'react';
 import View from '../../../components/View';
 
@@ -48,11 +48,13 @@ const rolesAsFunction = (bubbleData: BubbleProps, index: number) => {
             return { messageRender: RenderIndex };
     }
 };
+
 export interface AiMsgItem {
     key: number;
     role: 'ai' | 'user';
     content: string;
 }
+
 const MessagesView = ({ height, msgList }: { msgList: AiMsgItem[]; height: number }) => {
     const [count, setCount] = React.useState(3);
     const [useRolesAsFunction, setUseRolesAsFunction] = React.useState(false);

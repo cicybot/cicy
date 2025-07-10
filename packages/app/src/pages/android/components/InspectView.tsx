@@ -1,9 +1,8 @@
 import { Button, Tree } from 'antd';
 import View from '../../../components/View';
 import { SelectedNodeView } from './SelectedNodeView';
-import { DownOutlined } from '@ant-design/icons';
-import CCAgentClient from '../../../services/CCWSAgentClient';
-import { CloseOutlined } from '@ant-design/icons';
+import { CloseOutlined, DownOutlined } from '@ant-design/icons';
+import CCAgentClient from '../../../services/cicy/CCWSAgentClient';
 
 export const InspectView = ({
     agent,

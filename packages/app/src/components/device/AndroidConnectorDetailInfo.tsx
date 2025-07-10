@@ -2,12 +2,12 @@ import View from '../View';
 import { useEffect, useState } from 'react';
 import { AndroidIcon } from '../Icons';
 import { useTimeoutLoop } from '@cicy/utils';
-import CCAndroidConnectorClient from '../../services/CCAndroidConnectorClient';
-import type { DeviceInfo } from '../../services/CCWSAgentClient';
+import CCAndroidConnectorClient from '../../services/cicy/CCAndroidConnectorClient';
+import type { DeviceInfo } from '../../services/cicy/CCWSAgentClient';
 import Loading from '../UI/Loading';
 import { UploadAgentButton } from './UploadAgentButton';
 import { diffObj } from '../../utils/utils';
-import { CCWSMainWindowClient } from '../../services/CCWSMainWindowClient';
+import { CCWSMainWindowClient } from '../../services/cicy/CCWSMainWindowClient';
 import { DeviceInfoView } from './DeviceInfoView';
 
 export const AndroidConnectorDetailInfo = ({
@@ -34,6 +34,7 @@ export const AndroidConnectorDetailInfo = ({
             }
         });
     }, []);
+
     async function fetchDeviceInfo() {
         if (!serverIp || serverIp === '127.0.0.1') {
             return null;
@@ -58,6 +59,7 @@ export const AndroidConnectorDetailInfo = ({
             }
         }
     }
+
     useEffect(() => {
         fetchDeviceInfo().catch(console.error);
     }, []);

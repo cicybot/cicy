@@ -1,47 +1,54 @@
-import { EditOutlined, EyeOutlined, EyeInvisibleOutlined, ExportOutlined } from '@ant-design/icons';
+import { EditOutlined, ExportOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProForm, ProFormGroup, ProFormText, ProTable } from '@ant-design/pro-components';
-import { Button, Checkbox, Drawer, message, Tooltip } from 'antd';
-import { useState } from 'react';
-import BrowserService from '../../services/BrowserService';
-import { SiteAccountInfo, SiteInfo } from '../../services/SiteService';
+import { Button, Checkbox, Drawer, message, Tabs, type TabsProps, Tooltip } from 'antd';
+import { useEffect, useState } from 'react';
+import BrowserService from '../../services/cicy/BrowserService';
+import { SiteAccountInfo, SiteInfo, SiteService } from '../../services/model/SiteService';
+import { BrowserAccountProxy } from './BrowserAccountProxy';
+import View from '../View';
+import { BrowserAccount, BrowserAccountSite } from '../../services/model/BrowserAccount';
 
 export const AccountDetail = ({
     changeAccounts,
-    accounts,
-    site,
     account
 }: {
-    changeAccounts: any;
     site: SiteInfo;
-    accounts: SiteAccountInfo[];
+    changeAccounts: any;
     account: SiteAccountInfo;
 }) => {
-    return (
-        <ProForm
-            readonly={false}
-            name=""
-            initialValues={{
-                username: account.auth.username,
-                password: account.auth.password,
-                email: account.auth.email,
-                phone: account.auth.phone
-            }}
-            onFinish={async value => {
-                changeAccounts(site, accounts, {
-                    ...account,
-                    auth: value
-                });
-            }}
-        >
-            <ProFormGroup title="帐户">
-                <ProFormText width="md" name="email" label="Email" />
-                <ProFormText.Password width="md" name="password" label="密码" />
-                <ProFormText width="md" name="phone" label="电话" />
-                <ProFormText width="md" name="username" label="用户名" />
-            </ProFormGroup>
-        </ProForm>
-    );
+    const items: TabsProps['items'] = [
+        {
+            key: '1',
+            label: '帐户',
+            children: (
+                <ProForm
+                    readonly={false}
+                    name=""
+                    initialValues={{
+                        username: account.auth.username,
+                        password: account.auth.password,
+                        email: account.auth.email,
+                        phone: account.auth.phone
+                    }}
+                    onFinish={async value => {
+                        changeAccounts({
+                            ...account,
+                            auth: value
+                        });
+                    }}
+                >
+                    <ProFormGroup title="">
+                        <ProFormText width="md" name="email" label="Email" />
+                        <ProFormText.Password width="md" name="password" label="密码" />
+                        <ProFormText width="md" name="phone" label="电话" />
+                        <ProFormText width="md" name="username" label="用户名" />
+                    </ProFormGroup>
+                </ProForm>
+            )
+        }
+    ];
+    return <Tabs defaultActiveKey="1" items={items} onChange={() => {}} />;
 };
 
 const SiteAccountsTable = ({
@@ -118,9 +125,9 @@ const SiteAccountsTable = ({
                 <Tooltip key="delete" title={record.is_deleted ? '可见' : '隐藏'}>
                     <a
                         onClick={async () => {
-                            changeAccounts(site, accounts, {
+                            changeAccounts({
                                 ...record,
-                                is_deleted: !record.is_deleted ? true : false
+                                is_deleted: !record.is_deleted ? 1 : 0
                             });
                         }}
                     >
@@ -143,12 +150,7 @@ const SiteAccountsTable = ({
                 search={false}
                 options={false}
                 toolBarRender={() => [
-                    <Button
-                        onClick={() => addAccounts(site, accounts)}
-                        size="small"
-                        type="primary"
-                        key="add"
-                    >
+                    <Button onClick={() => addAccounts(site)} size="small" type="primary" key="add">
                         增加
                     </Button>,
                     <Checkbox
@@ -172,9 +174,8 @@ const SiteAccountsTable = ({
             >
                 {account && (
                     <AccountDetail
-                        changeAccounts={changeAccounts}
                         site={site}
-                        accounts={accounts}
+                        changeAccounts={changeAccounts}
                         account={account}
                     ></AccountDetail>
                 )}

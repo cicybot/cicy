@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import View from '../../../components/View';
 import Loading from '../../../components/UI/Loading';
-import CCAgentClient, { DeviceInfo } from '../../../services/CCWSAgentClient';
+import CCAgentClient, { DeviceInfo } from '../../../services/cicy/CCWSAgentClient';
 import AndroidDetailInner from './AndroidDetailInner';
 
 const AndroidDetailWrap = () => {

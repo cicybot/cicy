@@ -4,21 +4,20 @@ import { Button, Dropdown, Tag } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
 import { useWsClients } from '../../hooks/ws';
-import BrowserService from '../../services/BrowserService';
-import { SiteService } from '../../services/SiteService';
+import BrowserService from '../../services/cicy/BrowserService';
+import { SiteService } from '../../services/model/SiteService';
 import {
-    isAndroidAgentRustClient,
     isAndroidAgentClient,
-    isAndroidChatClient,
     isAndroidAgentManageClient,
+    isAndroidAgentRustClient,
+    isAndroidChatClient,
     isBrowserClient,
+    isConnector,
     isMainWebContent,
     isMainWindow,
-    isConnector,
     isMasterWebContent
 } from '../../utils/helper';
 import { onEvent } from '../../utils/utils';
-import { useState } from 'react';
 import { useLocalStorageState } from '@cicy/utils';
 
 export type TableListItem = {

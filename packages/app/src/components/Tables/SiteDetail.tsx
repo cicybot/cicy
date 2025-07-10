@@ -2,52 +2,37 @@ import { useEffect, useState } from 'react';
 import Loading from '../UI/Loading';
 import View from '../View';
 import SiteAccountsTable from './SiteAccountsTable';
-import { SiteAccountInfo, SiteInfo, SiteService } from '../../services/SiteService';
-import { message } from 'antd';
+import { SiteAccountInfo, SiteInfo, SiteService } from '../../services/model/SiteService';
 import { onEvent } from '../../utils/utils';
+import { SiteAccount } from '../../services/model/SiteAccount';
 
 const SiteDetail = ({ site }: { site: SiteInfo }) => {
     const [accounts, setAccounts] = useState<SiteAccountInfo[]>([]);
-    useEffect(() => {
-        new SiteService(site.site_id).getAccounts().then(res => {
-            let accounts: SiteAccountInfo[] = [
-                {
-                    auth: {},
-                    account_index: 0
-                }
-            ];
-            if (res.length > 0) {
-                accounts = res;
+    const fetchAccounts = () => {
+        return new SiteService(site.site_id).getAccounts().then(res => {
+            if (res.length === 0) {
+                SiteAccount.add(site.site_id).then(() => {
+                    fetchAccounts().catch(console.error);
+                });
             }
-            setAccounts(accounts);
+            setAccounts(res);
         });
+    };
+    useEffect(() => {
+        fetchAccounts().catch(console.error);
     }, [site]);
 
-    const changeAccounts = (
-        site: SiteInfo,
-        accounts: SiteAccountInfo[],
-        account: SiteAccountInfo
-    ) => {
+    const changeAccounts = async (account: SiteAccountInfo) => {
         onEvent('showLoading');
-        const accounts_ = SiteService.updateAccount(accounts, account);
-        setAccounts(accounts_);
-        new SiteService(site.site_id, account.account_index)
-            .saveAccounts(accounts_)
-            .then(() => {
-                message.success('保存成功');
-            })
-            .catch(() => {
-                message.error('保存失败');
-            })
-            .finally(() => {
-                onEvent('hideLoading');
-            });
+        await new SiteAccount(site.site_id, account.account_index).save(account);
+        await fetchAccounts();
+        onEvent('hideLoading');
     };
 
-    const addAccounts = (site: SiteInfo, accounts: SiteAccountInfo[]) => {
-        const { accounts: accounts_, account_index } = SiteService.addAccount(accounts);
-        new SiteService(site.site_id, account_index).saveAccounts(accounts_);
-        setAccounts(accounts_);
+    const addAccounts = (site: SiteInfo) => {
+        SiteAccount.add(site.site_id).then(() => {
+            fetchAccounts().catch(console.error);
+        });
     };
     if (!site) {
         return (

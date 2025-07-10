@@ -1,21 +1,21 @@
-import { MenuProps, message } from 'antd';
-import { Dropdown, Drawer } from 'antd';
+import { Drawer, Dropdown, MenuProps, message } from 'antd';
 
 import {
-    HomeOutlined,
     ArrowLeftOutlined,
-    ReloadOutlined,
     ConsoleSqlOutlined,
+    HomeOutlined,
+    MenuOutlined,
+    ReloadOutlined,
     SettingOutlined
 } from '@ant-design/icons';
-
-import { MenuOutlined } from '@ant-design/icons';
 import View from '../../components/View';
-import WebviewTag = Electron.WebviewTag;
-import { AccountInfo, SiteAccountInfo, SiteInfo, SiteService } from '../../services/SiteService';
+import { SiteAccountInfo, SiteInfo, SiteService } from '../../services/model/SiteService';
 import { useEffect, useState } from 'react';
 import { AccountDetail } from '../../components/Tables/SiteAccountsTable';
 import { onEvent } from '../../utils/utils';
+import WebviewTag = Electron.WebviewTag;
+import { SiteAccount } from '../../services/model/SiteAccount';
+
 const items: MenuProps['items'] = [
     {
         key: 'home',
@@ -47,41 +47,31 @@ const items: MenuProps['items'] = [
 const MenuBtn = ({ siteService, webview }: { siteService: SiteService; webview: WebviewTag }) => {
     const [showSettingDrawer, setShowSettingDrawer] = useState(false);
     const [site, setSite] = useState<SiteInfo | null>(null);
-    const [accounts, setAccounts] = useState<SiteAccountInfo[]>([]);
     const [account, setAccount] = useState<SiteAccountInfo | null>(null);
     useEffect(() => {
         (async () => {
             const site = await siteService.getSiteInfo();
             setSite(site);
-            const accounts = await siteService.getAccounts();
-            setAccounts(accounts);
+
             const account = await siteService.getAccount();
             setAccount(
-                account || {
-                    account_index: 0,
-                    auth: {}
-                }
+                account ||
+                    ({
+                        account_index: 0,
+                        site_id: site.site_id,
+                        config: {},
+                        auth: {}
+                    } as SiteAccountInfo)
             );
         })();
     }, []);
-    const changeAccounts = (
-        site: SiteInfo,
-        accounts: SiteAccountInfo[],
-        account: SiteAccountInfo
-    ) => {
+    const changeAccounts = async (account: SiteAccountInfo) => {
+        if (site) {
+            return;
+        }
         onEvent('showLoading');
-        const accounts_ = SiteService.updateAccount(accounts, account);
-        siteService
-            .saveAccounts(accounts_)
-            .then(() => {
-                message.success('保存成功');
-            })
-            .catch(() => {
-                message.error('保存失败');
-            })
-            .finally(() => {
-                onEvent('hideLoading');
-            });
+        await new SiteAccount(site!.site_id, account.account_index).save(account);
+        onEvent('hideLoading');
     };
 
     return (
@@ -130,11 +120,10 @@ const MenuBtn = ({ siteService, webview }: { siteService: SiteService; webview: 
                 onClose={() => setShowSettingDrawer(false)}
                 open={showSettingDrawer}
             >
-                {Boolean(site && account && accounts) && (
+                {Boolean(site && account) && (
                     <AccountDetail
-                        changeAccounts={changeAccounts}
                         site={site!}
-                        accounts={accounts}
+                        changeAccounts={changeAccounts}
                         account={account!}
                     ></AccountDetail>
                 )}

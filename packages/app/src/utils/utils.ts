@@ -88,3 +88,37 @@ export const diffObj = (a: any, b: any) => {
     }
     return false;
 };
+
+export function formatRelativeTime(
+    timestamp?: number,
+    options?: {
+        exactAfterDays?: number;
+    }
+): string {
+    if (!timestamp) return '-';
+
+    const now = Date.now();
+    const date = new Date(timestamp * 1000);
+    const diffInSeconds = Math.floor((now - date.getTime()) / 1000);
+
+    // Relative time formatting
+    if (diffInSeconds < 5) return '刚刚';
+    if (diffInSeconds < 60) return `${diffInSeconds}秒前`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}分钟前`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}小时前`;
+
+    // Exact date formatting after specified days (default 1 day)
+    const exactAfterDays = options?.exactAfterDays ?? 1;
+    if (diffInSeconds < exactAfterDays * 86400) {
+        return `${Math.floor(diffInSeconds / 86400)}天前`;
+    }
+
+    // Return formatted date for older timestamps
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
