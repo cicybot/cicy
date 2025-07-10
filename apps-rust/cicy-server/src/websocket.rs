@@ -114,7 +114,7 @@ async fn handle_socket(
             }
         }
     }
-
+    state.logout_client(&client_id).await;
     info!("Client disconnected: {} {:?}", client_id, timestamp);
     state.client_manager.remove_client(&client_id).await;
 }
@@ -130,8 +130,55 @@ async fn handle_client_message(state: &Arc<AppState>, client_id: &str, payload: 
         state.handle_callback(message_id, payload_data).await;
         return;
     }
+    let is_callback = payload.get("to").and_then(Value::as_str) == Some("__SERVER")
+        && action == "callback";
+
+    if !is_callback && action != "login" {
+        // Check authentication for all other messages
+        if !state.is_authenticated(client_id).await {
+            let message_id = payload.get("id").and_then(Value::as_str).unwrap_or("");
+            let _ = state.send_to_client(
+                client_id,
+                json!({
+                    "id": message_id,
+                    "action": "logout",
+                    "payload": {"reason": "Not authenticated"}
+                }).to_string()
+            ).await;
+            return;
+        }
+    }
 
     match action {
+        "login" => {
+            let token = payload_data.get("token").and_then(Value::as_str).unwrap_or("");
+            let expected_token = &state.expected_token;
+            if token == expected_token {
+                state.authenticate_client(client_id).await;
+
+                // Successful login
+                let _ = state.send_to_client(
+                    client_id,
+                    json!({
+                        "id": message_id,
+                        "action": "logged",
+                        "payload": {"status": "success"}
+                    }).to_string()
+                ).await;
+            } else {
+                state.logout_client(client_id).await;
+                // Failed login
+                let _ = state.send_to_client(
+                    client_id,
+                    json!({
+                        "id": message_id,
+                        "action": "logout",
+                        "payload": {"reason": "Invalid token"}
+                    }).to_string()
+                ).await;
+            }
+
+        }
         "ping" => {
             let _ = state.send_to_client(client_id,
                                          json!({"id": message_id, "action": "pong"}).to_string()

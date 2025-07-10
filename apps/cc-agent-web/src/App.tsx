@@ -43,6 +43,7 @@ function App() {
         isConnected.current = true;
         fetchAppInfo().then(() => {
             jsonRpc('deviceInfo').then(res => {
+                console.log('deviceInfo', JSON.stringify(res));
                 const { result } = res;
                 const { serverUrl, clientId } = result;
                 CCWSClient.setServerUrl(serverUrl);

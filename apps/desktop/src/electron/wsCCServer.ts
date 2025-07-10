@@ -8,7 +8,7 @@ import * as os from 'os';
 
 const execPromise = util.promisify(exec);
 
-export async function initCCServer(ip = '0.0.0.0', port = 4444, rust?: boolean) {
+export async function initCCServer(ip = '0.0.0.0', port = 4444, token: string, rust?: boolean) {
     const { publicDir, userDataPath: userDataPath1, version, isDev } = getAppInfo();
 
     if (!rust) {
@@ -43,7 +43,7 @@ export async function initCCServer(ip = '0.0.0.0', port = 4444, rust?: boolean) 
                 await execPromise(`chmod +x "${pathCmd}"`);
             }
         }
-        const cmd = `"${pathCmd}" --assets-dir "${assetsDir}" --port ${port} --ip ${ip} -d`;
+        const cmd = `"${pathCmd}" --token "${token}" --assets-dir "${assetsDir}" --port ${port} --ip ${ip} -d`;
 
         console.log('initCCServer rust: ', {
             platform,

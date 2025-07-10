@@ -676,7 +676,7 @@ export async function initConnector(serverUrl: string) {
         }
     }
 
-    const cmd = `"${pathCmd}" -d --ws-server ${serverUrl} --client-id CONNECTOR-ELECTRON`;
+    const cmd = `"${pathCmd}" -d --ws-server "${serverUrl}" --client-id CONNECTOR-ELECTRON`;
 
     console.log('initConnector rust: ', {
         platform,

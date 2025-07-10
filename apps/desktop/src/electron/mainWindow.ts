@@ -267,8 +267,19 @@ export class MainWindow {
                 case 'getAppInfo': {
                     return getAppInfo();
                 }
+
+                case 'initCCServer': {
+                    await initCCServer(
+                        payload.serverIp,
+                        payload.serverPort,
+                        payload.token,
+                        payload.useRust
+                    );
+                    return true;
+                }
                 case 'initConnector': {
-                    return await initConnector(payload.serverUrl);
+                    await initConnector(payload.serverUrl);
+                    return true;
                 }
                 default: {
                     return handleMsg(action, payload);
@@ -303,7 +314,6 @@ export class MainWindow {
             callback(details);
         });
 
-        await initCCServer('0.0.0.0', 4444, true);
         await delay(500);
         return this.mainWindow;
     }

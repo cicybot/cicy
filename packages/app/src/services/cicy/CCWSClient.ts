@@ -93,6 +93,10 @@ export class CCWSClient {
         interval = 100
     ) {
         try {
+            const waitRes = await CCWSClient.waitForIsLogged();
+            if (!waitRes) {
+                throw new Error('login error or timeout');
+            }
             const id = uuidv4();
             MsgResult.set(id, false);
             CCWSClient._send(
@@ -143,7 +147,24 @@ export class CCWSClient {
             .replace('/ws', '')
             .replace('127.0.0.1', serverIp);
     }
+    static isLogged() {
+        return isLogged;
+    }
+    static async waitForIsLogged() {
+        if (isLogged) {
+            return true;
+        }
+        const res = await waitForResult(() => {
+            return {
+                isLogged
+            };
+        });
+        return res.isLogged;
+    }
 
+    static _setServerUrl(serverUrl: string) {
+        __serverUrl = serverUrl;
+    }
     static setServerUrl(serverUrl: string) {
         console.log('setServerUrl', {
             serverUrl,
@@ -165,9 +186,9 @@ export class CCWSClient {
     }
 }
 
-//@ts-ignore
-window.__setServerUrl = CCWSClient.setServerUrl;
+let isLogged = false;
 export const connectCCServer = (clientId: string, options?: WsOptions) => {
+    isLogged = false;
     if (!__serverUrl) {
         setTimeout(() => {
             connectCCServer(clientId, options);
@@ -176,11 +197,25 @@ export const connectCCServer = (clientId: string, options?: WsOptions) => {
     }
     const serverUrl = __serverUrl;
     try {
-        const url = `${serverUrl}?id=${clientId}&t=` + +new Date();
+        const [cleanUrl, token] = serverUrl.split('?');
+
+        const url = `${cleanUrl}?id=${clientId}&t=` + +new Date();
         __ws = new WebSocket(url);
 
         console.log('[+] connecting to ' + url);
         __ws.onopen = () => {
+            if (token) {
+                __ws!.send(
+                    JSON.stringify({
+                        action: 'login',
+                        payload: {
+                            token: token.replace('token=', '')
+                        }
+                    })
+                );
+            } else {
+                isLogged = true;
+            }
             console.log('[+] connected to ' + url);
             options?.onOpen && options.onOpen(__ws!);
         };
@@ -195,8 +230,13 @@ export const connectCCServer = (clientId: string, options?: WsOptions) => {
                     if (MsgResult.has(id)) {
                         MsgResult.set(id, payload);
                     }
+                } else if (action === 'logged') {
+                    isLogged = true;
+                } else if (action === 'logout') {
+                    isLogged = false;
+                    window.dispatchEvent(new CustomEvent('goLogin'));
                 } else {
-                    options?.onMessage && options.onMessage(data);
+                    isLogged && options?.onMessage && options.onMessage(data);
                 }
             }
         };
@@ -205,6 +245,7 @@ export const connectCCServer = (clientId: string, options?: WsOptions) => {
             console.error('[-] Connection error', e);
         };
         __ws.onclose = e => {
+            isLogged = false;
             console.log('[-] on close', e.code);
             options?.onClose && options.onClose(__ws!, e.code);
             if (WsCloseCode.WS_CLOSE_STOP_RECONNECT !== e.code) {

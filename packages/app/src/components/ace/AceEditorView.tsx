@@ -83,6 +83,7 @@ export function AceEditorView({
             }}
             editorProps={{ $blockScrolling: true }}
             setOptions={{
+                useWorker: false,
                 enableBasicAutocompletion: mode === 'javascript',
                 enableLiveAutocompletion: mode === 'javascript',
                 enableMobileMenu: mode === 'javascript',

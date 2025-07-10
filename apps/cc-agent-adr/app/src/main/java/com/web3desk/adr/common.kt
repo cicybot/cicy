@@ -10,16 +10,23 @@ import android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import com.hjq.permissions.XXPermissions
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.Locale
+
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.concurrent.TimeUnit
+
 
 const val LOCAL_SERVER_PORT = 4448
 const val VERSION = "1.0.1"
 
 const val HOME_URL_LOCAL = "http://localhost:4448/?v=1"
-const val HOME_URL = "http://192.168.196.244:5173/?v=1"
-
+//const val HOME_URL = "http://192.168.110.244:5173/?v=1"
+const val HOME_URL = HOME_URL_LOCAL
 
 // Activity requestCode
 const val REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION = 101
@@ -110,5 +117,53 @@ fun padKeyTo8Bytes(key: String): String {
         key.substring(0, 8)  // Truncate if the key is longer than 8 characters
     } else {
         key.padEnd(8, '0')  // Pad with '0' if the key is shorter than 8 characters
+    }
+}
+
+/**
+ * Executes a shell command and returns the result as a JSONObject
+ *
+ * @param cmd The shell command to execute
+ * @param timeoutSeconds Maximum execution time (default: 30 seconds)
+ * @return JSONObject containing execution results
+ */
+@RequiresApi(Build.VERSION_CODES.O)
+fun shellExec(cmd: String, timeoutSeconds: Long = 30): JSONObject {
+    return try {
+        // Basic command validation
+        if (cmd.contains(Regex("[&|;`\$><]"))) {
+            throw SecurityException("Command contains potentially dangerous characters")
+        }
+
+        // Start the process
+        val process = Runtime.getRuntime().exec(arrayOf("/bin/sh", "-c", cmd))
+
+        // Set timeout
+        if (!process.waitFor(timeoutSeconds, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            return JSONObject().apply {
+                put("err", "Command timed out after $timeoutSeconds seconds")
+            }
+        }
+
+        // Read output streams
+        val output = BufferedReader(InputStreamReader(process.inputStream)).use { it.readText() }
+        val errorOutput = BufferedReader(InputStreamReader(process.errorStream)).use { it.readText() }
+
+        // Build result object
+        JSONObject().apply {
+            put("result", output.trim())
+            if (errorOutput.isNotBlank()) {
+                put("err", errorOutput.trim())
+            }
+        }
+    } catch (e: SecurityException) {
+        JSONObject().apply {
+            put("err", "Security violation: ${e.message}")
+        }
+    } catch (e: Exception) {
+        JSONObject().apply {
+            put("err", "Execution failed: ${e.message}")
+        }
     }
 }

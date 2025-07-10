@@ -45,10 +45,18 @@ fn make_call_res(id: &Option<String>,from: &Option<String>, result: JsonRpcRespo
     })
 }
 pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
+    // Split URL to extract base URL and token
+    let (clean_url, token) = match server_url.split_once('?') {
+        Some((base, query)) => (base.to_string(), query.to_string()),
+        None => (server_url.to_string(), String::new()),
+    };
+
+    let mut is_logged = false;
+
     loop {
         let url_str = format!(
             "{}?id={}&t={}",
-            server_url,
+            clean_url,
             client_id,
             Utc::now().timestamp_millis()
         );
@@ -76,17 +84,63 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
 
         let (mut write, mut read) = ws_stream.split();
 
+        // Send login message if token exists
+        if !token.is_empty() {
+            let login_msg = json!({
+                "action": "login",
+                "payload": {
+                    "token": token.replace("token=", "")
+                }
+            }).to_string();
+
+            if let Err(e) = write.send(Message::Text(login_msg)).await {
+                error!("Failed to send login message: {}", e);
+                continue;
+            }
+        } else {
+            is_logged = true;
+        }
+
         loop {
             match read.next().await {
                 Some(Ok(msg)) => {
                     match msg {
                         Message::Text(txt) => {
                             info!("Received text: {}", txt);
-                            // 这里传写入端 &mut write，并处理错误返回
-                            if let Err(e) = handle_msg(&txt, &mut write).await {
-                                error!("handle_msg error: {}", e);
-                                break; // 出错重连
+
+                            if let Ok(data) = serde_json::from_str::<Value>(&txt) {
+                                let action = data.get("action").and_then(Value::as_str).unwrap_or("");
+
+                                match action {
+                                    "callback" => {
+                                        // Handle callback messages
+                                        // if let Some(id) = data.get("id").and_then(Value::as_str) {
+                                        //     // Store in your MsgResult equivalent
+                                        // }
+                                    }
+                                    "logged" => {
+                                        is_logged = true;
+                                    }
+                                    "logout" => {
+                                        error!("logout!!");
+                                        // is_logged = false;
+                                        break; // Will trigger reconnection
+                                    }
+                                    _ => {
+                                        if is_logged {
+                                            if let Err(e) = handle_msg(&txt, &mut write).await {
+                                                error!("handle_msg error: {}", e);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                             }
+
+                            // // if let Err(e) = handle_msg(&txt, &mut write).await {
+                            //     error!("handle_msg error: {}", e);
+                            //     break; // 出错重连
+                            // }
                         }
                         Message::Binary(bin) => {
                             info!("Received binary message ({} bytes)", bin.len());
@@ -122,7 +176,7 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
                 }
             }
         }
-
+        is_logged = false;
         info!("[*] Connection closed, retrying in 5 seconds...");
         sleep(Duration::from_secs(5)).await;
     }

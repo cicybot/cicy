@@ -47,10 +47,17 @@ fn make_call_res(id: &Option<String>,from: &Option<String>, result: JsonRpcRespo
     })
 }
 pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
+    // Split URL to extract base URL and token
+    let (clean_url, token) = match server_url.split_once('?') {
+        Some((base, query)) => (base.to_string(), query.to_string()),
+        None => (server_url.to_string(), String::new()),
+    };
+    let mut is_logged = false;
+
     loop {
         let url_str = format!(
             "{}?id={}&t={}",
-            server_url,
+            clean_url,
             client_id,
             Utc::now().timestamp_millis()
         );
@@ -79,6 +86,22 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
         let (write, mut read) = ws_stream.split();
         let write = Arc::new(Mutex::new(write));
 
+        // Send login message if token exists
+        if !token.is_empty() {
+            let login_msg = json!({
+                "action": "login",
+                "payload": {
+                    "token": token.replace("token=", "")
+                }
+            }).to_string();
+
+            if let Err(e) = write.lock().await.send(Message::Text(login_msg)).await {
+                error!("Failed to send login message: {}", e);
+                continue;
+            }
+        } else {
+            is_logged = true;
+        }
         // Send ping every 5 seconds in a separate task
         let write_ping = write.clone(); // Clone the Arc to pass it into the task
         let ping_task = task::spawn(async move {
@@ -100,11 +123,40 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
                     match msg {
                         Message::Text(txt) => {
                             info!("Received text: {}", txt);
-                            let mut write_lock = write.lock().await;
-                            if let Err(e) = handle_msg(&txt, &mut *write_lock).await { // Dereference here
-                                error!("handle_msg error: {}", e);
-                                break; // 出错重连
+                            if let Ok(data) = serde_json::from_str::<Value>(&txt) {
+                                let action = data.get("action").and_then(Value::as_str).unwrap_or("");
+
+                                match action {
+                                    "callback" => {
+                                        // Handle callback messages
+                                        // if let Some(id) = data.get("id").and_then(Value::as_str) {
+                                        //     // Store in your MsgResult equivalent
+                                        // }
+                                    }
+                                    "logged" => {
+                                        is_logged = true;
+                                    }
+                                    "logout" => {
+                                        error!("logout!!");
+                                        break; // Will trigger reconnection
+                                    }
+                                    _ => {
+                                        if is_logged {
+                                            let mut write_lock = write.lock().await;
+                                            if let Err(e) = handle_msg(&txt, &mut *write_lock).await { // Dereference here
+                                                error!("handle_msg error: {}", e);
+                                                break; // 出错重连
+                                            }
+                                        }
+                                    }
+                                }
                             }
+
+                            // let mut write_lock = write.lock().await;
+                            // if let Err(e) = handle_msg(&txt, &mut *write_lock).await { // Dereference here
+                            //     error!("handle_msg error: {}", e);
+                            //     break; // 出错重连
+                            // }
                         }
                         Message::Binary(bin) => {
                             info!("Received binary message ({} bytes)", bin.len());
@@ -141,6 +193,7 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
 
         // Wait for the ping task to finish (though it should run indefinitely)
         ping_task.abort();
+        is_logged = false;
 
         info!("[*] Connection closed, retrying in 1 second...");
         sleep(Duration::from_secs(1)).await;

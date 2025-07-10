@@ -10,6 +10,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -28,7 +29,8 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
     private val isConnecting = AtomicBoolean(false)
     private val shouldReconnect = AtomicBoolean(true)
     private val configFilePath = "/data/local/tmp/config_server.txt"
-
+    private var token: String? = null
+    private var isLogged = false
     private val client = OkHttpClient.Builder()
         .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive
         .build()
@@ -49,6 +51,23 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
             null
         }
     }
+    private fun processWebSocketUrl(originalUrl: String): Pair<String, String?> {
+        return if (originalUrl.contains("token=")) {
+            // Split into base URL and query parameters
+            val (baseUrl, queryParams) = originalUrl.split('?', limit = 2)
+
+            // Extract token from query parameters
+            val token = queryParams.split('&')
+                .firstOrNull { it.startsWith("token=") }
+                ?.replace("token=", "")
+
+            // Return clean URL and token
+            Pair(baseUrl, token)
+        } else {
+            // No token in URL
+            Pair(originalUrl, null)
+        }
+    }
 
     fun connect() {
         val serverUrl = readServerUrlFromFile();
@@ -66,7 +85,9 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
         isConnecting.set(true)
 
         try {
-            val url = "$serverUrl?id=$clientId&t=${System.currentTimeMillis()}"
+            val (cleanServerUrl, extractedToken) = processWebSocketUrl(serverUrl)
+            token = extractedToken
+            val url = "$cleanServerUrl?id=$clientId&t=${System.currentTimeMillis()}"
             Log.d(tag, "[+] Connecting to $url")
 
             val request = Request.Builder()
@@ -77,6 +98,18 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
                 override fun onOpen(webSocket: WebSocket, response: Response) {
                     isConnecting.set(false)
                     Log.d(tag, "[+] Connected to $url")
+                    if(token?.isEmpty() == false){
+                        // Send login message
+                        val loginMessage = JSONObject().apply {
+                            put("action", "login")
+                            put("payload", JSONObject().apply {
+                                put("token", token)
+                            })
+                        }.toString()
+
+                        webSocket.send(loginMessage)
+                    }
+
                     options?.onOpen(webSocket)
 
                     // Start sending ping every 5 seconds after successful connection
@@ -96,8 +129,17 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
                                 // MsgResult[id] = payload
                             } else if (action == "pong") {
                                 Log.d(tag, "pp-pong!")
+                            } else if (action == "logged") {
+                                Log.d(tag, "logged")
+                                isLogged = true;
+                            } else if (action == "logout") {
+                                Log.d(tag, "logout")
+                                isLogged = false;
                             } else {
-                                options?.onMessage(webSocket, text)
+                                if(isLogged){
+                                    options?.onMessage(webSocket, text)
+                                }
+
                             }
                         }
                     } catch (e: Exception) {

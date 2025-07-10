@@ -14,8 +14,19 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            '/appInfo': 'http://192.168.196.7:4448',
-            '/jsonrpc': 'http://192.168.196.7:4448'
+            '/appInfo': {
+                target: 'http://192.168.110.197:4448',
+                changeOrigin: true,
+                secure: false,
+                rewrite: function (path) { return path.replace(/^\/appInfo/, ''); },
+                // Additional resilience options:
+                timeout: 30000
+            },
+            '/jsonrpc': {
+                target: 'http://192.168.110.197:4448',
+                changeOrigin: true,
+                secure: false
+            }
         }
     },
     plugins: [react()]

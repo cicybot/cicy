@@ -136,6 +136,7 @@ class MainActivity : AppCompatActivity() {
         val version = Build.VERSION.RELEASE  // 安卓系统版本
         val id = Build.ID  // 编译版本ID
         val payload = JSONObject().apply {
+            put("clientId", "ADR-${brand}-${model}")
             put("ccAgentAccessibility", InputService.isOpen)
             put("ccAgentMediaProjection", MainService.isStart)
             put("displayWidth", screenWidth)

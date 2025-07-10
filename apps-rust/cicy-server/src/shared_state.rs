@@ -1,4 +1,6 @@
-use std::collections::HashMap;
+// shared_state.rs
+
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock, oneshot};
 use uuid::Uuid;
@@ -102,18 +104,33 @@ pub struct AppState {
     pub client_manager: ClientManager,
     pub global_tx: broadcast::Sender<String>,
     pub response_tracker: ResponseTracker,
+    pub expected_token: String,  // Add this field
+    pub authenticated_clients: RwLock<HashSet<String>>, // Track logged-in clients
+
 }
 
 impl AppState {
-    pub fn new() -> Self {
+    pub fn new(expected_token: String) -> Self {
         let (global_tx, _) = broadcast::channel(100);
         AppState {
             client_manager: ClientManager::new(),
             global_tx,
             response_tracker: ResponseTracker::new(),
+            expected_token,  // Initialize with provided token
+            authenticated_clients: RwLock::new(HashSet::new()),
         }
     }
+    pub async fn authenticate_client(&self, client_id: &str) {
+        self.authenticated_clients.write().await.insert(client_id.to_string());
+    }
 
+    pub async fn logout_client(&self, client_id: &str) {
+        self.authenticated_clients.write().await.remove(client_id);
+    }
+
+    pub async fn is_authenticated(&self, client_id: &str) -> bool {
+        self.authenticated_clients.read().await.contains(client_id)
+    }
     pub async fn send_to_client(&self, client_id: &str, message: String) -> Result<(), String> {
         if let Some(client_tx) = self.client_manager.get_client(client_id).await {
             client_tx.send(message).map_err(|e| e.to_string())?;
