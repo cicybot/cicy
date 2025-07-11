@@ -80,7 +80,7 @@ const WebviewBrowserInner = ({ userAgent }: { userAgent: string }) => {
                             dataDir
                         } = windowInfoRes.result.meta;
                         if (!isPortOnline.result) {
-                            await ProxyService.intMetaAccountConfig(accountIndex, metaConfigPath);
+                            await ProxyService.initMetaAccountConfig(accountIndex, metaConfigPath);
                             try {
                                 await ProxyService.testConfig(
                                     bin,
@@ -107,7 +107,7 @@ const WebviewBrowserInner = ({ userAgent }: { userAgent: string }) => {
                         const account = await siteService.getAccount();
 
                         connectCCServer(windowId, {
-                            onOpen: async () => {
+                            onLogged: async () => {
                                 currentWebContentsId = webview.getWebContentsId();
                                 let requestFilters: undefined | string[] = undefined;
                                 if (

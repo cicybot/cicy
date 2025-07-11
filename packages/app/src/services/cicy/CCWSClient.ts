@@ -31,6 +31,7 @@ let __ws: WebSocket | null;
 
 export interface WsOptions {
     onOpen?: (ws: WebSocket) => void;
+    onLogged: (ws: WebSocket) => void;
     onMessage?: (message: string) => void;
     onClose?: (ws: WebSocket, code: number) => void;
 }
@@ -232,6 +233,7 @@ export const connectCCServer = (clientId: string, options?: WsOptions) => {
                     }
                 } else if (action === 'logged') {
                     isLogged = true;
+                    options?.onLogged && options.onLogged(__ws!);
                 } else if (action === 'logout') {
                     isLogged = false;
                     window.dispatchEvent(new CustomEvent('goLogin'));

@@ -55,12 +55,16 @@ const Setting = () => {
             </View>
             <View>
                 <View p12>
-                    <ProDescriptions column={3}>
+                    <ProDescriptions column={1}>
                         <ProDescriptions.Item label={'CiCy Ser IP'}>
                             <ProField text={serverIp} mode="read" />
                         </ProDescriptions.Item>
                         <ProDescriptions.Item label={'CiCy Ser Url'}>
                             <ProField text={CCWSClient.getServerUrl()} mode="read" />
+                        </ProDescriptions.Item>
+
+                        <ProDescriptions.Item label={'Token'}>
+                            <ProField text={localStorage.getItem('token')} mode="read" />
                         </ProDescriptions.Item>
                     </ProDescriptions>
                     <Divider />

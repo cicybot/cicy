@@ -245,7 +245,10 @@ export class MainWindow {
         await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
-            console.log('[+] [MSG]', message);
+            if (!['utils', 'db'].includes(message.action)) {
+                console.log('[+] [MSG]', message);
+            }
+
             const { action, payload } = message || {};
             switch (action) {
                 case 'openPath': {
@@ -267,7 +270,6 @@ export class MainWindow {
                 case 'getAppInfo': {
                     return getAppInfo();
                 }
-
                 case 'initCCServer': {
                     await initCCServer(
                         payload.serverIp,

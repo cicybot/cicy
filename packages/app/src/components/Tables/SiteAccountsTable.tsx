@@ -5,7 +5,7 @@ import { Button, Checkbox, Drawer, message, Tabs, type TabsProps, Tooltip } from
 import { useEffect, useState } from 'react';
 import BrowserService from '../../services/cicy/BrowserService';
 import { SiteAccountInfo, SiteInfo, SiteService } from '../../services/model/SiteService';
-import { BrowserAccountProxy } from './BrowserAccountProxy';
+import { BrowserAccountProxy } from '../browser_account/BrowserAccountProxy';
 import View from '../View';
 import { BrowserAccount, BrowserAccountSite } from '../../services/model/BrowserAccount';
 

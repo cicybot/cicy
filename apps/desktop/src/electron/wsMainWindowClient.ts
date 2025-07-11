@@ -556,7 +556,7 @@ export const handleMsg = async (action: string, payload: any) => {
             case 'callBaseWindow': {
                 const { windowId, method, params } = payload || {};
                 const win = MainWindow.getWinById(windowId);
-                console.log(windowId, !!win);
+                // console.log(windowId, !!win);
                 if (win) {
                     res = {
                         err: ''

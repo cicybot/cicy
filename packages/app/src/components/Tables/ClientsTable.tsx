@@ -18,7 +18,7 @@ import {
     isMasterWebContent
 } from '../../utils/helper';
 import { onEvent } from '../../utils/utils';
-import { useLocalStorageState } from '@cicy/utils';
+import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 
 export type TableListItem = {
     key: string;
@@ -120,6 +120,9 @@ const ClientsTable = () => {
             label: ClientTypes[key]
         };
     });
+    useTimeoutLoop(async () => {
+        await refetch(true);
+    }, 2000);
 
     const dataSource = clients
         .filter(clientId => {

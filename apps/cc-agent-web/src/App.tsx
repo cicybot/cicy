@@ -48,7 +48,7 @@ function App() {
                 const { serverUrl, clientId } = result;
                 CCWSClient.setServerUrl(serverUrl);
                 connectCCServer(clientId + '-CHAT', {
-                    onOpen: () => {
+                    onLogged: () => {
                         setChatConnected(true);
                     },
                     onMessage: (message: string) => {

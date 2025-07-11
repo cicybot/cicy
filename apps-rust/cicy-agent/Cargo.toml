@@ -1,6 +1,6 @@
 [package]
 name = "cicy-agent"
-version = "1.0.69"
+version = "1.0.70"
 authors = ["Barry"]
 edition = "2024"
 license = "MIT"

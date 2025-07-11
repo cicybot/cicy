@@ -9,6 +9,7 @@ import BrowserService from '../../services/cicy/BrowserService';
 import { useTimeoutLoop } from '@cicy/utils';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import ProxyService from '../../services/common/ProxyService';
+import ProxyPorts from '../../components/proxy/ProxyPorts';
 
 const Proxy = () => {
     const { appInfo } = useMainWindowContext();
@@ -35,8 +36,29 @@ const Proxy = () => {
             setIsServerOnline(false);
         }
     }
+    async function fetchMetaAccountPorts() {
+        let result = '';
+        if (appInfo.isWin) {
+            const res = await new BackgroundApi().shell(
+                `powershell -command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine  -like '*meta_*' } | Select-Object CommandLine"`
+            );
+            result = res.result.stdout;
+        } else {
+            const res = await new BackgroundApi().shell("ps aux | grep meta_ | awk '{print $15}'");
+            result = res.result.stdout;
+        }
 
+        const rows = result
+            .trim()
+            .split('\n')
+            .map((row: string) => row.trim())
+            .filter((row: string) => row.endsWith('.yaml'))
+            .map((row: string) => parseInt(row.split('meta_')[1].replace('.yaml', '')));
+
+        return rows;
+    }
     useTimeoutLoop(async () => {
+        await fetchMetaAccountPorts();
         await isPortOnline();
     }, 2000);
 
@@ -54,7 +76,7 @@ const Proxy = () => {
     const items: TabsProps['items'] = [
         {
             key: '1',
-            label: '服务器',
+            label: '代理池',
             children: (
                 <View wh100p>
                     <View p12>
@@ -135,7 +157,7 @@ curl -v -x http://10001:pwd@127.0.0.1:${port} https://api.myip.com
         },
         {
             key: '2',
-            label: '配置',
+            label: '代理池配置',
             children: (
                 <View wh100p>
                     <View h={44} rowVCenter pl12>
@@ -150,7 +172,7 @@ curl -v -x http://10001:pwd@127.0.0.1:${port} https://api.myip.com
                                     })
                                     .then(async () => {
                                         await startServer();
-                                        message.success('保存成功! 请重启服务');
+                                        message.success('保存成功并重启成功!');
                                     })
                                     .finally(() => {
                                         onEvent('hideLoading');
@@ -197,6 +219,20 @@ curl -v -x http://10001:pwd@127.0.0.1:${port} https://api.myip.com
                                 规则
                             </Button>
                         </View>
+
+                        <View ml12>
+                            <Button
+                                size="small"
+                                disabled={!isServerOnline}
+                                onClick={() => {
+                                    new BrowserService(
+                                        `https://board.zash.run.place/#/proxies`
+                                    ).openWindow({ noWebview: true });
+                                }}
+                            >
+                                Zash
+                            </Button>
+                        </View>
                     </View>
                     <View w100p h={'calc(100vh - 138px)'}>
                         <AceEditorView
@@ -211,6 +247,15 @@ curl -v -x http://10001:pwd@127.0.0.1:${port} https://api.myip.com
                             id={'meta_config'}
                         ></AceEditorView>
                     </View>
+                </View>
+            )
+        },
+        {
+            key: '3',
+            label: '窗口代理',
+            children: (
+                <View wh100p>
+                    <ProxyPorts></ProxyPorts>
                 </View>
             )
         }

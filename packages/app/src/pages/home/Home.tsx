@@ -64,7 +64,7 @@ const Home = () => {
                 }
             }
             connectCCServer(clientId, {
-                onOpen: () => {
+                onLogged: () => {
                     setWsConnected(true);
                     window.backgroundApi &&
                         window.backgroundApi.message({

@@ -1,4 +1,9 @@
 import { ClientIds } from '../services/cicy/CCWSClient';
+import { onEvent } from './utils';
+import { BackgroundApi } from '../services/common/BackgroundApi';
+import ProxyService from '../services/common/ProxyService';
+import { message } from 'antd';
+import { BrowserAccount } from '../services/model/BrowserAccount';
 
 export const isAndroidAgentRustClient = (clientId: string) => {
     return (
@@ -20,6 +25,7 @@ export const isAndroidChatClient = (clientId: string) => {
 export const isAndroidAgentManageClient = (clientId: string) => {
     return clientId.startsWith('ADR-') && clientId.endsWith('-MANAGE');
 };
+
 export const isBrowserClient = (clientId: string) => {
     const t = clientId.split('-');
 

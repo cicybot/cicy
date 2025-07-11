@@ -3,13 +3,12 @@ import { ProTable } from '@ant-design/pro-components';
 import { Button, Drawer, message } from 'antd';
 
 import { useBrowserAccounts } from '../../hooks/ws';
-import { formatRelativeTime, onEvent } from '../../utils/utils';
-import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
+import { onEvent } from '../../utils/utils';
+import { BrowserAccountInfo } from '../../services/model/BrowserAccount';
 import { EditOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import View from '../View';
-import BrowserAccountDetail from './BrowserAccountDetail';
-import { BackgroundApi } from '../../services/common/BackgroundApi';
+import BrowserAccountDetail from '../browser_account/BrowserAccountDetail';
 import ProxyService from '../../services/common/ProxyService';
 
 const BrowserAccountsTable = () => {
@@ -40,21 +39,6 @@ const BrowserAccountsTable = () => {
             }
         },
         {
-            title: '延时',
-            dataIndex: 'delay',
-            render: (_, { config }) => {
-                return <>{config.testDelay || '-'}</>;
-            }
-        },
-
-        {
-            title: '测试时间',
-            dataIndex: 'ts',
-            render: (_, { config }) => {
-                return <>{config.testTs ? formatRelativeTime(config.testTs) : '-'}</>;
-            }
-        },
-        {
             title: '操作',
             width: 120,
             valueType: 'option',
@@ -73,36 +57,13 @@ const BrowserAccountsTable = () => {
                     key="test"
                     onClick={async () => {
                         onEvent('showLoading');
-                        const startTime = Date.now();
-                        new BackgroundApi()
-                            .axios('https://api.myip.com', {
-                                timeout: 5000,
-                                httpsProxy: `http://127.0.0.1:${ProxyService.getMetaAccountProxyPort(
-                                    record.id
-                                )}`
-                            })
-                            .then(async (res: any) => {
-                                if (res.err) {
-                                    message.error(res.err);
-                                } else {
-                                    const { ip, country } = res.result;
-                                    await new BrowserAccount(record.id).save({
-                                        ...record.config,
-                                        testDelay: Date.now() - startTime,
-                                        testTs: Math.floor(startTime / 1000),
-                                        testLocation: country,
-                                        testIp: ip
-                                    });
-                                    await refresh();
-                                }
-                            })
-                            .catch(e => {
-                                //@ts-ignore
-                                message.error(e.message);
-                            })
-                            .finally(() => {
-                                onEvent('hideLoading');
-                            });
+                        try {
+                            await ProxyService.testSpeed(record);
+                            await refresh();
+                        } catch (e) {
+                            message.error(e + '');
+                        }
+                        onEvent('hideLoading');
                     }}
                     style={{ marginRight: 8 }}
                 >
