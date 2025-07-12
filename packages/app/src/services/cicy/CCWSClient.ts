@@ -139,7 +139,7 @@ export class CCWSClient {
     }
 
     static isLocalServer() {
-        return DEFAULT_SERVER_URL === __serverUrl;
+        return __serverUrl.indexOf('127.0.0.1') > -1;
     }
 
     static getHttpUrl(serverIp: string) {

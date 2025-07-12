@@ -1,6 +1,4 @@
 import { BackgroundApi } from './BackgroundApi';
-import { onEvent } from '../../utils/utils';
-import { message } from 'antd';
 import { BrowserAccount, BrowserAccountInfo } from '../model/BrowserAccount';
 
 export const DEFAULT_META_CONFIG_YAML = `# 4445 4455 不可修改，其他参考 
@@ -30,12 +28,7 @@ rules:
 export const DEFAULT_META_ACCOUNT_CONFIG_YAML = `
 mixed-port: @port@
 bind-address: '*'
-allow-lan: false
-external-controller: '127.0.0.1:@port_web@'
-external-controller-cors:
-  allow-private-network: true
-  allow-origins:
-  - '*'
+allow-lan: true
 mode: rule
 
 proxies:
@@ -80,21 +73,26 @@ export default class ProxyService {
     static getMetaAccountProxyPort(accountIndex: number) {
         return 10000 + accountIndex;
     }
-    static getMetaAccountProxyWebuiPort(accountIndex: number) {
+
+    static getMetaAccountProxyMitmPort(accountIndex: number) {
         return 20000 + accountIndex;
     }
+
     static async initMetaAccountConfig(accountIndex: number, metaConfigPath: string) {
         const res = await ProxyService.isMetaAccountConfigPathExists(accountIndex, metaConfigPath);
         if (!res) {
-            const port = ProxyService.getMetaAccountProxyPort(accountIndex);
-            await new BackgroundApi().utils({
-                method: 'fileWriteString',
-                params: [
-                    ProxyService.getMetaAccountConfigPath(accountIndex, metaConfigPath),
-                    ProxyService.getMetaAccountConfig(port)
-                ]
-            });
+            await this.saveMetaAccountConfig(accountIndex, metaConfigPath);
         }
+    }
+    static async saveMetaAccountConfig(accountIndex: number, metaConfigPath: string) {
+        const port = ProxyService.getMetaAccountProxyPort(accountIndex);
+        await new BackgroundApi().utils({
+            method: 'fileWriteString',
+            params: [
+                ProxyService.getMetaAccountConfigPath(accountIndex, metaConfigPath),
+                ProxyService.getMetaAccountConfig(port).trim()
+            ]
+        });
     }
     static async startServer(
         bin: string,
@@ -137,30 +135,23 @@ export default class ProxyService {
         return metaConfigPath.replace('.yaml', `_meta_${port}.yaml`);
     }
     static getMetaAccountConfig(port: number) {
-        let config = DEFAULT_META_ACCOUNT_CONFIG_YAML.replace(/@port_web@/g, port + 10000 + '');
-        config = config.replace(/@port@/g, port + '');
+        let config = DEFAULT_META_ACCOUNT_CONFIG_YAML.replace(/@port@/g, port + '');
         config = config.replace(
             /@proxy_server@/g,
             ProxyService.getMetaAccountCacheProxyServerHost()
         );
         config = config.replace(/@proxy_port@/g, ProxyService.getMetaAccountCacheProxyServerPort());
+
         return config;
     }
     static getMetaAccountCacheProxyServerHost() {
         let host = '127.0.0.1';
-        const cache = localStorage.getItem('proxy_server');
-        if (cache) {
-            host = JSON.parse(cache)[0];
-        }
+
         return host;
     }
 
     static getMetaAccountCacheProxyServerPort() {
         let port = ProxyService.getProxyPort();
-        const cache = localStorage.getItem('proxy_port');
-        if (cache) {
-            port = JSON.parse(cache)[0];
-        }
         return port + '';
     }
     static getMetaConfig() {

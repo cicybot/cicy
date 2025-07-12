@@ -1,5 +1,5 @@
+import { AndroidConnector } from '../../components/adr-connector/AndroidConnector';
 import View from '../../components/View';
-import { AndroidConnector } from '../../components/device/AndroidConnector';
 
 const Android = () => {
     return (

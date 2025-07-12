@@ -10,6 +10,14 @@ export class BackgroundApi {
     send(msg: { action: string; payload?: any }) {
         return this.api.message(msg);
     }
+    openPath(path: string) {
+        return this.send({
+            action: 'openPath',
+            payload: {
+                path
+            }
+        });
+    }
     setWebContentConfig(
         windowId: string,
         webContentsId: number,
@@ -41,11 +49,13 @@ export class BackgroundApi {
         });
     }
 
-    killPort(port: number) {
-        return this.utils({
-            method: 'killPort',
-            params: [port]
-        });
+    async killPort(port: number) {
+        try {
+            await this.utils({
+                method: 'killPort',
+                params: [port]
+            });
+        } catch (e) {}
     }
 
     async metaStart(port: number, cmd: string, showWin?: boolean) {
@@ -81,13 +91,18 @@ export class BackgroundApi {
         });
     }
 
+    mainWindowInfo() {
+        return this.send({
+            action: 'mainWindowInfo'
+        });
+    }
+
     utils(payload: { method: string; params?: any }) {
         return this.send({
             action: 'utils',
             payload
         });
     }
-
     async axios(
         url: string,
         params?: {

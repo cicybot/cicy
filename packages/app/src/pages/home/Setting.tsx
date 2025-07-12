@@ -1,4 +1,4 @@
-import { Breadcrumb, Divider } from 'antd';
+import { Breadcrumb, Button, Divider } from 'antd';
 import View from '../../components/View';
 import { useEffect, useState } from 'react';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
@@ -54,12 +54,12 @@ const Setting = () => {
                 />
             </View>
             <View>
-                <View p12>
+                <View p12 ml12>
                     <ProDescriptions column={1}>
-                        <ProDescriptions.Item label={'CiCy Ser IP'}>
+                        <ProDescriptions.Item label={'CiCy 服务器 IP'}>
                             <ProField text={serverIp} mode="read" />
                         </ProDescriptions.Item>
-                        <ProDescriptions.Item label={'CiCy Ser Url'}>
+                        <ProDescriptions.Item label={'CiCy 服务器 Url'}>
                             <ProField text={CCWSClient.getServerUrl()} mode="read" />
                         </ProDescriptions.Item>
 
@@ -79,19 +79,59 @@ const Setting = () => {
                             <ProField text={publicIpInfo[2]} mode="read" />
                         </ProDescriptions.Item>
                     </ProDescriptions>
-
                     <Divider />
-                    <ProDescriptions column={1}>
-                        {Object.keys(appInfo || {}).map((key: string) => {
-                            //@ts-ignore
-                            const text = appInfo[key];
-                            return (
-                                <ProDescriptions.Item key={key} label={key.replace('ccAgent', '')}>
-                                    <ProField text={text + ''} mode="read" />
-                                </ProDescriptions.Item>
-                            );
-                        })}
+                    <ProDescriptions column={3}>
+                        <ProDescriptions.Item label={'版本'}>
+                            <ProField text={appInfo.version} mode="read" />
+                        </ProDescriptions.Item>
+                        <ProDescriptions.Item label={'本机IP'}>
+                            <ProField text={appInfo.ip} mode="read" />
+                        </ProDescriptions.Item>
                     </ProDescriptions>
+                    <Divider />
+                    <ProDescriptions column={2}>
+                        <ProDescriptions.Item label={'数据目录'}>
+                            <ProField text={appInfo.appDataPath} mode="read" />
+                        </ProDescriptions.Item>
+                        <View ml12>
+                            <Button
+                                size={'small'}
+                                onClick={() => {
+                                    new BackgroundApi().openPath(appInfo.appDataPath);
+                                }}
+                            >
+                                打开
+                            </Button>
+                        </View>
+                    </ProDescriptions>
+                    <Divider />
+                    <ProDescriptions column={2}>
+                        <ProDescriptions.Item label={'公开目录'}>
+                            <ProField text={appInfo.publicDir} mode="read" />
+                        </ProDescriptions.Item>
+                        <View ml12>
+                            <Button
+                                size={'small'}
+                                onClick={() => {
+                                    new BackgroundApi().openPath(appInfo.publicDir);
+                                }}
+                            >
+                                打开
+                            </Button>
+                        </View>
+                    </ProDescriptions>
+                    {/*<Divider />*/}
+                    {/*<ProDescriptions column={1}>*/}
+                    {/*    {Object.keys(appInfo || {}).map((key: string) => {*/}
+                    {/*        //@ts-ignore*/}
+                    {/*        const text = appInfo[key];*/}
+                    {/*        return (*/}
+                    {/*            <ProDescriptions.Item key={key} label={key.replace('ccAgent', '')}>*/}
+                    {/*                <ProField text={text + ''} mode="read" />*/}
+                    {/*            </ProDescriptions.Item>*/}
+                    {/*        );*/}
+                    {/*    })}*/}
+                    {/*</ProDescriptions>*/}
                 </View>
             </View>
         </View>

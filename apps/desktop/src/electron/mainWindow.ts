@@ -18,7 +18,7 @@ import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
 import os from 'os';
-import { getLocalIPAddress } from '@cicy/cicy-ws';
+import { getLocalIPAddress, killPort } from '@cicy/cicy-ws';
 import util from 'util';
 import { exec } from 'child_process';
 const execPromise = util.promisify(exec);
@@ -168,9 +168,10 @@ export class MainWindow {
             win.on('close', (e: any) => {
                 let w = this.windows.get(winId);
                 new WebContentsRequest(winId).clearRequests();
+
                 this.windowsReady.delete(winId);
                 this.windows.delete(winId);
-
+                this.handleProxyPorts(winId);
                 if (w) {
                     saveBounds(winId, w.getBounds());
                     w = undefined;
@@ -190,6 +191,42 @@ export class MainWindow {
         }
         return win;
     }
+    static getAccountIndexByWinId(winId: string) {
+        const row = winId.split('-');
+        if (row.length === 2 && parseInt(row[0]) >= 0) {
+            return parseInt(row[0]);
+        } else {
+            return null;
+        }
+    }
+    static async handleProxyPorts(winId: string) {
+        const accountIndex = this.getAccountIndexByWinId(winId);
+        if (accountIndex !== null) {
+            const accounts = Array.from(this.windows)
+                .map(row => row[0])
+                .map(row => row.split('-'))
+                .filter(row => row.length === 2 && parseInt(row[0]) >= 0)
+                .map(row => parseInt(row[0]));
+            if (accounts.indexOf(accountIndex) === -1) {
+                const port = 10000 + accountIndex;
+                console.log('killPort', port);
+
+                try {
+                    await killPort(port);
+                } catch (e) {
+                    console.error(e);
+                }
+                const port1 = 20000 + accountIndex;
+                console.log('killPort', port1);
+                try {
+                    await killPort(port1);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+    }
+
     static async openMainWindow() {
         if (this.mainWindow !== undefined && this.mainWindow !== null) return this.mainWindow;
         const userDataPath = app.getPath('userData');

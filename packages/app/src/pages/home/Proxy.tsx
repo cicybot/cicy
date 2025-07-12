@@ -10,6 +10,7 @@ import { useTimeoutLoop } from '@cicy/utils';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import ProxyService from '../../services/common/ProxyService';
 import ProxyPorts from '../../components/proxy/ProxyPorts';
+import ProxyMitmproxy from '../../components/proxy/ProxyMitmproxy';
 
 const Proxy = () => {
     const { appInfo } = useMainWindowContext();
@@ -130,6 +131,20 @@ const Proxy = () => {
                                         规则
                                     </Button>
                                 </View>
+
+                                <View ml12>
+                                    <Button
+                                        size="small"
+                                        disabled={!isServerOnline}
+                                        onClick={() => {
+                                            new BrowserService(
+                                                `https://board.zash.run.place/#/proxies`
+                                            ).openWindow({ noWebview: true });
+                                        }}
+                                    >
+                                        Zash
+                                    </Button>
+                                </View>
                             </ProDescriptions.Item>
                         </ProDescriptions>
                         <View h={12}></View>
@@ -144,7 +159,7 @@ const Proxy = () => {
                                     }}
                                     value={`export https_proxy=http://127.0.0.1:${port} http_proxy=http://127.0.0.1:${port} all_proxy=socks5://127.0.0.1:${port}
 
-curl -v -x http://10001:pwd@127.0.0.1:${port} https://api.myip.com
+curl -v -x http://Account_10001:pwd@127.0.0.1:${port} https://api.myip.com
 `}
                                     mode={'sh'}
                                     id={'env'}
@@ -152,106 +167,48 @@ curl -v -x http://10001:pwd@127.0.0.1:${port} https://api.myip.com
                             </View>
                         </ProDescriptions>
                     </View>
+                    <View>
+                        <View h={44} rowVCenter pl12>
+                            <Button
+                                size={'small'}
+                                onClick={() => {
+                                    onEvent('showLoading');
+                                    new BackgroundApi()
+                                        .utils({
+                                            method: 'fileWriteString',
+                                            params: [configPath, config]
+                                        })
+                                        .then(async () => {
+                                            await startServer();
+                                            message.success('保存成功并重启成功!');
+                                        })
+                                        .finally(() => {
+                                            onEvent('hideLoading');
+                                        });
+                                }}
+                            >
+                                保存
+                            </Button>
+                        </View>
+                        <View w100p h={'calc(100vh - 360px)'}>
+                            <AceEditorView
+                                options={{
+                                    wrap: true
+                                }}
+                                value={config}
+                                onChange={e => {
+                                    setConfig(e);
+                                }}
+                                mode={'yaml'}
+                                id={'meta_config'}
+                            ></AceEditorView>
+                        </View>
+                    </View>
                 </View>
             )
         },
         {
             key: '2',
-            label: '代理池配置',
-            children: (
-                <View wh100p>
-                    <View h={44} rowVCenter pl12>
-                        <Button
-                            size={'small'}
-                            onClick={() => {
-                                onEvent('showLoading');
-                                new BackgroundApi()
-                                    .utils({
-                                        method: 'fileWriteString',
-                                        params: [configPath, config]
-                                    })
-                                    .then(async () => {
-                                        await startServer();
-                                        message.success('保存成功并重启成功!');
-                                    })
-                                    .finally(() => {
-                                        onEvent('hideLoading');
-                                    });
-                            }}
-                        >
-                            保存
-                        </Button>
-                        <View w={12}></View>
-                        <Button
-                            size="small"
-                            onClick={async () => {
-                                onEvent('showLoading');
-                                await startServer();
-                                onEvent('hideLoading');
-                            }}
-                        >
-                            {isServerOnline ? '重启' : '启动'}
-                        </Button>
-
-                        <View ml12>
-                            <Button
-                                size="small"
-                                disabled={!isServerOnline}
-                                onClick={() => {
-                                    new BrowserService(
-                                        `https://yacd.metacubex.one/?hostname=127.0.0.1&port=${port_web}&secret=#/proxies`
-                                    ).openWindow({ noWebview: true });
-                                }}
-                            >
-                                节点
-                            </Button>
-                        </View>
-                        <View ml12>
-                            <Button
-                                size="small"
-                                disabled={!isServerOnline}
-                                onClick={() => {
-                                    new BrowserService(
-                                        `https://yacd.metacubex.one/?hostname=127.0.0.1&port=${port_web}&secret=#/rules`
-                                    ).openWindow({ noWebview: true });
-                                }}
-                            >
-                                规则
-                            </Button>
-                        </View>
-
-                        <View ml12>
-                            <Button
-                                size="small"
-                                disabled={!isServerOnline}
-                                onClick={() => {
-                                    new BrowserService(
-                                        `https://board.zash.run.place/#/proxies`
-                                    ).openWindow({ noWebview: true });
-                                }}
-                            >
-                                Zash
-                            </Button>
-                        </View>
-                    </View>
-                    <View w100p h={'calc(100vh - 138px)'}>
-                        <AceEditorView
-                            options={{
-                                wrap: true
-                            }}
-                            defaultCode={config}
-                            onChange={e => {
-                                setConfig(e);
-                            }}
-                            mode={'yaml'}
-                            id={'meta_config'}
-                        ></AceEditorView>
-                    </View>
-                </View>
-            )
-        },
-        {
-            key: '3',
             label: '窗口代理',
             children: (
                 <View wh100p>
@@ -259,6 +216,15 @@ curl -v -x http://10001:pwd@127.0.0.1:${port} https://api.myip.com
                 </View>
             )
         }
+        // {
+        //     key: '3',
+        //     label: '中间人代理',
+        //     children: (
+        //         <View wh100p>
+        //             <ProxyMitmproxy></ProxyMitmproxy>
+        //         </View>
+        //     )
+        // }
     ];
     return (
         <View relative wh100p p12 borderBox>

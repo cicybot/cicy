@@ -4,11 +4,10 @@ import { useMainWindowContext } from '../../providers/MainWindowProvider';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import { ProColumns, ProTable } from '@ant-design/pro-components';
-import { Avatar, Button, Drawer, Input, message, Popconfirm } from 'antd';
+import { Button, Drawer, Input, message } from 'antd';
 import ProxyService from '../../services/common/ProxyService';
 import { onEvent } from '../../utils/utils';
 import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
-import BrowserAccountDetail from '../browser_account/BrowserAccountDetail';
 import { BrowserAccountProxy } from '../browser_account/BrowserAccountProxy';
 
 const ProxyPorts = () => {
@@ -120,7 +119,7 @@ const ProxyPorts = () => {
 
     return (
         <View relative wh100p p12 borderBox>
-            <View rowVCenter mb12>
+            <View rowVCenter mb12 hide>
                 <View rowVCenter mr12>
                     <View mr12>代理地址:</View>
                     <View>

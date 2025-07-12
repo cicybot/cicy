@@ -564,8 +564,6 @@ export const handleMsg = async (action: string, payload: any) => {
                     switch (method) {
                         case 'setTitle': {
                             const { title } = params || {};
-                            console.log('setTitle', title);
-
                             win.setTitle(title);
                             break;
                         }

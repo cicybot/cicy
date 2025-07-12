@@ -6,7 +6,7 @@ import { connectCCServer } from '../../services/cicy/CCWSClient';
 import Loading from '../../components/UI/Loading';
 import CCAgentClient from '../../services/cicy/CCWSAgentClient';
 import { useTimeoutLoop } from '@cicy/utils';
-import AndroidDetailWrap from './components/AndroidDetailWrap';
+import AndroidDetailWrap from '../../components/adr-detail/AndroidDetailWrap';
 
 const AndroidDetail = () => {
     const { clientId } = useParams();

@@ -115,7 +115,9 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async startAgentApp() {
-        return this.jsonrpcApp('');
+        return this.jsonrpc('shell', [
+            'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+        ]);
     }
 
     async stopAgentApp() {

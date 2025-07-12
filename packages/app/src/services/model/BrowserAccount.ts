@@ -3,6 +3,7 @@ import { AccountAuthInfo } from './SiteService';
 
 export interface BrowserAccountConfigInfo {
     proxyEnabled?: boolean;
+    mitm?: boolean;
     userAgent?: string;
     testIp?: string;
     testLocation?: string;

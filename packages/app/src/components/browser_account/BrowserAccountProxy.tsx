@@ -1,7 +1,7 @@
 import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
 import View from '../View';
 import { AceEditorView } from '../ace/AceEditorView';
-import { Button, message } from 'antd';
+import { Button, Checkbox, message } from 'antd';
 import BrowserService from '../../services/cicy/BrowserService';
 import { useEffect, useState } from 'react';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
@@ -9,13 +9,21 @@ import { useTimeoutLoop } from '@cicy/utils';
 import { formatRelativeTime, onEvent } from '../../utils/utils';
 import { useMainWindowContext } from '../../providers/MainWindowProvider';
 import ProxyService from '../../services/common/ProxyService';
+import ProxyMitmService from '../../services/common/ProxyMitmService';
 
-export const BrowserAccountProxy = ({ browserAccount }: { browserAccount: BrowserAccountInfo }) => {
+export const BrowserAccountProxy = ({
+    browserAccount: browserAccount1
+}: {
+    browserAccount: BrowserAccountInfo;
+}) => {
+    const [browserAccount, setBrowserAccount] = useState<BrowserAccountInfo>(browserAccount1);
     const { id, config } = browserAccount;
+
     const { appInfo } = useMainWindowContext();
     const { configPath: metaConfigPath, bin, dataDir } = appInfo.meta;
+    const serviceMitm = new ProxyMitmService(appInfo.appDataPath, appInfo.isWin);
+    // serviceMitm.setWebUI();
     const port = ProxyService.getMetaAccountProxyPort(id);
-    const port_web = ProxyService.getMetaAccountProxyWebuiPort(id);
     const configPath = ProxyService.getMetaAccountConfigPath(id, metaConfigPath);
     const [isServerOnline, setIsServerOnline] = useState(false);
 
@@ -38,6 +46,19 @@ export const BrowserAccountProxy = ({ browserAccount }: { browserAccount: Browse
     async function startServer() {
         try {
             await testConfig();
+            if (config.mitm) {
+                await new BackgroundApi().killPort(
+                    ProxyService.getMetaAccountProxyMitmPort(browserAccount.id)
+                );
+                await new BackgroundApi().killPort(8081);
+                await new BackgroundApi().killPort(8083);
+                await serviceMitm.startServer(
+                    ProxyService.getMetaAccountProxyMitmPort(browserAccount.id),
+                    ProxyService.getMetaAccountProxyPort(browserAccount.id),
+                    false
+                );
+            }
+
             return new BackgroundApi().metaStart(
                 port,
                 `${bin} -d ${dataDir} -f ${configPath}`,
@@ -48,7 +69,6 @@ export const BrowserAccountProxy = ({ browserAccount }: { browserAccount: Browse
             message.error(e.message);
         }
     }
-
     async function testConfig() {
         await ProxyService.testConfig(bin, configPath);
     }
@@ -74,20 +94,7 @@ export const BrowserAccountProxy = ({ browserAccount }: { browserAccount: Browse
                 >
                     {isServerOnline ? '重启' : '启动'}
                 </Button>
-                <View w={12}></View>
-                <View ml12>
-                    <Button
-                        size="small"
-                        disabled={!isServerOnline}
-                        onClick={() => {
-                            new BrowserService(
-                                `https://yacd.metacubex.one/?hostname=127.0.0.1&port=${port_web}&secret=#/rules`
-                            ).openWindow({ noWebview: true });
-                        }}
-                    >
-                        规则
-                    </Button>
-                </View>
+
                 <View w={12}></View>
                 <Button
                     size="small"
@@ -115,20 +122,6 @@ export const BrowserAccountProxy = ({ browserAccount }: { browserAccount: Browse
                     <Button
                         size="small"
                         disabled={!isServerOnline}
-                        onClick={() => {
-                            new BrowserService(
-                                `https://yacd.metacubex.one/?hostname=127.0.0.1&port=${port_web}&secret=#/rules`
-                            ).openWindow({ noWebview: true });
-                        }}
-                    >
-                        规则
-                    </Button>
-                </View>
-                <View w={12}></View>
-                <View ml12>
-                    <Button
-                        size="small"
-                        disabled={!isServerOnline}
                         onClick={async () => {
                             onEvent('showLoading');
                             try {
@@ -146,6 +139,37 @@ export const BrowserAccountProxy = ({ browserAccount }: { browserAccount: Browse
                         测速
                     </Button>
                 </View>
+                <View w={12}></View>
+                <View ml12>
+                    <Checkbox
+                        checked={config.mitm}
+                        onChange={async e => {
+                            const mitm = !config.mitm;
+                            if (mitm) {
+                                await serviceMitm.initScript();
+                            }
+                            await ProxyService.saveMetaAccountConfig(
+                                browserAccount.id,
+                                metaConfigPath
+                            );
+                            setBrowserAccount({
+                                ...browserAccount,
+                                config: {
+                                    ...browserAccount.config,
+                                    mitm
+                                }
+                            });
+                            new BrowserAccount(browserAccount.id)
+                                .save({
+                                    ...config,
+                                    mitm
+                                })
+                                .catch(console.error);
+                        }}
+                    >
+                        中间人代理
+                    </Checkbox>
+                </View>
             </View>
             <View rowVCenter h={44}>
                 <View mr12>{ipInfo[0] || '-'}</View>
@@ -162,21 +186,48 @@ export const BrowserAccountProxy = ({ browserAccount }: { browserAccount: Browse
 
             <View h={12}></View>
 
-            <View w100p h={44}>
+            <View w100p h={88}>
                 <AceEditorView
                     readOnly
                     options={{
                         showLineNumbers: false,
                         wrap: true
                     }}
-                    value={`curl -v -x http://127.0.0.1:${port} https://api.myip.com`}
+                    value={
+                        config.mitm
+                            ? `
+# Clash
+curl -v -x http://127.0.0.1:${port} https://api.myip.com
+# 中间人
+curl -v -x http://127.0.0.1:${ProxyService.getMetaAccountProxyMitmPort(
+                                  browserAccount.id
+                              )} https://api.myip.com`.trim()
+                            : `# Clash
+curl -v -x http://127.0.0.1:${port} https://api.myip.com`
+                    }
                     mode={'sh'}
                     id={'env'}
                 ></AceEditorView>
             </View>
             <View h={12}></View>
 
-            <View w100p h={400}>
+            <View w100p h={44} hide={!config.mitm}>
+                <AceEditorView
+                    readOnly
+                    options={{
+                        showLineNumbers: false,
+                        wrap: true
+                    }}
+                    value={`${serviceMitm.getCmd(
+                        ProxyService.getMetaAccountProxyMitmPort(browserAccount.id),
+                        ProxyService.getMetaAccountProxyPort(browserAccount.id)
+                    )}`}
+                    mode={'sh'}
+                    id={'env'}
+                ></AceEditorView>
+            </View>
+            <View h={12}></View>
+            <View w100p h={300}>
                 <AceEditorView
                     readOnly
                     options={{

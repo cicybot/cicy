@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { CCWSMainWindowClient } from '../services/cicy/CCWSMainWindowClient';
 import ProxyService from '../services/common/ProxyService';
+import { BackgroundApi } from '../services/common/BackgroundApi';
 
 interface MainWindowState {
     serverIp: string;
@@ -27,13 +28,15 @@ export const MainWindowProvider = ({ children }: { children: ReactNode }) => {
     const [serverIp, setServerIp] = useState(null);
     const [appInfo, setAppInfo] = useState(null);
     useEffect(() => {
-        new CCWSMainWindowClient().mainWindowInfo().then(res => {
+        new BackgroundApi().mainWindowInfo().then((res: any) => {
             setAppInfo(res.result);
             ProxyService.init(res.result.meta).catch(console.error);
         });
 
         new CCWSMainWindowClient().getServerInfo().then(res => {
-            setServerIp(res.ip);
+            if (!res.err) {
+                setServerIp(res.ip);
+            }
         });
     }, []);
 
