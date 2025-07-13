@@ -8,7 +8,7 @@ interface BackgroundApi {
     node: () => string;
     chrome: () => string;
     electron: () => string;
-    message: <Result>(message: {action:string,payload?:object}) => Promise<Result>;
+    message: <Result>(message: { action: string; payload?: object }) => Promise<Result>;
 }
 
 interface AppApi {
@@ -21,5 +21,4 @@ declare global {
     }
 }
 
-export { };
-
+export {};

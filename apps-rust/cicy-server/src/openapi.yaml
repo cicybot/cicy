@@ -2,8 +2,14 @@ openapi: 3.0.0
 info:
   title: CiCy API
   version: 1.0.0
+
+
+# Apply security globally (to all operations)
+security:
+  - BearerAuth: []
+
 paths:
-  /api/health:
+  /health:
     get:
       summary: health checker
       tags:
@@ -81,6 +87,12 @@ paths:
         '500':
           description: Internal server error
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # Optional, can remove if not using JWT
+      description: "Simple token authentication (just 'Bearer your-token')"
   schemas:
     BaseResponse:
       type: object

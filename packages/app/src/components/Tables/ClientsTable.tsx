@@ -1,19 +1,24 @@
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Tag } from 'antd';
+import { Button, Dropdown, Tag } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 
 import { useWsClients } from '../../hooks/ws';
-import BrowserService from '../../services/BrowserService';
-import { SiteService } from '../../services/SiteService';
+import BrowserService from '../../services/cicy/BrowserService';
+import { SiteService } from '../../services/model/SiteService';
 import {
-    isAdroidAgentRustClient,
-    isAdroidAgentClient,
-    isAdroidAgentManageClient,
+    isAndroidAgentClient,
+    isAndroidAgentManageClient,
+    isAndroidAgentRustClient,
+    isAndroidChatClient,
     isBrowserClient,
+    isConnector,
     isMainWebContent,
     isMainWindow,
-    isConnector
+    isMasterWebContent
 } from '../../utils/helper';
+import { onEvent } from '../../utils/utils';
+import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 
 export type TableListItem = {
     key: string;
@@ -30,9 +35,10 @@ const ClientsTable = () => {
             dataIndex: 'clientId',
             render: (_, record) => {
                 if (
-                    isAdroidAgentRustClient(record.clientId) ||
-                    isAdroidAgentClient(record.clientId) ||
-                    isAdroidAgentManageClient(record.clientId)
+                    isAndroidChatClient(record.clientId) ||
+                    isAndroidAgentClient(record.clientId) ||
+                    isAndroidAgentRustClient(record.clientId) ||
+                    isAndroidAgentManageClient(record.clientId)
                 ) {
                     return (
                         <a
@@ -77,15 +83,19 @@ const ClientsTable = () => {
             dataIndex: 'key',
             render: (_, record) => {
                 let tag = '其他';
-                if (isAdroidAgentRustClient(record.clientId)) {
-                    tag = 'Agent Rust';
-                } else if (isAdroidAgentClient(record.clientId)) {
-                    tag = 'Agent Agent';
-                } else if (isAdroidAgentManageClient(record.clientId)) {
-                    tag = 'Agent Manage';
+                if (isAndroidAgentRustClient(record.clientId)) {
+                    tag = 'Agent';
+                } else if (isAndroidAgentClient(record.clientId)) {
+                    tag = 'Agent';
+                } else if (isAndroidAgentManageClient(record.clientId)) {
+                    tag = 'Agent';
+                } else if (isAndroidChatClient(record.clientId)) {
+                    tag = 'Agent';
                 } else if (isBrowserClient(record.clientId)) {
                     tag = 'Browser';
                 } else if (isMainWebContent(record.clientId)) {
+                    tag = 'MainWebContent';
+                } else if (isMasterWebContent(record.clientId)) {
                     tag = 'MainWebContent';
                 } else if (isMainWindow(record.clientId)) {
                     tag = 'MainWindow';
@@ -96,13 +106,59 @@ const ClientsTable = () => {
             }
         }
     ];
-    const dataSource = clients.map((clientId: string) => {
+    const [clientType, setClientType] = useLocalStorageState('clientType', 'android');
+    const ClientTypes: any = {
+        all: '全部',
+        android: '安卓',
+        browser: '浏览器',
+        connector: '连接器',
+        else: '其他'
+    };
+    const ClientTypesList = Object.keys(ClientTypes).map(key => {
         return {
-            clientId,
-            key: clientId
+            key,
+            label: ClientTypes[key]
         };
     });
+    useTimeoutLoop(async () => {
+        await refetch(true);
+    }, 2000);
 
+    const dataSource = clients
+        .filter(clientId => {
+            if (clientType === 'all') {
+                return true;
+            }
+            if (clientType === 'android') {
+                return (
+                    isAndroidAgentClient(clientId) ||
+                    isAndroidAgentRustClient(clientId) ||
+                    isAndroidChatClient(clientId) ||
+                    isAndroidAgentManageClient(clientId)
+                );
+            }
+            if (clientType === 'browser') {
+                return isBrowserClient(clientId);
+            }
+            if (clientType === 'connector') {
+                return isConnector(clientId);
+            }
+
+            if (clientType === 'else') {
+                return (
+                    isMainWindow(clientId) ||
+                    isMainWebContent(clientId) ||
+                    isMasterWebContent(clientId)
+                );
+            }
+            return false;
+        })
+        .map((clientId: string) => {
+            return {
+                clientId,
+                key: clientId
+            };
+        });
     return (
         <ProTable<TableListItem>
             dataSource={dataSource as TableListItem[]}
@@ -114,7 +170,30 @@ const ClientsTable = () => {
             search={false}
             options={false}
             toolBarRender={() => [
-                <Button size="small" type="primary" key="primary" onClick={() => refetch()}>
+                <Dropdown
+                    key="menu"
+                    trigger={['click']}
+                    menu={{
+                        onClick: e => {
+                            setClientType(e.key);
+                        },
+                        items: ClientTypesList
+                    }}
+                >
+                    <Button>
+                        {ClientTypes[clientType]} ({dataSource.length} / {clients.length})
+                        <DownOutlined />
+                    </Button>
+                </Dropdown>,
+                <Button
+                    size="small"
+                    type="primary"
+                    key="primary"
+                    onClick={async () => {
+                        await refetch();
+                        onEvent('hideLoading');
+                    }}
+                >
                     刷新
                 </Button>
             ]}

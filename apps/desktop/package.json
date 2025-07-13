@@ -1,7 +1,7 @@
 {
     "name": "@cicy/desktop",
     "license": "Apache-2.0",
-    "version": "1.0.48",
+    "version": "1.0.72",
     "description": "CiCy desktop",
     "main": ".webpack/main",
     "repository": {
@@ -67,6 +67,7 @@
     "dependencies": {
         "@cicy/app": "1.0.0",
         "@cicy/cicy-ws": "1.0.0",
+        "axios": "^1.10.0",
         "better-sqlite3": "^11.10.0",
         "buffer": "^6.0.3",
         "copy-to-clipboard": "^3.3.3",
@@ -78,6 +79,8 @@
         "electron-store": "^8.1.0",
         "events": "^3.3.0",
         "eventsource": "^2.0.2",
+        "execa": "^9.6.0",
+        "https-proxy-agent": "^7.0.6",
         "i18next": "^23.7.7",
         "keytar": "^7.9.0",
         "process": "^0.11.10",

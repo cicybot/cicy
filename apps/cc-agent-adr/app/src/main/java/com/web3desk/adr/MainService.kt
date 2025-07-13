@@ -458,7 +458,7 @@ class MainService : Service() {
                 it.setSurface(s)
             } ?: let {
                 virtualDisplay = mp.createVirtualDisplay(
-                    "Web3-Desk-VD",
+                    "CiCy-Agent-VD",
                     SCREEN_INFO.width,
                     SCREEN_INFO.height,
                     SCREEN_INFO.dpi,

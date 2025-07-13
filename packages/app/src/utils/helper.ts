@@ -1,18 +1,31 @@
-import { ClientIds } from '../services/CCWSClient';
+import { ClientIds } from '../services/cicy/CCWSClient';
+import { onEvent } from './utils';
+import { BackgroundApi } from '../services/common/BackgroundApi';
+import ProxyService from '../services/common/ProxyService';
+import { message } from 'antd';
+import { BrowserAccount } from '../services/model/BrowserAccount';
 
-export const isAdroidAgentRustClient = (clientId: string) => {
+export const isAndroidAgentRustClient = (clientId: string) => {
     return (
-        clientId.startsWith('ADR-') && !clientId.endsWith('-APP') && !clientId.endsWith('-MANAGE')
+        clientId.startsWith('ADR-') &&
+        !clientId.endsWith('-APP') &&
+        !clientId.endsWith('-MANAGE') &&
+        !clientId.endsWith('-CHAT')
     );
 };
 
-export const isAdroidAgentClient = (clientId: string) => {
+export const isAndroidAgentClient = (clientId: string) => {
     return clientId.startsWith('ADR-') && clientId.endsWith('-APP');
 };
 
-export const isAdroidAgentManageClient = (clientId: string) => {
+export const isAndroidChatClient = (clientId: string) => {
+    return clientId.startsWith('ADR-') && clientId.endsWith('-CHAT');
+};
+
+export const isAndroidAgentManageClient = (clientId: string) => {
     return clientId.startsWith('ADR-') && clientId.endsWith('-MANAGE');
 };
+
 export const isBrowserClient = (clientId: string) => {
     const t = clientId.split('-');
 
@@ -25,6 +38,10 @@ export const isMainWindow = (clientId: string) => {
 
 export const isMainWebContent = (clientId: string) => {
     return clientId === ClientIds.MainWebContent;
+};
+
+export const isMasterWebContent = (clientId: string) => {
+    return clientId.startsWith('MasterWebContent');
 };
 
 export const isConnector = (clientId: string) => {

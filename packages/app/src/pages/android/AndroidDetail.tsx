@@ -1,16 +1,12 @@
-import { DownOutlined } from '@ant-design/icons';
-import { ProDescriptions, ProField } from '@ant-design/pro-components';
-import type { TreeDataNode, TreeProps } from 'antd';
-import { Button, Input, Tree } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import View from '../../components/View';
-import { connectCCServer } from '../../services/CCWSClient';
+import { connectCCServer } from '../../services/cicy/CCWSClient';
 
 import Loading from '../../components/UI/Loading';
-import CCAgentClient, { DeviceInfo } from '../../services/CCWSAgentClient';
-import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
-import AndroidDetailWrap from './components/AndroidDetailWrap';
+import CCAgentClient from '../../services/cicy/CCWSAgentClient';
+import { useTimeoutLoop } from '@cicy/utils';
+import AndroidDetailWrap from '../../components/adr-detail/AndroidDetailWrap';
 
 const AndroidDetail = () => {
     const { clientId } = useParams();
@@ -26,7 +22,7 @@ const AndroidDetail = () => {
             return;
         }
         connectCCServer(clientId + '-MANAGE', {
-            onOpen: () => {
+            onLogged: () => {
                 setWsConnected(true);
                 agent.isOnline().then(isOnline => {
                     setIsOnLine(isOnline);
@@ -38,6 +34,7 @@ const AndroidDetail = () => {
             }
         });
     }, [clientId]);
+    console.log({ wsConnected, isOnline });
     useTimeoutLoop(async () => {
         if (wsConnected && !isOnline) {
             const res = await agent.isOnline();

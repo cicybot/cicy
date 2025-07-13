@@ -210,7 +210,7 @@ async fn daemon_loop(args: &Args) {
     let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate()).expect("Cannot listen SIGTERM");
     let mut sigint = tokio::signal::unix::signal(SignalKind::interrupt()).expect("Cannot listen SIGINT");
 
-    let pid = process::id().to_string();
+    // let pid = process::id().to_string();
 
     let ws_server_cloned = ws_server.clone();
     let ws_handle = tokio::spawn(async move {
@@ -228,11 +228,11 @@ async fn daemon_loop(args: &Args) {
                 break;
             }
             _ = sleep(Duration::from_secs(5)) => {
-                if utils::is_android_linux(){
-                    let device_info = device::get_device_info_min();
-                    info!("deviceInfo:{}",device_info);
-                }
-                utils::get_memory_usage_cross_platform(&pid)
+                // if utils::is_android_linux(){
+                //     let device_info = device::get_device_info_min();
+                //     info!("deviceInfo:{}",device_info);
+                // }
+                // utils::get_memory_usage_cross_platform(&pid)
             }
         }
     }

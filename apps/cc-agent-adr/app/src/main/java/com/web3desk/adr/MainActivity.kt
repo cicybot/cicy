@@ -11,18 +11,23 @@ import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.res.AssetManager
 import android.media.projection.MediaProjectionManager
+import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.WindowManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
+import org.leap.vpn.LeafVpnService
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -32,9 +37,11 @@ class MainActivity : AppCompatActivity() {
     private val logTag = "mMainActivity"
     var webviewIsReady: Boolean = false
     private var server: LocalServer? = null
-    var mainService: MainService? = null
-
     private lateinit var mediaProjectionManager: MediaProjectionManager
+    private var isVpnConnected:Boolean = false;
+    private var isVpnConnecting:Boolean = false;
+
+    var mainService: MainService? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,20 +58,68 @@ class MainActivity : AppCompatActivity() {
         startService(intent)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE) // Binds the service
 
-
         webView = findViewById<WebView>(R.id.webview)
         webView.settings.javaScriptEnabled = true
-        webView.settings.allowFileAccess = true // Allow file access
-        webView.settings.allowContentAccess = true // Allow access to content URLs
-        webView.settings.allowUniversalAccessFromFileURLs = true // Allow CORS for file URLs
-        webView.settings.allowFileAccessFromFileURLs =
-            true // Allow access to other file URLs from file
+        webView.settings.allowFileAccess = true
+        webView.settings.allowContentAccess = true
         webView.settings.domStorageEnabled = true
-        webView.webViewClient = WebViewClient()
+        webView.webViewClient = CustomWebViewClient()
         webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(WebAppInterface(this), "__AndroidAPI")
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(messageReceiver, IntentFilter("WebViewMessage"))
+        loadHomePage()
+        startVpn()
+    }
+
+    fun isVpnRunning(): Boolean {
+        return isVpnConnected
+    }
+
+    fun stopVpn() {
+        isVpnConnected = false;
+        sendBroadcast(Intent("signal_stop_leap"))
+    }
+
+    fun startVpn() {
+        val intent = VpnService.prepare(this)
+        if (intent != null) {
+            startActivityForResult(intent, VPN_REQUEST_CODE)
+        } else {
+            onActivityResult(VPN_REQUEST_CODE, RESULT_OK, null)
+        }
+    }
+
+    inner class CustomWebViewClient : WebViewClient() {
+        override fun onReceivedError(
+            view: WebView,
+            request: WebResourceRequest?,
+            error: WebResourceError?
+        ) {
+            super.onReceivedError(view, request, error)
+            Log.e(logTag, "Error loading page: ${error?.description}")
+            if (request?.url.toString() == HOME_URL) {
+                Log.d(logTag, "Main URL failed, falling back to local URL")
+                view.loadUrl(HOME_URL_LOCAL)
+            }
+        }
+
+        override fun onReceivedHttpError(
+            view: WebView,
+            request: WebResourceRequest?,
+            errorResponse: WebResourceResponse?
+        ) {
+            super.onReceivedHttpError(view, request, errorResponse)
+            Log.e(logTag, "HTTP Error loading page: ${errorResponse?.statusCode}")
+            if (request?.url.toString() == HOME_URL) {
+                Log.d(logTag, "Main URL HTTP error, falling back to local URL")
+                view.loadUrl(HOME_URL_LOCAL)
+            }
+        }
+    }
+
+    private fun loadHomePage() {
+        Log.d(logTag, "Loading URL: $HOME_URL")
         webView.loadUrl(HOME_URL)
     }
 
@@ -92,7 +147,12 @@ class MainActivity : AppCompatActivity() {
         val product = Build.PRODUCT // 产品名称
         val version = Build.VERSION.RELEASE  // 安卓系统版本
         val id = Build.ID  // 编译版本ID
+        val serverUrl = readServerUrlFromFile();
+
         val payload = JSONObject().apply {
+            put("clientId", "ADR-${brand}-${model}")
+            put("serverUrl", serverUrl)
+            put("model", model)
             put("ccAgentAccessibility", InputService.isOpen)
             put("ccAgentMediaProjection", MainService.isStart)
             put("displayWidth", screenWidth)
@@ -101,6 +161,8 @@ class MainActivity : AppCompatActivity() {
             put("ipAddress", ipAddress)
             put("brand", brand)
             put("model", model)
+            put("isVpnConnected", isVpnConnected)
+            put("isVpnConnecting", isVpnConnecting)
             put("BuildDevice", device)
             put("BuildProduct", product)
             put("buildVersion", version)
@@ -152,6 +214,29 @@ class MainActivity : AppCompatActivity() {
 
     private val messageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            when (intent?.action) {
+                "leap_vpn.state_changed" -> {
+                    val state = intent.getStringExtra("state")
+                    runOnUiThread {
+                        when (state) {
+                            "disconnected" -> {
+                                Toast.makeText(context, "Vpn已断开", Toast.LENGTH_SHORT).show()
+                                isVpnConnected = false
+                                isVpnConnecting = false
+                            }
+                            "connected" -> {
+                                Toast.makeText(context, "Vpn已连接", Toast.LENGTH_SHORT).show()
+                                isVpnConnected = true
+                                isVpnConnecting = false
+                            }
+                            "connecting" -> {
+                                isVpnConnecting = true
+                            }
+                        }
+                    }
+                }
+            }
+
             val message = intent.getStringExtra("message") ?: ""
             if (message.contains("on_screen_recording")) {
                 Toast.makeText(context, "正在录制屏幕...", Toast.LENGTH_SHORT).show()
@@ -179,9 +264,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+        override fun onServiceConnected(name: ComponentName?, serviceBinder: IBinder?) {
             Log.d(logTag, "onServiceConnected")
-            val binder = service as MainService.LocalBinder
+            val binder = serviceBinder as MainService.LocalBinder
             mainService = binder.getService()
         }
 
@@ -191,12 +276,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION && resultCode == RES_FAILED) {
             sendMessageToWebView(JSONObject().apply {
                 put("action", "on_media_projection_canceled")
             }.toString())
+        }
+
+        if (requestCode == VPN_REQUEST_CODE) {
+            val intent = Intent(this, LeafVpnService::class.java)
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            isVpnConnected = true;
         }
         onStateChanged()
     }

@@ -1,4 +1,4 @@
-import { AndroidOutlined, WindowsOutlined, LinkOutlined } from '@ant-design/icons';
+import { AndroidOutlined, LinkOutlined, SettingOutlined, WindowsOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
 import React from 'react';
@@ -7,9 +7,12 @@ import { useLocation, useNavigate } from 'react-router';
 type MenuItem = Required<MenuProps>['items'][number];
 
 const items: MenuItem[] = [
-    { key: '/android', icon: <AndroidOutlined />, label: '安卓连接器' },
     { key: '/clients', icon: <LinkOutlined />, label: '客户端' },
-    { key: '/sites', icon: <WindowsOutlined />, label: '浏览器' }
+    { key: '/android', icon: <AndroidOutlined />, label: '安卓连接器' },
+    { key: '/sites', icon: <WindowsOutlined />, label: '站点' },
+    { key: '/browserAccounts', icon: <SettingOutlined />, label: '浏览器帐户' },
+    { key: '/proxy', icon: <SettingOutlined />, label: '代理' },
+    { key: '/setting', icon: <SettingOutlined />, label: '设置' }
 ];
 
 const SizeBar: React.FC = () => {
@@ -17,7 +20,7 @@ const SizeBar: React.FC = () => {
     let location = useLocation();
     return (
         <Menu
-            defaultSelectedKeys={[location.pathname === '/' ? '/android' : location.pathname]}
+            defaultSelectedKeys={[location.pathname === '/' ? '/clients' : location.pathname]}
             mode="inline"
             style={{ width: '100%', height: '100%', paddingInline: 12, paddingTop: 24 }}
             onSelect={({ key }: { key: string }) => {

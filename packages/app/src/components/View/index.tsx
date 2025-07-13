@@ -1,6 +1,7 @@
 import { CSSProperties, JSXElementConstructor, ReactElement, ReactNode } from 'react';
 
 export interface UtilsProps {
+    json?: Object | any;
     transX?: number;
     transY?: number;
     miniScrollBar?: boolean;
@@ -49,6 +50,7 @@ export interface UtilsProps {
     opacity?: number;
     absolute?: boolean;
     abs?: boolean;
+    fixed?: boolean;
     relative?: boolean;
     absFull?: boolean;
     zIdx?: number;
@@ -76,7 +78,7 @@ export interface FlexProps {
 
 export interface FontProps {
     fontSize?: number;
-    color?:string;
+    color?: string;
     fontWeight?: number;
 }
 
@@ -217,6 +219,7 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
         fWrap,
         absolute,
         abs,
+        fixed,
         relative,
         absFull,
         center,
@@ -261,13 +264,13 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
         sx_.borderBottom = `1px solid ${borderBottomColor}`;
     }
 
-    if(color){
+    if (color) {
         sx_.color = color;
     }
-    if(fontWeight){
+    if (fontWeight) {
         sx_.fontWeight = fontWeight;
     }
-    if(fontSize){
+    if (fontSize) {
         sx_.fontSize = fontSize;
     }
     if (borderBox) {
@@ -291,6 +294,11 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
     if (relative) {
         sx_.position = 'relative';
     }
+
+    if (fixed) {
+        sx_.position = 'fixed';
+    }
+
     if (absFull) {
         sx_.position = 'absolute';
         sx_.left = 0;
@@ -629,13 +637,20 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
     };
 }
 
-const View = ({ children,...props }: ViewProps) => {
-    const { empty, hide, ...props_ } = props;
+const View = ({ children, ...props }: ViewProps) => {
+    const { empty, hide, json, ...props_ } = props;
     if (hide) {
         return null;
     }
     if (empty) {
         return <>{children}</>;
+    }
+    if (json) {
+        return (
+            <div {...handleProps(props_)}>
+                <pre>{JSON.stringify(json, null, 2)}</pre>
+            </div>
+        );
     }
     return <div {...handleProps(props_)}>{children || ''}</div>;
 };

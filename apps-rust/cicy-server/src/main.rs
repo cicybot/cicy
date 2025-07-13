@@ -50,6 +50,10 @@ struct Args {
     #[arg(long, default_value = "")]
     assets_dir: String,
 
+    /// token
+    #[arg(long)]
+    token: String,
+
     /// Server IP address to bind to
     #[arg(long, default_value = "0.0.0.0")]
     ip: String,
@@ -59,7 +63,8 @@ struct Args {
     port: u16,
 
     #[arg(long = "loop", hide = true)]
-    loop_mode: bool
+    loop_mode: bool,
+
 }
 
 fn is_loop_mode() -> bool {
@@ -81,6 +86,7 @@ fn run_daemon(args: &Args) {
     let mut command = Command::new(std::env::current_exe().unwrap());
     command.arg("--loop")
         .arg("--dir").arg(args.dir.clone())
+        .arg("--token").arg(args.token.clone())
         .arg("--assets-dir").arg(args.assets_dir.clone())
         .arg("--ip").arg(ip)
         .arg("--port").arg(port.to_string())
@@ -175,10 +181,10 @@ async fn daemon_loop(args: &Args) {
     let pid = process::id().to_string();
 
     // Create shared state
-    let state = Arc::new(shared_state::AppState::new());
+    let state = Arc::new(shared_state::AppState::new(args.token.clone()));
 
     // Create the application router
-    let app = server::create_app(state,&args.assets_dir);
+    let app = server::create_app(state,&args.assets_dir,&args.token);
 
     // Start the server with explicit SocketAddr type
     let addr: std::net::SocketAddr = format!("{}:{}", args.ip, args.port)

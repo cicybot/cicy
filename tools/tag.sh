@@ -51,6 +51,7 @@ get_cur_dir() {
 get_cur_dir
 PROJECT_DIR=$(dirname "${CUR_DIR}")
 cd $PROJECT_DIR
+sh apps/cc-agent-adr/build.sh
 export TAG=$1
 
 if [ -z "$TAG" ]; then
@@ -61,10 +62,12 @@ else
 fi
 
 sed -i '' "s/VERSION: .*/VERSION: ${TAG}/" ${PROJECT_DIR}/.github/workflows/cd.yaml
-grep 'VERSION:' "${PROJECT_DIR}/.github/workflows/cd.yaml"
-
 sed -i '' "s/\"version\": \".*\"/\"version\": \"${TAG}\"/" "${PROJECT_DIR}/apps/desktop/package.json"
-grep 'version' ${PROJECT_DIR}/apps/desktop/package.json
+
+cd $PROJECT_DIR/tools
+node fix-version.js $TAG ../apps-rust/cicy-agent/Cargo.toml
+node fix-version.js $TAG ../apps-rust/cicy-connector/Cargo.toml
+node fix-version.js $TAG ../apps-rust/cicy-server/Cargo.toml
 cd $PROJECT_DIR
 git add . && git commit -m "add tag: v${TAG}"
 git tag -a v$TAG -m "Release version v${TAG}" && git push origin v$TAG

@@ -34,7 +34,7 @@ fn get_memory_usage_win(pid: &str) {
         Err(e) => error!("Failed to run tasklist: {}", e),
     }
 }
-
+#[allow(dead_code)]
 #[cfg(not(target_os = "windows"))]
 fn get_memory_usage(pid: &str) {
     if is_android_linux() {
@@ -85,7 +85,7 @@ fn get_memory_usage(pid: &str) {
 pub fn get_memory_usage_cross_platform(pid: &str) {
     get_memory_usage_win(pid);
 }
-
+#[allow(dead_code)]
 #[cfg(not(target_os = "windows"))]
 pub fn get_memory_usage_cross_platform(pid: &str) {
     get_memory_usage(pid);

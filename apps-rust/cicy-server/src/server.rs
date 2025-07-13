@@ -1,20 +1,20 @@
 // src/server.rs
 use axum::{
-    extract::Path,
+    extract::{Path,Request},
     http::{header, StatusCode},
     response::{Response, IntoResponse},
     routing::post,
     routing::get,
     Router,
     body::Body,
+    middleware::{self, Next},
 };
+
 use include_dir::{Dir, include_dir};
 use mime_guess::from_path;
 use std::sync::Arc;
 use axum::http::HeaderMap;
 use tower_http::{
-    compression::CompressionLayer,
-    set_header::SetResponseHeaderLayer,
     trace::TraceLayer,
 };
 use tracing::error;
@@ -23,14 +23,42 @@ use crate::swagger::{openapi_spec, swagger_ui};
 
 static STATIC_DIR: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/public");
 
-pub fn create_app(state: Arc<AppState>,assets_dir:&str) -> Router {
+pub async fn token_auth_middleware(
+    headers: HeaderMap,
+    request: Request,
+    next: Next,
+    expected_token: String, // The token you want to compare against
+) -> Result<Response, StatusCode> {
+    // Skip auth for non-API routes
+    if !request.uri().path().starts_with("/api/") {
+        return Ok(next.run(request).await);
+    }
+
+    // Extract token from Authorization header
+    let received_token = headers
+        .get(axum::http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer "))
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+
+    // Compare tokens directly
+    if received_token != expected_token {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
+    Ok(next.run(request).await)
+}
+pub fn create_app(state: Arc<AppState>,assets_dir:&str,token:&str) -> Router {
+    let expected_token = token.to_string(); // Your hardcoded token
 
     Router::new()
         // API endpoints
-        .route("/api/health", get(crate::api::health_check))
+        .route("/health", get(crate::api::health_check))
         .route("/api/ws/info", get(crate::api::ws_info))
         .route("/api/ws/sendMsg", post(crate::api::ws_send_msg))
         .route("/api/ws/broadcastMsg", get(crate::api::broadcast_msg))
+
+
         // Swagger UI 页面
         .route("/doc", get(swagger_ui))
         // OpenAPI 规范端点
@@ -59,6 +87,9 @@ pub fn create_app(state: Arc<AppState>,assets_dir:&str) -> Router {
 
         // Apply middleware
         .fallback(handler_404)
+        .layer(middleware::from_fn(move |headers, request, next| {
+            token_auth_middleware(headers, request, next, expected_token.clone())
+        }))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|req: &axum::http::Request<_>| {

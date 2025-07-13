@@ -17,9 +17,7 @@ pub fn get_device_info() -> serde_json::Value {
         echo ccAgentAppInstalled:$(pm list packages | grep com.cc.agent.adr)
         echo ccAgentAppRunning:$(pidof com.cc.agent.adr)
         echo ccAgentAppUploaded:$(ls /data/local/tmp/app.apk 2>/dev/null)
-        echo ccAgentAppHttpServer:$(ss -tnlp| grep 4448 | awk '{print $4}')
         echo ccAgentRustPid:$(cat /data/local/tmp/daemon.pid 2>/dev/null)
-        echo ccAgentRustHttpServer:$(ss -tnlp| grep 4447 |  awk '{print $4}')
         echo ccAgentMediaProjection:$(dumpsys media_projection | grep com.cc.agent.adr)
         echo ccAgentAccessibility:$(settings get secure enabled_accessibility_services | grep com.web3desk.adr.InputService)
     "#;
@@ -46,8 +44,6 @@ pub fn get_device_info() -> serde_json::Value {
                 "size" => value.trim().strip_prefix("Physical size: ").unwrap_or(value.trim()).to_string(),
                 "dpi" => value.trim().strip_prefix("Physical density: ").unwrap_or(value.trim()).to_string(),
                 "ipAddress" => value.trim().strip_prefix("addr:").unwrap_or(value.trim()).to_string(),
-                "ccAgentRustHttpServer" => value.trim().strip_prefix("0.0.0.0:").unwrap_or(value.trim()).to_string(),
-                "ccAgentAppHttpServer" => value.trim().strip_prefix("*:").unwrap_or(value.trim()).to_string(),
                 _ => value.trim().to_string(),
             };
             map.insert(key.to_string(), serde_json::Value::String(clean_value));
@@ -78,7 +74,6 @@ pub fn get_device_info_min() -> serde_json::Value {
         echo clientId:ADR-$(getprop ro.product.brand)-$(getprop ro.product.model)
         echo ccAgentAppRunning:$(pidof com.cc.agent.adr)
         echo ipAddress:$(ifconfig | grep 'inet addr' | grep Bcast | awk '{print $2}')
-        echo ccAgentAppHttpServer:$(ss -tnlp| grep 4448 |  awk '{print $4}')
         echo ccAgentMediaProjection:$(dumpsys media_projection | grep com.cc.agent.adr)
         echo ccAgentAccessibility:$(settings get secure enabled_accessibility_services | grep com.web3desk.adr.InputService)
     "#;

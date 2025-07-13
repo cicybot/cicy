@@ -18,11 +18,15 @@ import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
 import os from 'os';
+import { getLocalIPAddress, killPort } from '@cicy/cicy-ws';
+import util from 'util';
+import { exec } from 'child_process';
+const execPromise = util.promisify(exec);
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
 export function initDir() {
-    const { appDataPath } = getAppInfo();
+    const { appDataPath, meta } = getAppInfo();
     if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
         fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
     }
@@ -32,6 +36,10 @@ export function initDir() {
     if (!fs.existsSync(path.join(appDataPath, 'data'))) {
         fs.mkdirSync(path.join(appDataPath, 'data'), { recursive: true });
     }
+    if (!fs.existsSync(path.join(appDataPath, 'meta'))) {
+        fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
+    }
+    execPromise(`chmod +x "${meta.bin}"`).catch(console.error);
 }
 
 export function t(key: string) {
@@ -160,9 +168,10 @@ export class MainWindow {
             win.on('close', (e: any) => {
                 let w = this.windows.get(winId);
                 new WebContentsRequest(winId).clearRequests();
+
                 this.windowsReady.delete(winId);
                 this.windows.delete(winId);
-
+                this.handleProxyPorts(winId);
                 if (w) {
                     saveBounds(winId, w.getBounds());
                     w = undefined;
@@ -182,14 +191,60 @@ export class MainWindow {
         }
         return win;
     }
+    static getAccountIndexByWinId(winId: string) {
+        const row = winId.split('-');
+        if (row.length === 2 && parseInt(row[0]) >= 0) {
+            return parseInt(row[0]);
+        } else {
+            return null;
+        }
+    }
+    static async handleProxyPorts(winId: string) {
+        const accountIndex = this.getAccountIndexByWinId(winId);
+        if (accountIndex !== null) {
+            const accounts = Array.from(this.windows)
+                .map(row => row[0])
+                .map(row => row.split('-'))
+                .filter(row => row.length === 2 && parseInt(row[0]) >= 0)
+                .map(row => parseInt(row[0]));
+            if (accounts.indexOf(accountIndex) === -1) {
+                const port = 10000 + accountIndex;
+                console.log('killPort', port);
+
+                try {
+                    await killPort(port);
+                } catch (e) {
+                    console.error(e);
+                }
+                const port1 = 20000 + accountIndex;
+                console.log('killPort', port1);
+                try {
+                    await killPort(port1);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+    }
+
     static async openMainWindow() {
         if (this.mainWindow !== undefined && this.mainWindow !== null) return this.mainWindow;
         const userDataPath = app.getPath('userData');
         const appDataPath = path.join(os.homedir(), '.cicy');
         const version = app.getVersion();
+        const ip = getLocalIPAddress();
+        const isWin = process.platform === 'win32';
+        const sep = isWin ? '\\' : '/';
 
         setAppInfo({
+            ip: ip ? ip.adr : '127.0.0.1',
+            isWin,
             appDataPath,
+            meta: {
+                configPath: path.join(appDataPath, 'meta', 'config.yaml'),
+                dataDir: path.join(publicDir, 'static', 'meta', 'data'),
+                bin: path.join(publicDir, 'static', 'meta', 'bin', `meta${isWin ? '.exe' : ''}`)
+            },
             publicDir,
             userDataPath,
             version,
@@ -210,7 +265,7 @@ export class MainWindow {
         if (DEV_URL) {
             this.currentUrl = DEV_URL;
         } else {
-            this.currentUrl = 'https://cicy.pages.dev';
+            // this.currentUrl = 'https://cicy.pages.dev';
         }
 
         console.log('[+] CurrentUrl:', this.currentUrl);
@@ -227,7 +282,10 @@ export class MainWindow {
         await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
-            console.log('[+] [MSG]', message);
+            if (!['utils', 'db'].includes(message.action)) {
+                console.log('[+] [MSG]', message);
+            }
+
             const { action, payload } = message || {};
             switch (action) {
                 case 'openPath': {
@@ -249,8 +307,18 @@ export class MainWindow {
                 case 'getAppInfo': {
                     return getAppInfo();
                 }
+                case 'initCCServer': {
+                    await initCCServer(
+                        payload.serverIp,
+                        payload.serverPort,
+                        payload.token,
+                        payload.useRust
+                    );
+                    return true;
+                }
                 case 'initConnector': {
-                    return await initConnector(payload.serverUrl);
+                    await initConnector(payload.serverUrl);
+                    return true;
                 }
                 default: {
                     return handleMsg(action, payload);
@@ -285,7 +353,6 @@ export class MainWindow {
             callback(details);
         });
 
-        await initCCServer('0.0.0.0', 4444, true);
         await delay(500);
         return this.mainWindow;
     }

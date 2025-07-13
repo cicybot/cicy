@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import View, { handleProps, ViewProps } from '.';
-
+import { handleProps, ViewProps } from '.';
 
 interface ViewWithSizeProps extends ViewProps {
     children: ReactNode;

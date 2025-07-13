@@ -1,26 +1,23 @@
 import { createHashRouter, Navigate, RouterProvider } from 'react-router';
+
+import WebviewBrowser from '../pages/webview/WebviewBrowser';
+import { GlobalProvider } from '../providers/GlobalProvider';
+import { useEffectOnce } from '../hooks/hooks';
+
 import AndroidDetail from '../pages/android/AndroidDetail';
 import Android from '../pages/home/Android';
 import Clients from '../pages/home/Clients';
 import Home from '../pages/home/Home';
-
 import Sites from '../pages/home/Sites';
-
-import WebviewBrowser from '../pages/webview/WebviewBrowser';
-import { GlobalProvider } from '../providers/GlobalProvider';
-import { useEffect, useRef } from 'react';
-import { SiteService } from '../services/SiteService';
-import { useEffectOnce } from '../hooks/hooks';
-import { CacheService } from '../services/CacheService';
+import Setting from '../pages/home/Setting';
+import BrowserAccounts from '../pages/home/BrowserAccounts';
+import Proxy from '../pages/home/Proxy';
+import { ModelHelper } from '../services/model/ModelHelper';
 
 const router = createHashRouter([
     {
         path: '/android/detail/:clientId',
         Component: AndroidDetail
-    },
-    {
-        path: '/androidConnector',
-        element: <>androidConnector</>
     },
     {
         path: '/browser',
@@ -32,32 +29,41 @@ const router = createHashRouter([
         children: [
             {
                 index: true,
-                element: <Navigate to="/android" replace />
-            },
-            {
-                path: 'android',
-                Component: Android
+                element: <Navigate to="/clients" replace />
             },
             {
                 path: 'clients',
                 Component: Clients
             },
             {
+                path: 'android',
+                Component: Android
+            },
+            {
                 path: 'sites',
                 Component: Sites
+            },
+            {
+                path: 'proxy',
+                Component: Proxy
+            },
+            {
+                path: 'browserAccounts',
+                Component: BrowserAccounts
+            },
+            {
+                path: 'setting',
+                Component: Setting
             }
         ]
     }
 ]);
-
+async function init() {
+    ModelHelper.init().catch(console.error);
+}
 const App = () => {
     useEffectOnce(() => {
-        if (window.backgroundApi) {
-            (async () => {
-                await SiteService.initDb();
-                await CacheService.initDb();
-            })();
-        }
+        init().catch(console.error);
     }, []);
     return (
         <GlobalProvider>

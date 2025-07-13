@@ -1,7 +1,38 @@
-import { CCWSClient } from '../services/CCWSClient';
-import { SiteInfo, SiteService } from '../services/SiteService';
+import { CCWSClient } from '../services/cicy/CCWSClient';
+import { SiteInfo, SiteService } from '../services/model/SiteService';
 import { useEffect, useState } from 'react';
 import { onEvent } from '../utils/utils';
+import { BrowserAccount, BrowserAccountInfo } from '../services/model/BrowserAccount';
+
+export const useBrowserAccounts = () => {
+    const [rows, setRows] = useState<BrowserAccountInfo[]>([]);
+    const getRows = async () => {
+        return BrowserAccount.getAccounts().then(res => {
+            try {
+                if (res.length === 0) {
+                    BrowserAccount.add({}, 5);
+                }
+                setRows(res);
+            } catch (error) {
+                setRows([]);
+            }
+        });
+    };
+    useEffect(() => {
+        getRows().catch(console.error);
+        const reloadBrowserAccounts = () => getRows();
+        window.addEventListener('reloadBrowserAccounts', reloadBrowserAccounts);
+        return () => {
+            window.removeEventListener('reloadBrowserAccounts', reloadBrowserAccounts);
+        };
+    }, []);
+    return {
+        rows,
+        refresh: async () => {
+            await getRows();
+        }
+    };
+};
 
 export const useWsClients = () => {
     const [clients, setData] = useState([]);
@@ -9,6 +40,9 @@ export const useWsClients = () => {
         return new CCWSClient('').getClients().then(res => {
             try {
                 setData(r => {
+                    if (!res) {
+                        return [];
+                    }
                     if (JSON.stringify(r) === JSON.stringify(res.clients)) {
                         return r;
                     }
@@ -24,12 +58,11 @@ export const useWsClients = () => {
     }, []);
     return {
         clients,
-        refetch: (noLoading?: boolean) => {
+        refetch: async (noLoading?: boolean) => {
             if (!noLoading) {
                 onEvent('showLoading');
             }
-
-            getData().finally(() => onEvent('hideLoading'));
+            await getData();
         }
     };
 };
