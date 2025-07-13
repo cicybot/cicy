@@ -28,29 +28,13 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
     private var webSocket: WebSocket? = null
     private val isConnecting = AtomicBoolean(false)
     private val shouldReconnect = AtomicBoolean(true)
-    private val configFilePath = "/data/local/tmp/config_server.txt"
     private var token: String? = null
     private var isLogged = false
     private val client = OkHttpClient.Builder()
         .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive
         .build()
 
-    private fun readServerUrlFromFile(): String? {
-        return try {
-            val file = File(configFilePath)
-            if (!file.exists()) {
-                Log.e(tag, "Config file not found at $configFilePath")
-                return null
-            }
 
-            BufferedReader(FileReader(file)).use { reader ->
-                reader.readLine()?.trim()?.takeIf { it.isNotEmpty() }
-            }
-        } catch (e: Exception) {
-            Log.e(tag, "Error reading config file", e)
-            null
-        }
-    }
     private fun processWebSocketUrl(originalUrl: String): Pair<String, String?> {
         return if (originalUrl.contains("token=")) {
             // Split into base URL and query parameters
@@ -71,7 +55,6 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
 
     fun connect() {
         val serverUrl = readServerUrlFromFile();
-
         if (serverUrl == null) {
             Log.w(tag, "Server URL not set, retrying in 1 second")
             CoroutineScope(Dispatchers.IO).launch {

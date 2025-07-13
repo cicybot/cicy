@@ -17,6 +17,8 @@ import java.io.ByteArrayOutputStream
 import java.util.Locale
 
 import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
 import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
 
@@ -25,12 +27,13 @@ const val LOCAL_SERVER_PORT = 4448
 const val VERSION = "1.0.1"
 
 const val HOME_URL_LOCAL = "http://localhost:4448/?v=1"
-//const val HOME_URL = "http://192.168.110.244:5173/?v=1"
+//const val HOME_URL = "http://192.168.246.244:5173"
 const val HOME_URL = HOME_URL_LOCAL
 
 // Activity requestCode
 const val REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION = 101
 const val REQ_REQUEST_MEDIA_PROJECTION = 201
+const val VPN_REQUEST_CODE = 102
 
 // Activity responseCode
 const val RES_FAILED = -100
@@ -165,5 +168,20 @@ fun shellExec(cmd: String, timeoutSeconds: Long = 30): JSONObject {
         JSONObject().apply {
             put("err", "Execution failed: ${e.message}")
         }
+    }
+}
+
+fun readServerUrlFromFile(): String? {
+    return try {
+        val file = File("/data/local/tmp/config_server.txt")
+        if (!file.exists()) {
+            return null
+        }
+
+        BufferedReader(FileReader(file)).use { reader ->
+            reader.readLine()?.trim()?.takeIf { it.isNotEmpty() }
+        }
+    } catch (e: Exception) {
+        null
     }
 }

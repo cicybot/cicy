@@ -60,6 +60,6 @@ cd $PROJECT_DIR/apps/cc-agent-adr
 #cp app/src/main/java/com/web3desk/adr/common.kt common.kt
 #sed -i '' "s/\/.*:5173/\/\/localhost:4448/" app/src/main/java/com/web3desk/adr/common.kt
 ./gradlew assembleDebug
-mv common.kt app/src/main/java/com/web3desk/adr/common.kt
+#mv common.kt app/src/main/java/com/web3desk/adr/common.kt
 rm -rf $PROJECT_DIR/apps/desktop/public/static/assets/app-v0.0.0.apk
 mv app/build/outputs/apk/debug/app-debug.apk $PROJECT_DIR/apps/desktop/public/static/assets/app-v0.0.0.apk

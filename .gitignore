@@ -11,7 +11,7 @@ config_server.txt
 *.pid
 Cargo.lock
 .vscode
-
+__pycache__
 apps/desktop/out/
 /out-tsc
 

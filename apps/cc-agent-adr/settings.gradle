@@ -13,5 +13,6 @@ dependencyResolutionManagement {
         maven { url 'https://jitpack.io' }
     }
 }
-rootProject.name = "Web3-Desk"
+rootProject.name = "CiCy-Agent"
 include ':app'
+

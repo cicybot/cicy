@@ -27,7 +27,7 @@ export default class CCWSAgentClient extends CCWSClient {
     mediaProjection: boolean;
     deviceInfo?: DeviceInfo;
     appInfo?: any;
-
+    isApp?: boolean;
     constructor(clientId: string) {
         super(clientId);
         this.accessibility = false;
@@ -38,6 +38,9 @@ export default class CCWSAgentClient extends CCWSClient {
         this.appInfo = appInfo;
     }
 
+    isInApp(isApp: boolean) {
+        this.isApp = isApp;
+    }
     setDeviceInfo(deviceInfo: DeviceInfo) {
         this.deviceInfo = deviceInfo;
     }
@@ -162,6 +165,21 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async jsonrpcApp(method: string, params?: any[]) {
+        if (this.isApp) {
+            const res = await fetch('/jsonrpc', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'Application/json'
+                },
+                body: JSON.stringify({
+                    method,
+                    params
+                })
+            });
+            const json = await res.json();
+            console.log('[jsonrpcApp]', json);
+            return json.result;
+        }
         return this.getAppClient()._action('jsonrpc', {
             method,
             params: typeof params === 'string' ? [params] : params || []

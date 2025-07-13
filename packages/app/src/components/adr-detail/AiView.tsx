@@ -16,7 +16,6 @@ export const AiView = () => {
     const setMsg = (msg: AiMsgItem) => {
         setMsgList([...msgList, msg]);
     };
-    console.log(msgList.length, messageListHeight);
     return (
         <View relative wh100p borderBox>
             <View abs xx0 top={32} bottom={height + 12} overflowHidden borderBox>
