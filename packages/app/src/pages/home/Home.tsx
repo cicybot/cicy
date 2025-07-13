@@ -6,7 +6,7 @@ import { CCWSClient, ClientIds, connectCCServer } from '../../services/cicy/CCWS
 import { MainClientMessageHandler } from '../../services/cicy/MainClientMessageHandler';
 import Loading from '../../components/UI/Loading';
 import { MainWindowProvider } from '../../providers/MainWindowProvider';
-import { waitForResult } from '@cicy/utils';
+import { sleep, waitForResult } from '@cicy/utils';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
 import { v4 as uuid } from 'uuid';
 
@@ -35,33 +35,27 @@ const Home = () => {
                     const serverUrl = `ws://127.0.0.1:${serverPort}/ws?token=${token}`;
                     localStorage.setItem('serverUrl', serverUrl);
                     CCWSClient._setServerUrl(serverUrl);
-                }
-                if (!serverIp) {
-                    serverIp = '0.0.0.0';
-                    localStorage.setItem('token', token);
+                } else {
+                    CCWSClient._setServerUrl(localStorage.getItem('serverUrl')!);
                 }
 
-                await window.backgroundApi.message({
-                    action: 'initCCServer',
-                    payload: {
-                        serverIp,
-                        serverPort,
-                        useRust: true,
-                        token
-                    }
-                });
-                const res = await waitForResult(async () => {
-                    const res = await new BackgroundApi().isPortOnline(serverPort);
-                    return {
-                        isPortOnline: res && res.result
-                    };
-                });
-                if (!res.isPortOnline) {
-                    setTimeout(() => {
-                        location.reload();
-                    }, 10000);
-                    return;
+                if (!serverIp) {
+                    serverIp = '0.0.0.0';
+                    localStorage.setItem('serverIp', serverIp);
                 }
+                await new BackgroundApi().killPort(serverPort);
+                window.backgroundApi
+                    .message({
+                        action: 'initCCServer',
+                        payload: {
+                            serverIp,
+                            serverPort,
+                            useRust: true,
+                            token
+                        }
+                    })
+                    .catch(console.error);
+                await sleep(1000);
             }
             connectCCServer(clientId, {
                 onLogged: () => {

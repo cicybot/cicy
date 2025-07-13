@@ -1,2 +1,2 @@
-// export {App} from '@cicy/app'
-export { App } from './EmptyApp';
+export { App } from '@cicy/app';
+// export { App } from './EmptyApp';

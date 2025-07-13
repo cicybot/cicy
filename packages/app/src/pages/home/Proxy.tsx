@@ -10,7 +10,6 @@ import { useTimeoutLoop } from '@cicy/utils';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import ProxyService from '../../services/common/ProxyService';
 import ProxyPorts from '../../components/proxy/ProxyPorts';
-import ProxyMitmproxy from '../../components/proxy/ProxyMitmproxy';
 
 const Proxy = () => {
     const { appInfo } = useMainWindowContext();
@@ -23,7 +22,7 @@ const Proxy = () => {
     async function startServer() {
         try {
             await ProxyService.testConfig(bin, configPath);
-            await ProxyService.startServer(bin, dataDir, configPath, port, true);
+            await ProxyService.startServer(bin, dataDir, configPath, port, false);
         } catch (e) {
             message.error(e as string);
         }
