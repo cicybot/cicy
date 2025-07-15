@@ -10,6 +10,7 @@ use serde_json::json;
 use crate::jsonrpc_server::handle_method_call;
 use tokio::sync::Mutex;
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::task;
 
 #[derive(Deserialize)]
@@ -53,8 +54,11 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
         None => (server_url.to_string(), String::new()),
     };
     let mut is_logged = false;
+    let login_timeout = Duration::from_secs(5);
+    let start_time = Instant::now();
 
     loop {
+
         let url_str = format!(
             "{}?id={}&t={}",
             clean_url,
@@ -86,8 +90,12 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
         let (write, mut read) = ws_stream.split();
         let write = Arc::new(Mutex::new(write));
 
+        info!("[+] token is empty: {}",token.is_empty());
+
         // Send login message if token exists
         if !token.is_empty() {
+            info!("[+] Send Login req!");
+
             let login_msg = json!({
                 "action": "login",
                 "payload": {
@@ -100,100 +108,75 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
                 continue;
             }
         } else {
-            is_logged = true;
+            error!("token is empty");
+            return;
         }
-        // Send ping every 5 seconds in a separate task
-        let write_ping = write.clone(); // Clone the Arc to pass it into the task
-        let ping_task = task::spawn(async move {
-            loop {
-                sleep(Duration::from_secs(10)).await;
-                let ping_msg = json!({ "action": "ping" }).to_string();
-                let mut write_lock = write_ping.lock().await;
-                if let Err(e) = write_lock.send(Message::Text(ping_msg)).await {
-                    error!("Failed to send ping: {}", e);
-                    break;
-                }
-                debug!("Sent ping");
-            }
-        });
+
+        let mut ping_task_handle = None; // 将ping任务句柄移到这里
 
         loop {
-            match read.next().await {
-                Some(Ok(msg)) => {
-                    match msg {
-                        Message::Text(txt) => {
-                            info!("Received text: {}", txt);
-                            if let Ok(data) = serde_json::from_str::<Value>(&txt) {
-                                let action = data.get("action").and_then(Value::as_str).unwrap_or("");
+            tokio::select! {
+                msg = read.next() => match msg {
+                    Some(Ok(Message::Text(txt))) => {
+                        info!("Received text: {}", txt);
+                        if let Ok(data) = serde_json::from_str::<Value>(&txt) {
+                            let action = data.get("action").and_then(Value::as_str).unwrap_or("");
 
-                                match action {
-                                    "callback" => {
-                                        // Handle callback messages
-                                        // if let Some(id) = data.get("id").and_then(Value::as_str) {
-                                        //     // Store in your MsgResult equivalent
-                                        // }
-                                    }
-                                    "logged" => {
-                                        is_logged = true;
-                                    }
-                                    "logout" => {
-                                        error!("logout!!");
-                                        break; // Will trigger reconnection
-                                    }
-                                    _ => {
-                                        if is_logged {
-                                            let mut write_lock = write.lock().await;
-                                            if let Err(e) = handle_msg(&txt, &mut *write_lock).await { // Dereference here
-                                                error!("handle_msg error: {}", e);
-                                                break; // 出错重连
+                            match action {
+                                "callback" => {
+                                    // Handle callback messages
+                                    // if let Some(id) = data.get("id").and_then(Value::as_str) {
+                                    //     // Store in your MsgResult equivalent
+                                    // }
+                                }
+                                "logged" => {
+                                    is_logged = true;
+                                    // Send ping every 5 seconds in a separate task
+                                    let write_ping = write.clone(); // Clone the Arc to pass it into the task
+                                    ping_task_handle = Some(task::spawn(async move {
+                                        loop {
+                                            sleep(Duration::from_secs(10)).await;
+                                            let ping_msg = json!({ "action": "ping" }).to_string();
+                                            let mut write_lock = write_ping.lock().await;
+                                            if let Err(e) = write_lock.send(Message::Text(ping_msg)).await {
+                                                error!("Failed to send ping: {}", e);
+                                                break;
                                             }
+                                            debug!("Sent ping");
+                                        }
+                                    }));
+                                }
+                                "logout" => {
+                                    error!("logout!!");
+                                    break; // Will trigger reconnection
+                                }
+                                _ => {
+                                    if is_logged {
+                                        let mut write_lock = write.lock().await;
+                                        if let Err(e) = handle_msg(&txt, &mut *write_lock).await { // Dereference here
+                                            error!("handle_msg error: {}", e);
+                                            break; // 出错重连
                                         }
                                     }
                                 }
                             }
-
-                            // let mut write_lock = write.lock().await;
-                            // if let Err(e) = handle_msg(&txt, &mut *write_lock).await { // Dereference here
-                            //     error!("handle_msg error: {}", e);
-                            //     break; // 出错重连
-                            // }
                         }
-                        Message::Binary(bin) => {
-                            info!("Received binary message ({} bytes)", bin.len());
-                        }
-                        Message::Close(frame) => {
-                            if let Some(cf) = frame {
-                                info!("Connection closed with code: {}, reason: {}", cf.code, cf.reason);
-                            } else {
-                                info!("Connection closed without close frame");
-                            }
-                            break;
-                        }
-                        Message::Ping(p) => {
-                            let mut write_lock = write.lock().await;
-                            if let Err(e) = write_lock.send(Message::Pong(p)).await {
-                                error!("Failed to send pong: {}", e);
-                                break;
-                            }
-                        }
-                        Message::Pong(_) => {}
-                        _ => {}
+                    },
+                    _ => break,
+                },
+                _ = sleep(Duration::from_secs(1)) => {
+                    if !is_logged && start_time.elapsed() > login_timeout {
+                        error!("Login timeout, reconnecting...");
+                        break;
                     }
-                }
-                Some(Err(e)) => {
-                    error!("Error receiving message: {}", e);
-                    break;
-                }
-                None => {
-                    info!("Connection stream ended");
-                    break;
                 }
             }
         }
 
         // Wait for the ping task to finish (though it should run indefinitely)
-        ping_task.abort();
-        is_logged = false;
+        if let Some(handle) = ping_task_handle {
+            handle.abort();
+        }
 
         info!("[*] Connection closed, retrying in 1 second...");
         sleep(Duration::from_secs(1)).await;

@@ -2,7 +2,7 @@ import View from '../View';
 import { useEffect } from 'react';
 import { AndroidIcon } from '../Icons';
 import { AndroidConnectorPage } from './AndroidConnectorPage';
-import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
+import { useLocalStorageState } from '@cicy/utils';
 import CCAndroidConnectorClient, { AdbDevice } from '../../services/cicy/CCAndroidConnectorClient';
 import { Select } from 'antd';
 import { AndroidConnectorDetailInfo } from './AndroidConnectorDetailInfo';
@@ -12,8 +12,10 @@ export const AndroidConnectorDetail = ({
     devices,
     clients,
     clientId,
+    allClients,
     onChangeClient
 }: {
+    allClients: string[];
     onChangeClient: any;
     connector: CCAndroidConnectorClient;
     devices: AdbDevice[];
@@ -117,7 +119,11 @@ export const AndroidConnectorDetail = ({
                 />
             </View>
             <View wh100p>
-                <AndroidConnectorDetailInfo connector={connector}></AndroidConnectorDetailInfo>
+                <AndroidConnectorDetailInfo
+                    allClients={allClients}
+                    clients={clients}
+                    connector={connector}
+                ></AndroidConnectorDetailInfo>
             </View>
         </AndroidConnectorPage>
     );

@@ -6,7 +6,7 @@ import { CCWSClient, ClientIds, connectCCServer } from '../../services/cicy/CCWS
 import { MainClientMessageHandler } from '../../services/cicy/MainClientMessageHandler';
 import Loading from '../../components/UI/Loading';
 import { MainWindowProvider } from '../../providers/MainWindowProvider';
-import { sleep, waitForResult } from '@cicy/utils';
+import { sleep } from '@cicy/utils';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
 import { v4 as uuid } from 'uuid';
 

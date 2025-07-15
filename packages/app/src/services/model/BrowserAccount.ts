@@ -2,14 +2,16 @@ import DatabaseService from '../common/DatabaseService';
 import { AccountAuthInfo } from './SiteService';
 
 export interface BrowserAccountConfigInfo {
-    proxyEnabled?: boolean;
-    mitm?: boolean;
+    proxyType?: 'socks5' | 'http' | 'direct';
+    proxyHost?: string;
     userAgent?: string;
+    androidClientId?: string;
     testIp?: string;
     testLocation?: string;
     testTs?: number;
     testDelay?: number;
     proxyConfig?: string;
+    mitm?: boolean;
 }
 
 export interface BrowserAccountInfo {

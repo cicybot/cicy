@@ -22,7 +22,7 @@ const Proxy = () => {
     async function startServer() {
         try {
             await ProxyService.testConfig(bin, configPath);
-            await ProxyService.startServer(bin, dataDir, configPath, port, false);
+            await ProxyService.startServer(bin, dataDir, configPath, port, true);
         } catch (e) {
             message.error(e as string);
         }

@@ -28,14 +28,33 @@ const BrowserAccountsTable = () => {
             title: 'IP',
             dataIndex: 'ip',
             render: (_, { config }) => {
-                return <>{config.testIp || '-'}</>;
+                if (config.testIp) {
+                    return (
+                        <>
+                            {config.testIp} ({config.testLocation})
+                        </>
+                    );
+                }
+                return <>{'-'}</>;
             }
         },
         {
-            title: 'location',
-            dataIndex: 'location',
-            render: (_, { config }) => {
-                return <>{config.testLocation || '-'}</>;
+            title: '代理',
+            dataIndex: 'proxy',
+            render: (_, { id, config }) => {
+                let { proxyHost, proxyType } = config;
+                if (proxyType === 'direct' || !proxyType) {
+                    return <>直连</>;
+                } else {
+                    if (!proxyHost) {
+                        proxyHost = '127.0.0.1';
+                    }
+                    return (
+                        <>
+                            {proxyType}://{proxyHost}:{ProxyService.getMetaAccountProxyPort(id)}
+                        </>
+                    );
+                }
             }
         },
         {

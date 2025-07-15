@@ -2,12 +2,9 @@ import { EditOutlined, ExportOutlined, EyeInvisibleOutlined, EyeOutlined } from 
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProForm, ProFormGroup, ProFormText, ProTable } from '@ant-design/pro-components';
 import { Button, Checkbox, Drawer, message, Tabs, type TabsProps, Tooltip } from 'antd';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import BrowserService from '../../services/cicy/BrowserService';
-import { SiteAccountInfo, SiteInfo, SiteService } from '../../services/model/SiteService';
-import { BrowserAccountProxy } from '../browser_account/BrowserAccountProxy';
-import View from '../View';
-import { BrowserAccount, BrowserAccountSite } from '../../services/model/BrowserAccount';
+import { SiteAccountInfo, SiteInfo } from '../../services/model/SiteService';
 
 export const AccountDetail = ({
     changeAccounts,

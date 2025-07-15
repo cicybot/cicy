@@ -36,5 +36,7 @@ export const AndroidConnector = () => {
             </AndroidConnectorPage>
         );
     }
-    return <AndroidConnectorInner clients={clients}></AndroidConnectorInner>;
+    return (
+        <AndroidConnectorInner allClients={clientsData} clients={clients}></AndroidConnectorInner>
+    );
 };

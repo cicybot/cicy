@@ -28,17 +28,21 @@ export const UploadAgentButton = ({
                     const agentName = 'cicy-agent';
                     const sep = isWin ? '\\' : '/';
                     let nameApk = `app.apk`;
-                    let nameApkVer = `app-v${version}.apk`;
                     const serverUrl = CCWSClient.getServerUrl(serverIp);
                     const isLocalServer = CCWSClient.isLocalServer();
 
                     let abi = await connector.getDevcieCpuAbi();
                     if (abi.includes('arm64')) {
                         abi = 'arm64';
-                    }
-                    if (abi.includes('armeabi')) {
+                    } else if (abi.includes('armeabi')) {
                         abi = 'armv7a';
+                        alert('armv7a is not support');
+                        return;
+                    } else {
+                        abi = 'x86_64';
                     }
+                    let nameApkVer = `app-v${version}-${abi}.apk`;
+
                     let agentNameVer = `${agentName}-v${version}-${abi}`;
 
                     if (isLocalServer) {

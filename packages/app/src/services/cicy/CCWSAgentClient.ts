@@ -165,21 +165,6 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async jsonrpcApp(method: string, params?: any[]) {
-        if (this.isApp) {
-            const res = await fetch('/jsonrpc', {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'Application/json'
-                },
-                body: JSON.stringify({
-                    method,
-                    params
-                })
-            });
-            const json = await res.json();
-            console.log('[jsonrpcApp]', json);
-            return json.result;
-        }
         return this.getAppClient()._action('jsonrpc', {
             method,
             params: typeof params === 'string' ? [params] : params || []
@@ -252,5 +237,33 @@ export default class CCWSAgentClient extends CCWSClient {
     async isOnline() {
         const res = await super.isOnline(this.clientId);
         return !!res;
+    }
+    async getVpnStatus() {
+        let { err, config, allowList, isVpnRunning } = await new CCWSAgentClient(
+            this.clientId
+        ).jsonrpcApp('vpnStatus');
+        let proxyNode = '';
+        if (!err) {
+            config = config.trim();
+            const nodeRegex = /Node\s*=\s*([^\n]+)/;
+            const nodeMatch = config.match(nodeRegex);
+
+            if (nodeMatch) {
+                proxyNode = nodeMatch[1].trim();
+            }
+        }
+        if (!allowList) {
+            allowList = '';
+        }
+        return {
+            allowList: allowList.split('|').filter((row: string) => !!row),
+            proxyNode,
+            isVpnRunning: !!isVpnRunning
+        };
+    }
+    async getCurrentPackage() {
+        const res = this.shell(
+            'dumpsys activity activities | grep -E "mResumedActivity|mCurrentFocus"'
+        );
     }
 }

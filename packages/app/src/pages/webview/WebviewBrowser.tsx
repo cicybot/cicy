@@ -12,10 +12,6 @@ import MenuBtn from './MenuBtn';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
 import ProxyService from '../../services/common/ProxyService';
 import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
-import { waitForResult } from '@cicy/utils';
-import ProxyMitmproxy from '../../components/proxy/ProxyMitmproxy';
-import { useMainWindowContext } from '../../providers/MainWindowProvider';
-import ProxyMitmService from '../../services/common/ProxyMitmService';
 
 export let currentWebContentsId = 0;
 
@@ -46,6 +42,9 @@ const WebviewBrowserInner = ({
     const [error, setError] = useState<BrowserError | null>(null);
     const [loading, setLoading] = useState(true);
     const [favicon, setFavicon] = useState('');
+
+    const [proxyRules, setProxyRules] = useState('');
+
     const [currentUrl, setCurrentUrl] = useState(BLANK_URL);
 
     useEffect(() => {
@@ -80,45 +79,31 @@ const WebviewBrowserInner = ({
                     if (currentUrl.startsWith(BLANK_URL)) {
                         console.log(`[+] webContentsId`, webview.getWebContentsId());
                         const site = await siteService.getSiteInfo();
-                        const proxyPort = ProxyService.getMetaAccountProxyPort(accountIndex);
-                        const isPortOnline = await new BackgroundApi().isPortOnline(proxyPort);
-
-                        const { configPath: metaConfigPath, bin, dataDir } = appInfo.meta;
-                        if (!isPortOnline.result) {
-                            await ProxyService.initMetaAccountConfig(accountIndex, metaConfigPath);
-
-                            await ProxyService.startServer(
-                                bin,
-                                dataDir,
-                                ProxyService.getMetaAccountConfigPath(accountIndex, metaConfigPath),
-                                ProxyService.getMetaAccountProxyPort(accountIndex)
-                            );
-                            await waitForResult(async () => {
-                                const res = await new BackgroundApi().isPortOnline(proxyPort);
-                                return res.result;
-                            });
+                        let { proxyType, proxyHost } = browserAccountInfo.config;
+                        if (!proxyHost) {
+                            proxyHost = '127.0.0.1';
                         }
-                        if (browserAccountInfo.config.mitm) {
-                            const service = new ProxyMitmService(
-                                appInfo.appDataPath,
-                                appInfo.isWin
-                            );
-                            const port = ProxyService.getMetaAccountProxyMitmPort(
-                                browserAccountInfo.id
-                            );
-                            const isPortOnlineMimt = await service.isPortOnline(port);
-                            if (!isPortOnlineMimt) {
-                                await service.initScript();
-                                await service.startServer(
-                                    port,
-                                    ProxyService.getMetaAccountProxyPort(accountIndex)
-                                );
-                                await waitForResult(async () => {
-                                    const res = await new BackgroundApi().isPortOnline(port);
-                                    return res.result;
-                                });
+                        if (!proxyType) {
+                            proxyType = 'direct';
+                        }
+                        const proxyPort = ProxyService.getMetaAccountProxyPort(accountIndex);
+                        if (
+                            proxyType !== 'direct' &&
+                            (proxyHost === '127.0.0.1' || proxyHost === 'localhost')
+                        ) {
+                            const isPortOnline = await new BackgroundApi().isPortOnline(proxyPort);
+                            if (!isPortOnline.result) {
+                                alert(`本地代理端口没开: ${proxyHost}:${proxyPort}`);
+                                location.reload();
+
+                                return;
                             }
                         }
+                        let proxyRules: string | undefined = undefined;
+                        if (proxyType !== 'direct') {
+                            proxyRules = `${proxyType}://${proxyHost}:${proxyPort}`;
+                        }
+                        setProxyRules(proxyRules || '');
                         const account = await siteService.getAccount();
 
                         connectCCServer(windowId, {
@@ -133,12 +118,6 @@ const WebviewBrowserInner = ({
                                 ) {
                                     requestFilters = account.config.requestFilters;
                                 }
-                                const proxyRules = `http://127.0.0.1:${
-                                    browserAccountInfo.config.mitm
-                                        ? ProxyService.getMetaAccountProxyMitmPort(accountIndex)
-                                        : ProxyService.getMetaAccountProxyPort(accountIndex)
-                                }`;
-                                console.log({ proxyRules });
                                 await new BackgroundApi().setWebContentConfig(
                                     windowId,
                                     currentWebContentsId,
@@ -377,6 +356,7 @@ const WebviewBrowserInner = ({
                 </View>
                 <View rowVCenter>
                     <MenuBtn
+                        proxyRules={proxyRules}
                         siteService={siteService}
                         webview={webviewRef.current! as WebviewTag}
                     />
@@ -423,7 +403,6 @@ const WebviewBrowser = () => {
     useEffect(() => {
         new BackgroundApi().mainWindowInfo().then((res: any) => {
             setAppInfo(res.result);
-            ProxyService.init(res.result.meta).catch(console.error);
         });
     }, []);
     if (userAgent === null || browserAccountInfo == null || !appInfo) {

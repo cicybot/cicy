@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/pro-components": "^2.8.9",
     "@cicy/app": "1.0.0",
     "antd": "^5.26.1",
+    "antd-mobile": "5.39.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

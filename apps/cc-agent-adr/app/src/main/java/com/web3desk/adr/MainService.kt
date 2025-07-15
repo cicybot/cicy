@@ -93,7 +93,7 @@ class MainService : Service() {
     private val binder = LocalBinder()
 
     private var reuseVirtualDisplay = Build.VERSION.SDK_INT > 33
-    private var isHalfScale: Boolean? = null;
+    private var isHalfScale: Boolean? = null
 
     // video
     private var mediaProjection: MediaProjection? = null
@@ -144,7 +144,7 @@ class MainService : Service() {
             }
 
             "swiper" -> {
-                InputService.ctx?.swiper(value, x, y, delta);
+                InputService.ctx?.swiper(value, x, y, delta)
             }
 
             "dragStart" -> {
@@ -383,7 +383,7 @@ class MainService : Service() {
             // The virtual display video projection can be paused by calling `setSurface(null)`.
             // https://developer.android.com/reference/android/hardware/display/VirtualDisplay.Callback
             // https://learn.microsoft.com/en-us/dotnet/api/android.hardware.display.virtualdisplay.callback.onpaused?view=net-android-34.0
-            virtualDisplay?.setSurface(null)
+            virtualDisplay?.surface = null
         } else {
             virtualDisplay?.release()
         }
@@ -455,7 +455,7 @@ class MainService : Service() {
         try {
             virtualDisplay?.let {
                 it.resize(SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi)
-                it.setSurface(s)
+                it.surface = s
             } ?: let {
                 virtualDisplay = mp.createVirtualDisplay(
                     "CiCy-Agent-VD",
@@ -472,7 +472,7 @@ class MainService : Service() {
             Log.w(
                 logTag,
                 "createOrSetVirtualDisplay: got SecurityException, re-requesting confirmation"
-            );
+            )
             requestMediaProjection()
         }
     }
@@ -562,7 +562,7 @@ class MainService : Service() {
     }
 
     private fun sendMessageToActivity(message: String) {
-        val intent = Intent("WebViewMessage")
+        val intent = Intent("mainMessage")
         intent.putExtra("message", message)
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }

@@ -1,62 +1,16 @@
 import { spawn, exec } from 'child_process';
 import os from 'os';
-const fs = require('fs');
-const path = require('path');
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export function openTerminal(command: string, showWin?: boolean): number | undefined {
     if (!showWin) {
-        if (process.platform === 'win32') {
-            // Windows系统 - 使用随机临时文件路径
-            const tempDir = os.tmpdir();
-            const randomName = `runner_${Math.random().toString(36).substring(2, 10)}.vbs`;
-            const vbsPath = path.join(tempDir, randomName);
-
-            const vbsScript = `
-        Set objShell = CreateObject("WScript.Shell")
-        objShell.Run "${command.replace(/"/g, '""')}", 0, False
-        Set objShell = Nothing
-    `;
-
-            fs.writeFileSync(vbsPath, vbsScript);
-
-            const p = spawn('wscript.exe', [vbsPath], {
-                windowsHide: true,
-                detached: true,
-                stdio: 'ignore'
-            });
-
-            p.unref();
-
-            // 改进的文件清理方案
-            p.on('exit', () => {
-                try {
-                    fs.unlinkSync(vbsPath);
-                } catch (e) {
-                    // 文件可能已被自动删除，忽略错误
-                }
-            });
-
-            // 添加超时保险
-            const cleanupTimer = setTimeout(() => {
-                try {
-                    if (fs.existsSync(vbsPath)) {
-                        fs.unlinkSync(vbsPath);
-                    }
-                } catch (e) {}
-            }, 30000); // 30秒后强制清理
-
-            p.on('exit', () => clearTimeout(cleanupTimer));
-            return p.pid;
-        } else {
-            const p = spawn(command, [], {
-                detached: true,
-                stdio: 'ignore',
-                shell: true
-            });
-            p.unref();
-            return p.pid;
-        }
+        const p = spawn(command, [], {
+            detached: true,
+            stdio: 'ignore',
+            shell: true
+        });
+        p.unref();
+        return p.pid;
     }
     const width = 1024;
     const height = 320;

@@ -1,6 +1,11 @@
 import { BackgroundApi } from './BackgroundApi';
 import { BrowserAccount, BrowserAccountInfo } from '../model/BrowserAccount';
+import { MainWindowAppInfo } from '../../providers/MainWindowProvider';
 
+export const DEFAULT_SCRIPT = `
+def request(flow):
+    print("[+] [REQ]",flow.request.url)
+`;
 export const DEFAULT_META_CONFIG_YAML = `# 4445 4455 不可修改，其他参考 
 # https://clash.wiki/configuration/configuration-reference.html
 
@@ -43,8 +48,8 @@ rules:
   - 'MATCH,http'
 `;
 export default class ProxyService {
-    static async init(meta: { configPath: string; bin: string; dataDir: string }) {
-        const { bin, configPath, dataDir } = meta;
+    static async init(appInfo: MainWindowAppInfo) {
+        const { configPath } = appInfo.meta;
         const res = await new BackgroundApi().utils({
             method: 'fileExists',
             params: [configPath]
@@ -55,11 +60,27 @@ export default class ProxyService {
                 params: [configPath, DEFAULT_META_CONFIG_YAML]
             });
         }
-        new BackgroundApi().isPortOnline(ProxyService.getProxyPort()).then((res: any) => {
-            if (!res.result) {
-                ProxyService.startServer(bin, dataDir, configPath, ProxyService.getProxyPort());
-            }
+        await ProxyService.initForwardScript(appInfo);
+    }
+    static async initForwardScript(appInfo: MainWindowAppInfo) {
+        const path = ProxyService.getMitmForwardPath(appInfo);
+        const res = await new BackgroundApi().utils({
+            method: 'fileExists',
+            params: [path]
         });
+        if (!res.result) {
+            await new BackgroundApi().utils({
+                method: 'fileWriteString',
+                params: [path, DEFAULT_SCRIPT]
+            });
+            return DEFAULT_SCRIPT.trim();
+        } else {
+            const res = await new BackgroundApi().utils({
+                method: 'fileReadString',
+                params: [path]
+            });
+            return res.result.trim();
+        }
     }
     static getProxyPort() {
         return 4445;
@@ -159,10 +180,23 @@ export default class ProxyService {
     }
     static testSpeed(account: BrowserAccountInfo) {
         const startTime = Date.now();
+        let httpsProxy = undefined;
+        let { proxyType, proxyHost } = account.config;
+        if (!proxyType) {
+            proxyType = 'direct';
+        }
+        if (!proxyHost) {
+            proxyHost = '127.0.0.1';
+        }
+        if (proxyType !== 'direct') {
+            httpsProxy = `${proxyType}://${proxyHost}:${ProxyService.getMetaAccountProxyPort(
+                account.id
+            )}`;
+        }
         return new BackgroundApi()
             .axios('https://api.myip.com', {
                 timeout: 5000,
-                httpsProxy: `http://127.0.0.1:${ProxyService.getMetaAccountProxyPort(account.id)}`
+                httpsProxy
             })
             .then(async (res: any) => {
                 if (res.err) {
@@ -180,5 +214,24 @@ export default class ProxyService {
                     return [ip, country, Date.now() - startTime, testTs];
                 }
             });
+    }
+    static getMetaCmd({ meta }: MainWindowAppInfo) {
+        const { bin, dataDir, configPath } = meta;
+        return `${bin} -d ${dataDir} -f ${configPath}`;
+    }
+    static getMitmForwardPath(appInfo: MainWindowAppInfo) {
+        return `${appInfo.appDataPath}${appInfo.pathSep}script_forward.py`;
+    }
+    static getMetaAccountCmd(
+        type: 'mitmdump' | 'mitmweb',
+        appInfo: MainWindowAppInfo,
+        browserAccount: BrowserAccountInfo
+    ) {
+        const port = ProxyService.getMetaAccountProxyPort(browserAccount.id);
+        return `${type} -s ${ProxyService.getMitmForwardPath(
+            appInfo
+        )} --web-port ${ProxyService.getMetaAccountProxyMitmPort(
+            browserAccount.id
+        )} --listen-port ${port} --mode upstream:http://127.0.0.1:${ProxyService.getProxyPort()} --upstream-auth Account_${port}:pwd`;
     }
 }

@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/settings.tsx","./src/services/atxservice.ts","./src/services/websocketbrowserservice.ts","./src/utils/utils.ts","./src/utils/ws.ts"],"version":"5.8.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/proxy.tsx","./src/components/settings.tsx","./src/services/atxservice.ts","./src/services/websocketbrowserservice.ts","./src/utils/utils.ts","./src/utils/ws.ts"],"version":"5.8.3"}

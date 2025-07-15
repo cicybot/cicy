@@ -1,7 +1,7 @@
-import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
+import { BrowserAccountInfo } from '../../services/model/BrowserAccount';
 import View from '../View';
 import { AceEditorView } from '../ace/AceEditorView';
-import { Button, Checkbox, message } from 'antd';
+import { Button, message } from 'antd';
 import BrowserService from '../../services/cicy/BrowserService';
 import { useEffect, useState } from 'react';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
@@ -45,23 +45,16 @@ export const BrowserAccountProxy = ({
 
     async function startServer() {
         try {
-            await testConfig();
-            if (config.mitm) {
-                await new BackgroundApi().killPort(
-                    ProxyService.getMetaAccountProxyMitmPort(browserAccount.id)
-                );
-                await new BackgroundApi().killPort(8081);
-                await new BackgroundApi().killPort(8083);
-                await serviceMitm.startServer(
-                    ProxyService.getMetaAccountProxyMitmPort(browserAccount.id),
-                    ProxyService.getMetaAccountProxyPort(browserAccount.id),
-                    false
-                );
-            }
+            await new BackgroundApi().killPort(
+                ProxyService.getMetaAccountProxyPort(browserAccount.id)
+            );
 
-            return new BackgroundApi().metaStart(
-                port,
-                `${bin} -d ${dataDir} -f ${configPath}`,
+            await new BackgroundApi().killPort(
+                ProxyService.getMetaAccountProxyMitmPort(browserAccount.id)
+            );
+
+            await new BackgroundApi().openTerminal(
+                ProxyService.getMetaAccountCmd('mitmweb', appInfo, browserAccount),
                 true
             );
         } catch (e) {
@@ -117,6 +110,26 @@ export const BrowserAccountProxy = ({
                 >
                     测试站点2
                 </Button>
+                <View w={6}></View>
+                <Button
+                    size="small"
+                    onClick={async () => {
+                        new BrowserService('https://2025.ip138.com/', browserAccount.id)
+                            .openWindow()
+                            .then(console.error);
+                    }}
+                >
+                    测试站点3
+                </Button>
+                <View w={12}></View>
+                <Button
+                    size="small"
+                    onClick={async () => {
+                        new BackgroundApi().openPath(ProxyService.getMitmForwardPath(appInfo));
+                    }}
+                >
+                    打开转发脚本
+                </Button>
                 <View w={12}></View>
                 <View ml12>
                     <Button
@@ -139,37 +152,6 @@ export const BrowserAccountProxy = ({
                         测速
                     </Button>
                 </View>
-                <View w={12}></View>
-                <View ml12>
-                    <Checkbox
-                        checked={config.mitm}
-                        onChange={async e => {
-                            const mitm = !config.mitm;
-                            if (mitm) {
-                                await serviceMitm.initScript();
-                            }
-                            await ProxyService.saveMetaAccountConfig(
-                                browserAccount.id,
-                                metaConfigPath
-                            );
-                            setBrowserAccount({
-                                ...browserAccount,
-                                config: {
-                                    ...browserAccount.config,
-                                    mitm
-                                }
-                            });
-                            new BrowserAccount(browserAccount.id)
-                                .save({
-                                    ...config,
-                                    mitm
-                                })
-                                .catch(console.error);
-                        }}
-                    >
-                        中间人代理
-                    </Checkbox>
-                </View>
             </View>
             <View rowVCenter h={44}>
                 <View mr12>{ipInfo[0] || '-'}</View>
@@ -186,57 +168,33 @@ export const BrowserAccountProxy = ({
 
             <View h={12}></View>
 
-            <View w100p h={88}>
+            <View w100p h={64}>
                 <AceEditorView
                     readOnly
                     options={{
                         showLineNumbers: false,
                         wrap: true
                     }}
-                    value={
-                        config.mitm
-                            ? `
-# Clash
-curl -v -x http://127.0.0.1:${port} https://api.myip.com
-# 中间人
-curl -v -x http://127.0.0.1:${ProxyService.getMetaAccountProxyMitmPort(
-                                  browserAccount.id
-                              )} https://api.myip.com`.trim()
-                            : `# Clash
-curl -v -x http://127.0.0.1:${port} https://api.myip.com`
-                    }
+                    value={`
+curl -v -x http://127.0.0.1:${ProxyService.getMetaAccountProxyPort(
+                        browserAccount.id
+                    )} https://api.myip.com`}
                     mode={'sh'}
                     id={'env'}
                 ></AceEditorView>
             </View>
             <View h={12}></View>
 
-            <View w100p h={44} hide={!config.mitm}>
+            <View w100p h={88} hide={!config.mitm}>
                 <AceEditorView
                     readOnly
                     options={{
                         showLineNumbers: false,
                         wrap: true
                     }}
-                    value={`${serviceMitm.getCmd(
-                        ProxyService.getMetaAccountProxyMitmPort(browserAccount.id),
-                        ProxyService.getMetaAccountProxyPort(browserAccount.id)
-                    )}`}
+                    value={`${ProxyService.getMetaAccountCmd('mitmweb', appInfo, browserAccount)}`}
                     mode={'sh'}
                     id={'env'}
-                ></AceEditorView>
-            </View>
-            <View h={12}></View>
-            <View w100p h={300}>
-                <AceEditorView
-                    readOnly
-                    options={{
-                        showLineNumbers: false,
-                        wrap: true
-                    }}
-                    value={ProxyService.getMetaAccountConfig(port).trim()}
-                    mode={'yaml'}
-                    id={'config_yaml'}
                 ></AceEditorView>
             </View>
         </View>

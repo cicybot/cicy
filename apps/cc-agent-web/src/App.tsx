@@ -3,9 +3,10 @@ import { MenuOutlined } from '@ant-design/icons';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { CCWSClient, AiView, View, connectCCServer } from '@cicy/app';
-import { getAndroidAppApi, isAndroidApp } from './utils/utils';
+import { isAndroidApp, sendAndroidApiJsonRpc } from './utils/utils';
 import { Settings } from './components/Settings';
 import CCWSAgentClient from '@cicy/app/dist/services/cicy/CCWSAgentClient';
+
 function App() {
     const isConnected = useRef(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -13,10 +14,9 @@ function App() {
     const [appInfo, setAppInfo] = useState<any>({});
     async function onFetchAppInfo(clientId?: string) {
         if (isAndroidApp()) {
-            const appInfoStr = getAndroidAppApi().appInfo();
-            const appInfo = JSON.parse(appInfoStr);
-            setAppInfo(appInfo);
-            return appInfo;
+            const { result } = sendAndroidApiJsonRpc('appInfo');
+            setAppInfo(result);
+            return result;
         } else {
             const appInfo = await new CCWSAgentClient(clientId!).jsonrpcApp('appInfo');
             setAppInfo(appInfo);
@@ -45,9 +45,21 @@ function App() {
     }
 
     useEffect(() => {
+        const fetchAppInfo = () => onFetchAppInfo();
+        window.addEventListener('fetchAppInfo', fetchAppInfo);
+        return () => window.removeEventListener('fetchAppInfo', fetchAppInfo);
+    }, []);
+    useEffect(() => {
         if (isConnected.current) return;
         isConnected.current = true;
+
         if (isAndroidApp()) {
+            sendAndroidApiJsonRpc('webviewIsReady');
+            //@ts-ignore
+            window.AppCallback = async (message: string) => {
+                console.log('[+][AppCallback]', message);
+                onFetchAppInfo();
+            };
             onFetchAppInfo().then((res: any) => {
                 const { serverUrl, clientId } = res;
                 initConnect(serverUrl, clientId);
@@ -78,17 +90,17 @@ function App() {
             }
         }
     }, []);
-
-    console.log(JSON.stringify({ chatConnected, appInfo }));
     return (
         <View>
-            <View fixed top={0} h={32} xx0 borderBox rowVCenter jEnd>
-                <View rowVCenter wh={32} mr12>
+            <View fixed top={0} h={44} xx0 borderBox rowVCenter jStart>
+                <View rowVCenter wh={44} ml12>
                     <Button
                         type={'link'}
                         onClick={async () => {
                             setShowSettings(true);
+                            onFetchAppInfo();
                         }}
+                        size={'large'}
                         icon={<MenuOutlined />}
                     ></Button>
                 </View>
@@ -98,13 +110,13 @@ function App() {
             </View>
             <Drawer
                 title={'设置'}
-                width={'80%'}
+                width={'100%'}
                 closable={true}
                 onClose={() => setShowSettings(false)}
                 open={showSettings}
             >
                 {Boolean(showSettings && appInfo.ipAddress) && (
-                    <Settings appInfo={appInfo} onFetchAppInfo={onFetchAppInfo}></Settings>
+                    <Settings chatConnected={chatConnected} appInfo={appInfo}></Settings>
                 )}
             </Drawer>
         </View>

@@ -11,7 +11,7 @@ const items: MenuItem[] = [
     { key: '/android', icon: <AndroidOutlined />, label: '安卓连接器' },
     { key: '/sites', icon: <WindowsOutlined />, label: '站点' },
     { key: '/browserAccounts', icon: <SettingOutlined />, label: '浏览器帐户' },
-    { key: '/proxy', icon: <SettingOutlined />, label: '代理' },
+    // { key: '/proxy', icon: <SettingOutlined />, label: '代理' },
     { key: '/setting', icon: <SettingOutlined />, label: '设置' }
 ];
 

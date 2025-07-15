@@ -171,7 +171,7 @@ export class MainWindow {
 
                 this.windowsReady.delete(winId);
                 this.windows.delete(winId);
-                this.handleProxyPorts(winId);
+                // this.handleProxyPorts(winId);
                 if (w) {
                     saveBounds(winId, w.getBounds());
                     w = undefined;
@@ -234,18 +234,22 @@ export class MainWindow {
         const version = app.getVersion();
         const ip = getLocalIPAddress();
         const isWin = process.platform === 'win32';
-        const sep = isWin ? '\\' : '/';
+        const pathSep = isWin ? '\\' : '/';
 
+        const getMetaInfo = (isWin: boolean) => {
+            const configPath = path.join(appDataPath, 'meta', 'config.yaml');
+            const dataDir = path.join(publicDir, 'static', 'meta', 'data');
+            const bin = path.join(publicDir, 'static', 'meta', 'bin', `meta${isWin ? '.exe' : ''}`);
+            return { bin, dataDir, configPath };
+        };
         setAppInfo({
             ip: ip ? ip.adr : '127.0.0.1',
             isWin,
+            pathSep,
             appDataPath,
-            meta: {
-                configPath: path.join(appDataPath, 'meta', 'config.yaml'),
-                dataDir: path.join(publicDir, 'static', 'meta', 'data'),
-                bin: path.join(publicDir, 'static', 'meta', 'bin', `meta${isWin ? '.exe' : ''}`)
-            },
+            meta: getMetaInfo(isWin),
             publicDir,
+            appDir: path.dirname(path.dirname(path.dirname(publicDir))),
             userDataPath,
             version,
             isDev
@@ -279,7 +283,6 @@ export class MainWindow {
         } catch (err) {
             console.error('Error reading file: opencv.js', err);
         }
-        await this.mainWindow.loadURL(this.currentUrl);
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
             if (!['utils', 'db'].includes(message.action)) {
@@ -325,6 +328,8 @@ export class MainWindow {
                 }
             }
         });
+        await this.mainWindow.loadURL(this.currentUrl);
+
         this.mainWindow.on('close', () => {
             saveBounds('default', this.mainWindow.getBounds());
             this.windows.forEach(win => {

@@ -8,8 +8,10 @@ import { Select } from 'antd';
 import { AndroidConnectorDetail } from './AndroidConnectorDetail';
 
 export const AndroidConnectorInner = ({
+    allClients,
     clients
 }: {
+    allClients: string[];
     clients: { value: string; label: any }[];
 }) => {
     const [devices, setDevices] = useState<AdbDevice[]>([]);
@@ -94,6 +96,7 @@ export const AndroidConnectorInner = ({
     console.log('[+] devices:', devices);
     return (
         <AndroidConnectorDetail
+            allClients={allClients}
             onChangeClient={onChangeClient}
             clients={clients}
             clientId={clientId}

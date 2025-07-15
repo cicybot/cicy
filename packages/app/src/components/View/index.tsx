@@ -33,6 +33,8 @@ export interface UtilsProps {
     overflowXAuto?: boolean;
     userSelectNone?: boolean;
     useSelectText?: boolean;
+    h12?: boolean;
+    w12?: boolean;
     w?: any;
     h?: any;
     x?: number;
@@ -187,6 +189,8 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
         py12,
         mx12,
         my12,
+        h12,
+        w12,
         ph8,
         bottom,
         right,
@@ -479,7 +483,12 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
     if (mt12) sx_.marginTop = '12px';
     if (mr12) sx_.marginRight = '12px';
     if (mb12) sx_.marginBottom = '12px';
-
+    if (h12) {
+        sx_.height = '12px';
+    }
+    if (w12) {
+        sx_.width = '12px';
+    }
     if (mx12) {
         sx_.marginLeft = '12px';
         sx_.marginRight = '12px';
