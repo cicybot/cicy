@@ -22,6 +22,7 @@ import { InspectView } from './InspectView';
 import { AiView } from './AiView';
 import { MobileInfoView } from './MobileInfoView';
 import { CCWSMainWindowClient } from '../../services/cicy/CCWSMainWindowClient';
+import { AppsView } from './apps/AppsView';
 
 function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInfo }) {
     const [img, setImg] = useState('');

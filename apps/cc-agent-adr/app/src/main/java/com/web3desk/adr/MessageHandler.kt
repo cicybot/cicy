@@ -284,7 +284,6 @@ class MessageHandler(private val context: MainActivity) {
                     put("apps", apps)
                 }
             }
-
             else -> {
                 JSONObject().put("err", "Unknown method: $method")
             }
