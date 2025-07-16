@@ -77,9 +77,17 @@ jobs:
           if (Test-Path "app-v$env:VERSION-arm64.apk") {
               Remove-Item "app-v$env:VERSION-arm64.apk" -Force
           }
+          if (Test-Path "app-v$env:VERSION-armv7a.apk") {
+              Remove-Item "app-v$env:VERSION-armv7a.apk" -Force
+          }
           Move-Item -Force "app-v0.0.0-arm64.apk" "app-v${env:VERSION}-arm64.apk"
           Move-Item -Force "app-v0.0.0-x86_64.apk" "app-v${env:VERSION}-x86_64.apk"
-          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}.apk" --clobber
+          Move-Item -Force "app-v0.0.0-armv7a.apk" "app-v${env:VERSION}-armv7a.apk"
+          
+          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}-arm64.apk" --clobber
+          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}-x86_64.apk" --clobber
+          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}-armv7a.apk" --clobber
+          
           ls
           cd ../../../../../
           node tools/fix-app.js
