@@ -62,7 +62,7 @@ buildTarget() {
   cp app/libs/libclash-arm64.aar app/libs/libclash.aar
   rm -rf "$PROJECT_DIR"/apps/desktop/public/static/assets/app-v0.0.0-"$target".apk
   mv app/build/outputs/apk/debug/app-debug.apk "$PROJECT_DIR"/apps/desktop/public/static/assets/app-v0.0.0-"$target".apk
-  ls -alh "$PROJECT_DIR"/apps/desktop/public/static/assets/
+  ls -al "$PROJECT_DIR"/apps/desktop/public/static/assets/
 }
 
 targets="arm64 armv7a x86_64"

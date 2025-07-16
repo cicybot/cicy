@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.82
+  VERSION: 1.0.83
   VERSION_ANDROID_NDK: 27.2.12479018
   GH_TOKEN: ${{ github.token }}
 
