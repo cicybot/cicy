@@ -50,3 +50,17 @@ export function getAndroidAppApi() {
     //@ts-ignore
     return window['__AndroidAPI'];
 }
+
+export function sendAndroidApiJsonRpc(method: string, params?: string | any[]) {
+    const appInfoStr = getAndroidAppApi().jsonRpc(
+        JSON.stringify({
+            method,
+            params: !params ? [] : typeof params === 'string' ? [params] : params
+        })
+    );
+    return JSON.parse(appInfoStr);
+}
+
+export function alertJson(msg: string) {
+    alert(JSON.stringify(msg, null));
+}

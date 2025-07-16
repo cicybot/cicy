@@ -11,9 +11,6 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileReader
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -23,6 +20,7 @@ interface WsOptions {
     fun onClose(webSocket: WebSocket, code: Int)
     fun onFailure(webSocket: WebSocket, t: Throwable)
 }
+
 class CCWebSocketClient(private val clientId: String, private val options: WsOptions? = null) {
     private val tag = "CCWebSocketClient"
     private var webSocket: WebSocket? = null
@@ -54,7 +52,7 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
     }
 
     fun connect() {
-        val serverUrl = readServerUrlFromFile();
+        val serverUrl = readServerUrlFromFile()
         if (serverUrl == null) {
             Log.w(tag, "Server URL not set, retrying in 1 second")
             CoroutineScope(Dispatchers.IO).launch {
@@ -81,7 +79,7 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
                 override fun onOpen(webSocket: WebSocket, response: Response) {
                     isConnecting.set(false)
                     Log.d(tag, "[+] Connected to $url")
-                    if(token?.isEmpty() == false){
+                    if (token?.isEmpty() == false) {
                         // Send login message
                         val loginMessage = JSONObject().apply {
                             put("action", "login")
@@ -114,12 +112,12 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
                                 Log.d(tag, "pp-pong!")
                             } else if (action == "logged") {
                                 Log.d(tag, "logged")
-                                isLogged = true;
+                                isLogged = true
                             } else if (action == "logout") {
                                 Log.d(tag, "logout")
-                                isLogged = false;
+                                isLogged = false
                             } else {
-                                if(isLogged){
+                                if (isLogged) {
                                     options?.onMessage(webSocket, text)
                                 }
 
@@ -201,8 +199,8 @@ class CCWebSocketClient(private val clientId: String, private val options: WsOpt
         }
 
         // Extension function to parse JSON
-        private fun String.toJsonObject(): org.json.JSONObject {
-            return org.json.JSONObject(this)
+        private fun String.toJsonObject(): JSONObject {
+            return JSONObject(this)
         }
     }
 }

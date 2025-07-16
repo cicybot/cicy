@@ -10,7 +10,6 @@ import { useTimeoutLoop } from '@cicy/utils';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import ProxyService from '../../services/common/ProxyService';
 import ProxyPorts from '../../components/proxy/ProxyPorts';
-import ProxyMitmproxy from '../../components/proxy/ProxyMitmproxy';
 
 const Proxy = () => {
     const { appInfo } = useMainWindowContext();

@@ -13,27 +13,25 @@ import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import com.hjq.permissions.XXPermissions
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
-import java.util.Locale
-
 import java.io.BufferedReader
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileReader
 import java.io.InputStreamReader
+import java.util.Locale
 import java.util.concurrent.TimeUnit
-
 
 const val LOCAL_SERVER_PORT = 4448
 const val VERSION = "1.0.1"
-
+const val UseLocal = true
 const val HOME_URL_LOCAL = "http://localhost:4448/?v=1"
-//const val HOME_URL = "http://192.168.246.244:5173"
-const val HOME_URL = HOME_URL_LOCAL
+const val HOME_URL = "http://192.168.246.244:5173"
 
 // Activity requestCode
 const val REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION = 101
 const val REQ_REQUEST_MEDIA_PROJECTION = 201
 const val VPN_REQUEST_CODE = 102
+const val REQUEST_CODE_NOTIFICATION = 2001
 
 // Activity responseCode
 const val RES_FAILED = -100
@@ -54,6 +52,7 @@ val SCREEN_INFO = Info(0, 0, 1, 200)
 data class Info(
     var width: Int, var height: Int, var scale: Int, var dpi: Int
 )
+
 
 fun requestPermission(context: Context, type: String) {
     XXPermissions.with(context)
@@ -98,7 +97,7 @@ fun getScreenSize(windowManager: WindowManager): Pair<Int, Int> {
 
 fun translate(input: String): String {
     Log.d("common", "translate:$LOCAL_NAME")
-    return input;
+    return input
 }
 
 fun bitmapToByteArray(
@@ -151,7 +150,8 @@ fun shellExec(cmd: String, timeoutSeconds: Long = 30): JSONObject {
 
         // Read output streams
         val output = BufferedReader(InputStreamReader(process.inputStream)).use { it.readText() }
-        val errorOutput = BufferedReader(InputStreamReader(process.errorStream)).use { it.readText() }
+        val errorOutput =
+            BufferedReader(InputStreamReader(process.errorStream)).use { it.readText() }
 
         // Build result object
         JSONObject().apply {

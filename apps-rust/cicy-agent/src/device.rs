@@ -12,6 +12,7 @@ pub fn get_device_info() -> serde_json::Value {
         echo model:$(getprop ro.product.model)
         echo abi:$(getprop ro.product.cpu.abi)
         echo ipAddress:$(ifconfig | grep 'inet addr' | grep Bcast | awk '{print $2}')
+        echo vpn:$(ifconfig | grep 'tun')
         echo serverUrl:$(cat /data/local/tmp/config_server.txt 2>/dev/null)
         echo isRoot:$(ls //system/bin/su 2>/dev/null)
         echo ccAgentAppInstalled:$(pm list packages | grep com.cc.agent.adr)
@@ -51,7 +52,7 @@ pub fn get_device_info() -> serde_json::Value {
     }
 
         // Now convert specific keys to bool
-        for key in &["ccAgentAppInstalled","isRoot","ccAgentMediaProjection", "ccAgentAppRunning", "ccAgentAccessibility","ccAgentAppUploaded"] {
+        for key in &["ccAgentAppInstalled","vpn","isRoot","ccAgentMediaProjection", "ccAgentAppRunning", "ccAgentAccessibility","ccAgentAppUploaded"] {
         if let Some(value) = map.get(*key) {
             let is_true = match value {
                 serde_json::Value::String(s) => !s.is_empty(),

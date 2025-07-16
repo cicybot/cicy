@@ -1,13 +1,16 @@
 import { View } from '@cicy/app';
-import { Button } from 'antd';
+import { Button, Drawer } from 'antd';
 import CCWSAgentClient from '@cicy/app/dist/services/cicy/CCWSAgentClient';
 import { useEffect, useState } from 'react';
-import { isAndroidApp } from '../utils/utils';
+import { isAndroidApp, sendAndroidApiJsonRpc } from '../utils/utils';
+import { Proxy } from './Proxy';
 
-export const Settings = ({ appInfo, onFetchAppInfo }: { onFetchAppInfo: any; appInfo: any }) => {
+export const Settings = ({ chatConnected, appInfo }: { chatConnected: boolean; appInfo: any }) => {
     const { clientId } = appInfo;
     const agent = new CCWSAgentClient(clientId);
     const [deviceInfo, setDeviceInfo] = useState<any>({});
+    const [showVpnConfig, setShowVpnConfig] = useState(false);
+    const [changeProxy, setChangeProxy] = useState(false);
 
     agent.setAppInfo(appInfo);
     agent.isInApp(isAndroidApp());
@@ -16,47 +19,62 @@ export const Settings = ({ appInfo, onFetchAppInfo }: { onFetchAppInfo: any; app
     }
     const { ccAgentAccessibility, ipAddress, ccAgentMediaProjection } = appInfo;
     const [rustConnected, setRustConnected] = useState(false);
+
     useEffect(() => {
-        onFetchAppInfo(clientId);
-    }, []);
-    useEffect(() => {
-        agent.isOnline().then((res: boolean) => {
-            setRustConnected(res);
-        });
-        agent.getDeviceInfo().then((res: any) => {
-            setDeviceInfo(res);
-        });
+        setTimeout(() => {
+            agent.isOnline().then((res: boolean) => {
+                setRustConnected(res);
+            });
+            const { result } = sendAndroidApiJsonRpc('deviceInfo');
+            setDeviceInfo(result);
+        }, 200);
     }, []);
     return (
         <View>
             <View>
-                <View>{deviceInfo.clientId}</View>
+                <View>{appInfo.clientId}</View>
             </View>
-            <View style={{ marginTop: 12 }}>App Version: {appInfo.version}</View>
+            <View mt12>App Version: {appInfo.version}</View>
 
-            <View style={{ marginTop: 12 }}>
+            <View mt12>
                 <View>Agent: {'' + rustConnected}</View>
             </View>
 
-            <View style={{ marginTop: 12 }}>
+            <View mt12>
+                <View>Chat: {'' + chatConnected}</View>
+            </View>
+
+            <View mt12>
                 <View>IP: {ipAddress}</View>
             </View>
 
-            <View style={{ marginTop: 12 }}>
+            <View mt12>
                 <View>ServerUrl: {appInfo.serverUrl}</View>
             </View>
 
-            <View style={{ marginTop: 12 }}>
-                <View>RustPid: {deviceInfo.ccAgentRustPid}</View>
+            <View mt12>
+                <View>Agent Pid: {deviceInfo.ccAgentRustPid}</View>
             </View>
 
-            <View style={{ marginTop: 12 }}>
-                Rust Version: {deviceInfo.agentRustVersion || 'loading...'}
+            <View mt12>Agent Version: {deviceInfo.agentRustVersion || 'loading...'}</View>
+
+            <View mt12>Vpn : {appInfo.isVpnConnected + ''}</View>
+
+            <View mt12 rowVCenter>
+                <View>通知: {appInfo.notificationsIsGranted ? '已授权' : '未授权'}</View>
+                <View ml12 hide={appInfo.notificationsIsGranted}>
+                    <Button
+                        size="small"
+                        onClick={async () => {
+                            sendAndroidApiJsonRpc('requestNotificationPermission');
+                        }}
+                    >
+                        授权
+                    </Button>
+                </View>
             </View>
 
-            <View style={{ marginTop: 12 }}>Vpn : {appInfo.isVpnConnected + ''}</View>
-
-            <View style={{ marginTop: 12 }} rowVCenter>
+            <View mt12 rowVCenter>
                 <View>屏幕录制: {ccAgentMediaProjection ? '已开启' : '未开启'}</View>
                 <View ml12>
                     <Button
@@ -64,9 +82,9 @@ export const Settings = ({ appInfo, onFetchAppInfo }: { onFetchAppInfo: any; app
                         size="small"
                         onClick={async () => {
                             if (!ccAgentMediaProjection) {
-                                await agent.jsonrpcApp('startMediaProjection', []);
+                                sendAndroidApiJsonRpc('startMediaProjection');
                             } else {
-                                await agent.jsonrpcApp('stopMediaProjection', []);
+                                sendAndroidApiJsonRpc('stopMediaProjection');
                             }
                         }}
                     >
@@ -75,16 +93,16 @@ export const Settings = ({ appInfo, onFetchAppInfo }: { onFetchAppInfo: any; app
                 </View>
             </View>
 
-            <View style={{ marginTop: 12 }} rowVCenter>
+            <View mt12 rowVCenter>
                 <View>无障碍辅助: {ccAgentAccessibility ? '已开启' : '未开启'}</View>
                 <View ml12>
                     <Button
                         size="small"
                         onClick={async () => {
                             if (!ccAgentAccessibility) {
-                                await agent.jsonrpcApp('startAccessibility', []);
+                                sendAndroidApiJsonRpc('startAccessibility');
                             } else {
-                                await agent.jsonrpcApp('stopAccessibility', []);
+                                sendAndroidApiJsonRpc('stopAccessibility');
                             }
                         }}
                     >
@@ -92,85 +110,80 @@ export const Settings = ({ appInfo, onFetchAppInfo }: { onFetchAppInfo: any; app
                     </Button>
                 </View>
             </View>
-            <View style={{ marginTop: 12 }} rowVCenter>
+            <View mt12 rowVCenter>
+                <View>Vpn: {appInfo.isVpnConnected ? '已开启' : '未开启'}</View>
                 <View ml12>
                     <Button
                         size="small"
                         onClick={async () => {
-                            await agent.startAgentApp();
+                            if (!appInfo.isVpnConnected) {
+                                sendAndroidApiJsonRpc('startVpn');
+                            } else {
+                                sendAndroidApiJsonRpc('stopVpn');
+                            }
                         }}
                     >
-                        打开App
+                        {appInfo.isVpnConnected ? '关闭' : '打开'}
+                    </Button>
+                </View>
+                <View ml12 hide={!appInfo.isVpnConnected}>
+                    <Button
+                        size="small"
+                        onClick={async () => {
+                            sendAndroidApiJsonRpc('startVpn');
+                        }}
+                    >
+                        重启
                     </Button>
                 </View>
             </View>
-            <View style={{ marginTop: 12 }} rowVCenter>
+            <View mt12 rowVCenter pl={24}>
                 <View ml12>
                     <Button
                         size="small"
                         onClick={async () => {
-                            const config = `
-[General]
-loglevel = info
-logoutput = console
-dns-server = 8.8.8.8, 1.1.1.1
-[Proxy]
-Direct = direct
-Reject = reject
-Socks = socks, 192.168.246.244, 4445
-[Rule]
-FINAL, Socks
-                            `;
-                            await agent.jsonrpcApp('startVpn', [config]);
+                            setShowVpnConfig(true);
                         }}
                     >
-                        SOCKS
+                        配置
                     </Button>
                 </View>
                 <View ml12>
                     <Button
                         size="small"
                         onClick={async () => {
-                            const config = `
-[General]
-loglevel = info
-logoutput = console
-dns-server = 8.8.8.8, 1.1.1.1
-[Proxy]
-Direct = direct
-Reject = reject
-Socks = socks, 192.168.246.244, 4445
-[Rule]
-FINAL, Direct
-                            `;
-                            await agent.jsonrpcApp('startVpn', [config]);
+                            setChangeProxy(true);
                         }}
                     >
-                        直连
-                    </Button>
-                </View>
-                <View ml12>
-                    <Button
-                        size="small"
-                        onClick={async () => {
-                            await agent.jsonrpcApp('stopVpn', []);
-                        }}
-                    >
-                        Stop Vpn
-                    </Button>
-                </View>
-                <View ml12>
-                    <Button
-                        size="small"
-                        onClick={async () => {
-                            const res = await agent.jsonrpcApp('isVpnRunning', []);
-                            alert(JSON.stringify(res));
-                        }}
-                    >
-                        状态
+                        修改节点
                     </Button>
                 </View>
             </View>
+            <Drawer
+                title={'Vpn'}
+                width={'100%'}
+                closable={true}
+                onClose={() => setShowVpnConfig(false)}
+                open={showVpnConfig}
+            >
+                <View mt12 rowVCenter>
+                    <pre>{appInfo.vpnInfo.configYaml}</pre>
+                </View>
+            </Drawer>
+            <Drawer
+                bodyStyle={{ margin: 0, padding: 0 }}
+                title={'Proxy'}
+                width={'100%'}
+                closable={true}
+                onClose={() => setChangeProxy(false)}
+                open={changeProxy}
+            >
+                <View mt12 rowVCenter hide={!changeProxy}>
+                    <Proxy appInfo={appInfo}></Proxy>
+                </View>
+            </Drawer>
+
+            <View hide json={appInfo}></View>
         </View>
     );
 };

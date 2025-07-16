@@ -3,22 +3,25 @@ import { CCWSMainWindowClient } from '../services/cicy/CCWSMainWindowClient';
 import ProxyService from '../services/common/ProxyService';
 import { BackgroundApi } from '../services/common/BackgroundApi';
 
-interface MainWindowState {
-    serverIp: string;
-    appInfo: {
-        publicDir: string;
-        isWin: boolean;
-        ip: string;
-        meta: {
-            configPath: string;
-            dataDir: string;
-            bin: string;
-        };
-        appDataPath: string;
-        userDataPath: string;
-        version: string;
-        isDev: boolean;
+export interface MainWindowAppInfo {
+    appDir: string;
+    publicDir: string;
+    isWin: boolean;
+    pathSep: string;
+    ip: string;
+    meta: {
+        configPath: string;
+        dataDir: string;
+        bin: string;
     };
+    appDataPath: string;
+    userDataPath: string;
+    version: string;
+    isDev: boolean;
+}
+export interface MainWindowState {
+    serverIp: string;
+    appInfo: MainWindowAppInfo;
 }
 
 const MainWindowContext = createContext<MainWindowState>({} as MainWindowState);
@@ -30,7 +33,7 @@ export const MainWindowProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         new BackgroundApi().mainWindowInfo().then((res: any) => {
             setAppInfo(res.result);
-            ProxyService.init(res.result.meta).catch(console.error);
+            ProxyService.init(res.result).catch(console.error);
         });
 
         new CCWSMainWindowClient().getServerInfo().then(res => {

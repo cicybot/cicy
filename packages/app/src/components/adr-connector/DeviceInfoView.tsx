@@ -9,14 +9,15 @@ import Loading from '../UI/Loading';
 import { useTimeoutLoop } from '@cicy/utils';
 import { CCWSClient } from '../../services/cicy/CCWSClient';
 import { onEvent } from '../../utils/utils';
-
 export const DeviceInfoView = ({
     deviceInfo,
+    allClients,
     connector,
     serverIp,
     appInfo,
     fetchDeviceInfo
 }: {
+    allClients: string[];
     connector: CCAndroidConnectorClient;
     serverIp: string;
     appInfo: any;
@@ -36,7 +37,10 @@ export const DeviceInfoView = ({
     const [orgWidth, orgHeight] = size.split('x');
     const width = 250;
     const height = (parseInt(orgHeight) * width) / parseInt(orgWidth);
-
+    const { clientId } = deviceInfo;
+    const wsOnlineAgent = allClients.find(row => row === clientId);
+    const wsOnlineAgentApp = allClients.find(row => row === clientId + '-APP');
+    console.log({ allClients, wsOnlineAgent, wsOnlineAgentApp });
     return (
         <View ml12 mr12 flx column>
             <View w100p rowVCenter borderBox mb12 jEnd pr12 mt12>
@@ -117,9 +121,8 @@ export const DeviceInfoView = ({
                         </ProDescriptions>
                         <Divider></Divider>
                         <ProDescriptions column={2}>
-                            <ProDescriptions.Item label="Agent Rust" tooltip="提供底层执行命令">
-                                <ProField text={deviceInfo.ccAgentRustPid} mode="read" />
-                                <View ml12>
+                            <ProDescriptions.Item label="Agent" tooltip="提供底层执行命令">
+                                <View mr12>
                                     <Button
                                         onClick={async () => {
                                             if (!deviceInfo.serverUrl) {
@@ -138,12 +141,20 @@ export const DeviceInfoView = ({
                                         {deviceInfo.ccAgentRustPid ? '重启' : '启动'}
                                     </Button>
                                 </View>
+                                <ProField text={'PID:' + deviceInfo.ccAgentRustPid} mode="read" />
                             </ProDescriptions.Item>
 
                             <ProDescriptions.Item label="Version">
                                 <ProField text={deviceInfo.agentRustVersion + ''} mode={'read'} />
                             </ProDescriptions.Item>
                         </ProDescriptions>
+                        <ProDescriptions>
+                            <View rowVCenter mt12>
+                                <View>连接状态: </View>
+                                <View>{wsOnlineAgent ? '在线' : '离线'}</View>
+                            </View>
+                        </ProDescriptions>
+
                         <Divider></Divider>
                         <ProDescriptions column={2}>
                             <ProDescriptions.Item label="Agent App" tooltip="主要适配未Root的设备">
@@ -191,7 +202,10 @@ export const DeviceInfoView = ({
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
-                            <ProDescriptions.Item label="Running">
+                        </ProDescriptions>
+                        <View h={12}></View>
+                        <ProDescriptions>
+                            <ProDescriptions.Item label="运行状态">
                                 <ProField
                                     text={deviceInfo.ccAgentAppRunning + ''}
                                     mode={'read'}
@@ -242,6 +256,12 @@ export const DeviceInfoView = ({
                                 </View>
                             </ProDescriptions.Item>
                         </ProDescriptions>
+                        <ProDescriptions>
+                            <View rowVCenter mt12>
+                                <View>连接状态: </View>
+                                <View>{wsOnlineAgentApp ? '在线' : '离线'}</View>
+                            </View>
+                        </ProDescriptions>
                         <View h={16}></View>
                         <ProDescriptions column={2}>
                             <ProDescriptions.Item label="无障碍辅助">
@@ -256,6 +276,7 @@ export const DeviceInfoView = ({
                                 />
                                 <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
                                     <Button
+                                        disabled={!wsOnlineAgentApp}
                                         onClick={async () => {
                                             new CCWSClient(deviceInfo.clientId + '-APP').sendAction(
                                                 'jsonrpc',
@@ -289,6 +310,7 @@ export const DeviceInfoView = ({
                                 />
                                 <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
                                     <Button
+                                        disabled={!wsOnlineAgentApp}
                                         onClick={async () => {
                                             new CCWSClient(deviceInfo.clientId + '-APP').sendAction(
                                                 'jsonrpc',

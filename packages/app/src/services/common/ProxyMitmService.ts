@@ -1,4 +1,5 @@
 import { BackgroundApi } from './BackgroundApi';
+
 export const DEFAULT_SCRIPT = `
 def request(flow):
     print("[+] [REQ]",flow.request.url)

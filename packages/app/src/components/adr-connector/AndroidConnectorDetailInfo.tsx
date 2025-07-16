@@ -11,8 +11,12 @@ import { CCWSMainWindowClient } from '../../services/cicy/CCWSMainWindowClient';
 import { DeviceInfoView } from './DeviceInfoView';
 
 export const AndroidConnectorDetailInfo = ({
-    connector
+    connector,
+    clients,
+    allClients
 }: {
+    allClients: string[];
+    clients: any[];
     connector: CCAndroidConnectorClient;
 }) => {
     const [err, setErr] = useState('');
@@ -102,6 +106,7 @@ export const AndroidConnectorDetailInfo = ({
         return (
             <View>
                 <DeviceInfoView
+                    allClients={allClients}
                     appInfo={appInfo}
                     connector={connector}
                     serverIp={serverIp!}

@@ -225,8 +225,8 @@ class InputService : AccessibilityService() {
             TOUCH_PAN_UPDATE -> {
                 mouseX -= _x * SCREEN_INFO.scale
                 mouseY -= _y * SCREEN_INFO.scale
-                mouseX = max(0, mouseX);
-                mouseY = max(0, mouseY);
+                mouseX = max(0, mouseX)
+                mouseY = max(0, mouseY)
                 continueGesture(mouseX, mouseY)
             }
 
@@ -324,14 +324,14 @@ class InputService : AccessibilityService() {
         if (node == null) {
             return null
         }
-        if (node.isEditable() && node.isFocusable()) {
+        if (node.isEditable && node.isFocusable) {
             return node
         }
-        val childCount = node.getChildCount()
+        val childCount = node.childCount
         for (i in 0 until childCount) {
             val child = node.getChild(i)
             if (child != null) {
-                if (child.isEditable() && child.isFocusable()) {
+                if (child.isEditable && child.isFocusable) {
                     return child
                 }
                 if (Build.VERSION.SDK_INT < 33) {
@@ -363,7 +363,7 @@ class InputService : AccessibilityService() {
         val focusInput = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         var focusAccessibilityInput = findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY)
 
-        val rootInActiveWindow = getRootInActiveWindow()
+        val rootInActiveWindow = rootInActiveWindow
 
         Log.d(
             logTag,
@@ -371,7 +371,7 @@ class InputService : AccessibilityService() {
         )
 
         if (focusInput != null) {
-            if (focusInput.isFocusable() && focusInput.isEditable()) {
+            if (focusInput.isFocusable && focusInput.isEditable) {
                 insertAccessibilityNode(linkedList, focusInput)
             } else {
                 insertAccessibilityNode(latestList, focusInput)
@@ -379,7 +379,7 @@ class InputService : AccessibilityService() {
         }
 
         if (focusAccessibilityInput != null) {
-            if (focusAccessibilityInput.isFocusable() && focusAccessibilityInput.isEditable()) {
+            if (focusAccessibilityInput.isFocusable && focusAccessibilityInput.isEditable) {
                 insertAccessibilityNode(linkedList, focusAccessibilityInput)
             } else {
                 insertAccessibilityNode(latestList, focusAccessibilityInput)
@@ -478,7 +478,7 @@ class InputService : AccessibilityService() {
         // Size here doesn't matter, we won't show this view.
         fakeEditTextForTextStateCalculation?.layoutParams = LayoutParams(100, 100)
         fakeEditTextForTextStateCalculation?.onPreDraw()
-        val layout = fakeEditTextForTextStateCalculation?.getLayout()
+        val layout = fakeEditTextForTextStateCalculation?.layout
         Log.d(logTag, "fakeEditTextForTextStateCalculation layout:$layout")
         Log.d(logTag, "onServiceConnected!")
     }

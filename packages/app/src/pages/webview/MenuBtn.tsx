@@ -1,4 +1,4 @@
-import { Drawer, Dropdown, MenuProps, message } from 'antd';
+import { Drawer, Dropdown, MenuProps } from 'antd';
 
 import {
     ArrowLeftOutlined,
@@ -6,6 +6,7 @@ import {
     HomeOutlined,
     MenuOutlined,
     ReloadOutlined,
+    SecurityScanOutlined,
     SettingOutlined
 } from '@ant-design/icons';
 import View from '../../components/View';
@@ -13,38 +14,18 @@ import { SiteAccountInfo, SiteInfo, SiteService } from '../../services/model/Sit
 import { useEffect, useState } from 'react';
 import { AccountDetail } from '../../components/Tables/SiteAccountsTable';
 import { onEvent } from '../../utils/utils';
-import WebviewTag = Electron.WebviewTag;
 import { SiteAccount } from '../../services/model/SiteAccount';
+import WebviewTag = Electron.WebviewTag;
 
-const items: MenuProps['items'] = [
-    {
-        key: 'home',
-        label: '主页',
-        icon: <HomeOutlined />
-    },
-    {
-        key: 'back',
-        label: '后退',
-        icon: <ArrowLeftOutlined />
-    },
-    {
-        key: 'reload',
-        label: '刷新',
-        icon: <ReloadOutlined />
-    },
-    {
-        key: 'openDevTools',
-        label: '控制台',
-        icon: <ConsoleSqlOutlined />
-    },
-    {
-        key: 'setting',
-        label: '设置',
-        icon: <SettingOutlined />
-    }
-];
-
-const MenuBtn = ({ siteService, webview }: { siteService: SiteService; webview: WebviewTag }) => {
+const MenuBtn = ({
+    proxyRules,
+    siteService,
+    webview
+}: {
+    proxyRules: string;
+    siteService: SiteService;
+    webview: WebviewTag;
+}) => {
     const [showSettingDrawer, setShowSettingDrawer] = useState(false);
     const [site, setSite] = useState<SiteInfo | null>(null);
     const [account, setAccount] = useState<SiteAccountInfo | null>(null);
@@ -73,6 +54,42 @@ const MenuBtn = ({ siteService, webview }: { siteService: SiteService; webview: 
         await new SiteAccount(site!.site_id, account.account_index).save(account);
         onEvent('hideLoading');
     };
+
+    const items: MenuProps['items'] = [
+        {
+            key: 'home',
+            label: '主页',
+            icon: <HomeOutlined />
+        },
+        {
+            key: 'back',
+            label: '后退',
+            icon: <ArrowLeftOutlined />
+        },
+        {
+            key: 'reload',
+            label: '刷新',
+            icon: <ReloadOutlined />
+        },
+        {
+            key: 'openDevTools',
+            label: '控制台',
+            icon: <ConsoleSqlOutlined />
+        },
+        {
+            key: 'setting',
+            label: '设置',
+            icon: <SettingOutlined />
+        }
+    ];
+
+    if (proxyRules) {
+        items.push({
+            key: 'proxy',
+            label: `代理:${proxyRules}`,
+            icon: <SecurityScanOutlined />
+        });
+    }
 
     return (
         <View center mr={18} pointer>

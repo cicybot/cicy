@@ -42,7 +42,7 @@ pub async fn token_auth_middleware(
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
     // Compare tokens directly
-    if received_token != expected_token {
+    if received_token.is_empty() || received_token != expected_token {
         return Err(StatusCode::UNAUTHORIZED);
     }
 

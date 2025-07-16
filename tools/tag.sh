@@ -51,7 +51,6 @@ get_cur_dir() {
 get_cur_dir
 PROJECT_DIR=$(dirname "${CUR_DIR}")
 cd $PROJECT_DIR
-sh apps/cc-agent-adr/build.sh
 export TAG=$1
 
 if [ -z "$TAG" ]; then

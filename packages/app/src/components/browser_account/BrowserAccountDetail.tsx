@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import View from '../View';
 import { AccountAuthInfo, SiteInfo } from '../../services/model/SiteService';
-import { Avatar, Button, Input, message, Tabs, type TabsProps } from 'antd';
+import { Avatar, Button, message, Tabs, type TabsProps } from 'antd';
 import {
     BrowserAccount,
     BrowserAccountInfo,
@@ -10,10 +10,11 @@ import {
 import BrowserService from '../../services/cicy/BrowserService';
 import {
     type ProColumns,
-    ProTable,
+    ProForm,
     ProFormGroup,
+    ProFormSelect,
     ProFormText,
-    ProForm
+    ProTable
 } from '@ant-design/pro-components';
 import { ExportOutlined, WindowsOutlined } from '@ant-design/icons';
 import { BrowserAccountProxy } from './BrowserAccountProxy';
@@ -100,11 +101,6 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
     const items: TabsProps['items'] = [
         {
             key: '1',
-            label: '代理',
-            children: <BrowserAccountProxy browserAccount={browserAccount}></BrowserAccountProxy>
-        },
-        {
-            key: '2',
             label: '站点',
             children: (
                 <View>
@@ -132,7 +128,7 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
             )
         },
         {
-            key: '3',
+            key: '2',
             label: '基本设置',
             children: (
                 <View>
@@ -140,7 +136,9 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
                         readonly={false}
                         name=""
                         initialValues={{
-                            userAgent: browserAccount.config.userAgent || ''
+                            userAgent: browserAccount.config.userAgent || '',
+                            proxyType: browserAccount.config.proxyType || 'direct',
+                            proxyHost: browserAccount.config.proxyHost || '127.0.0.1'
                         }}
                         onFinish={async value => {
                             onEvent('showLoading');
@@ -154,10 +152,23 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
                     >
                         <ProFormGroup title="">
                             <ProFormText width="xl" name="userAgent" label="UserAgent" />
+                            <ProFormSelect
+                                options={['direct', 'http']}
+                                width="xl"
+                                name="proxyType"
+                                label="代理类型"
+                            />
+                            <ProFormText width="md" name="proxyHost" label="代理主机" />
                         </ProFormGroup>
+                        <View mb={24}>代理端口 {10000 + browserAccount.id}</View>
                     </ProForm>
                 </View>
             )
+        },
+        {
+            key: '3',
+            label: '代理',
+            children: <BrowserAccountProxy browserAccount={browserAccount}></BrowserAccountProxy>
         }
     ];
     return <Tabs defaultActiveKey="1" items={items} onChange={() => {}} />;

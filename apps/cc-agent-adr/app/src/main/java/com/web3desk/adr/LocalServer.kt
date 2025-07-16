@@ -1,19 +1,10 @@
 package com.web3desk.adr
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import android.net.VpnService
-import android.os.Build
-import android.provider.Settings
 import android.util.Log
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import fi.iki.elonen.NanoHTTPD
 import okhttp3.WebSocket
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 import java.io.InputStream
 
 class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0.0.0", port) {
@@ -21,7 +12,7 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
 
     override fun start() {
         initWsClient()
-        super.start();
+        super.start()
     }
 
     override fun stop() {
@@ -30,16 +21,15 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
         super.stop()
     }
 
-    fun initWsClient() {
+    private fun initWsClient() {
         val appInfo = context.appInfo()
         val clientId = appInfo.getString("clientId")
 
-        wsClient = CCWebSocketClient(clientId + "-APP", object : WsOptions {
+        wsClient = CCWebSocketClient("$clientId-APP", object : WsOptions {
             override fun onOpen(webSocket: WebSocket) {
                 Log.d("WebSocket", "Connected!")
             }
 
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onMessage(webSocket: WebSocket, text: String) {
                 Log.d("WebSocket", "Received: $text")
                 if (text.isJson()) {
@@ -54,7 +44,7 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
                         val params =
                             payload.optJSONArray("params") ?: JSONArray() // Handle null params
                         val result = when (action) {
-                            "jsonrpc" -> handleMethod(method, params)
+                            "jsonrpc" -> MessageHandler(context).process(method, params)
                             else -> JSONObject().apply {
                                 put("err", "error action")
                             }
@@ -79,8 +69,6 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
                 Log.e("WebSocket", "Error", t)
             }
         })
-
-
         wsClient!!.connect()
     }
 
@@ -92,27 +80,24 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
         return response
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun serve(session: IHTTPSession?): Response {
         if (session == null) return newFixedLengthResponse("Session is null")
-        if (session.method == Method.OPTIONS) {
+        val uri = session.uri ?: "/index.html"
+        if (session.method == Method.OPTIONS && uri.equals("/screen")) {
             return addCorsHeaders(newFixedLengthResponse(Response.Status.OK, "text/plain", ""))
         }
-        val uri = session?.uri ?: "/index.html"
-        val path = uri.removePrefix("/") // 去掉 URI 前缀 "/"
-        val response = when (path) {
+        val response = when (val path = uri.removePrefix("/")) { // 去掉 URI 前缀 "/"
             "appInfo" -> handleAppInfoRequest()
-            "screen" -> handleScreeRequest()
+            "screen" -> handleScreeRequest().apply { addCorsHeaders(this) }
             "jsonrpc" -> handleJSONRpcRequest(session)
             else -> handleFileRequest(path)
         }
-        return addCorsHeaders(response)
-
+        return response
     }
 
     private fun handleFileRequest(path: String): Response {
         return try {
-            val actualPath = if (path.isEmpty()) "index.html" else path
+            val actualPath = path.ifEmpty { "index.html" }
             val inputStream: InputStream = context.assets.open(actualPath)
             val bytes = inputStream.readBytes()
             inputStream.close()
@@ -137,8 +122,6 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
         }
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleJSONRpcRequest(session: IHTTPSession): Response {
         return try {
             val body = HashMap<String, String>()
@@ -153,7 +136,8 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
             val method = requestJson.optString("method", "")
             val id = requestJson.opt("id") ?: 1
             val params = requestJson.optJSONArray("params") ?: JSONArray()
-            val result = handleMethod(method, params)
+
+            val result = MessageHandler(context).process(method, params)
             val responseJson = JSONObject().apply {
                 put("jsonrpc", "2.0")
                 put("id", id)
@@ -174,227 +158,9 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun handleMethod(method: String, params: JSONArray): JSONObject {
-        return when (method) {
-            "deviceInfo" -> {
-                val httpClient = HttpClient()
-                val (getStatus, getResponse) = httpClient.get(
-                    "http://127.0.0.1:4447/deviceInfo",
-                    mapOf("Accept" to "application/json")
-                )
-                if (getStatus != 200) {
-                    var configContent = ""
-                    val configFile = File("/data/local/tmp/config_server.txt")
-                    if (configFile.exists()) {
-                        configContent = configFile.readText().trim()
-                    }
-                    val clientId = context.appInfo().get("clientId");
-                    JSONObject().apply {
-                        put("serverUrl", configContent)
-                        put("clientId", clientId)
-                    }
-                } else {
-                    try {
-                        // Parse the response string into JSONObject
-                        val jsonResponse = JSONObject(getResponse)
-                        jsonResponse.getJSONObject("result")
-                    } catch (e: Exception) {
-                        // Handle JSON parsing error
-                        JSONObject().apply {
-                            put("err", "Failed to parse response: ${e.message}")
-                        }
-                    }
-                }
-            }
-
-            "shell" -> {
-                shellExec(params.get(0).toString())
-            }
-
-            "startMediaProjection" -> {
-                if (!MainService.isReady) {
-                    Intent(context, MainService::class.java).also {
-                        context.bindService(it, context.serviceConnection, Context.BIND_AUTO_CREATE)
-                    }
-                    context.requestMediaProjection()
-                }
-                JSONObject().apply {
-                    put("ok", true)
-                }
-            }
-
-            "startVpn" -> {
-                try {
-                    val sharedPref = context.getSharedPreferences("vpn_preferences", Context.MODE_PRIVATE)
-
-                    val editor = sharedPref.edit().apply {
-                        putString("config", params.optString(0, ""))
-                        putString("allowList", params.optString(1, ""))
-                    }
-                    val success = editor.commit()
-
-                    if (success) {
-                        Log.d("Prefs", "Save successful")
-                    } else {
-                        Log.e("Prefs", "Save failed")
-                    }
-                    context.startVpn()
-                    JSONObject().apply {
-                        put("ok", true)
-                    }
-                } catch (e: Exception) {
-                    JSONObject().apply {
-                        put("ok", false)
-                        put("error", e.message)
-                    }
-                }
-            }
-
-            "stopVpn" -> {
-                context.stopVpn()
-                JSONObject().apply {
-                    put("ok", true)
-                }
-            }
-
-            "isVpnRunning" -> {
-                JSONObject().apply {
-                    put("isVpnRunning", context.isVpnRunning())
-                }
-            }
-
-            "stopMediaProjection" -> {
-                context.mainService?.let {
-                    it.destroy()
-                    context.onStateChanged()
-
-                }
-                JSONObject().apply {
-                    put("ok", true)
-                }
-            }
-
-            "startAccessibility" -> {
-                startAction(context, Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                JSONObject().apply {
-                    put("ok", true)
-                }
-            }
-
-            "stopAccessibility" -> {
-                InputService.ctx?.disableSelf()
-                JSONObject().apply {
-                    put("ok", true)
-                }
-            }
-
-            "appInfo" -> {
-                context.appInfo();
-            }
-
-            "click" -> {
-                if (!InputService.isOpen) {
-                    JSONObject().apply {
-                        put("err", "InputService is not open")
-                        put("ok", false)
-                    }
-                } else {
-                    context.mainService?.handlePostEvent(JSONObject().apply {
-                        put("eventType", "click")
-                        put("x", params[0])
-                        put("y", params[1])
-                    })
-                    JSONObject().put("ok", true)
-                }
-
-            }
-
-            "inputText" -> {
-                if (!InputService.isOpen) {
-                    JSONObject().apply {
-                        put("err", "InputService is not open")
-                        put("ok", false)
-                    }
-                } else {
-                    val text = params[0].toString()
-                    InputService.ctx?.inputText(text)
-                    JSONObject().put("ok", true)
-                }
-            }
-
-            "pressKey" -> {
-                if (!InputService.isOpen) {
-                    JSONObject().apply {
-                        put("err", "InputService is not open")
-                        put("ok", false)
-                    }
-                } else {
-                    // Extract the key name from the params array
-                    val keyName = params[0].toString()
-                    // Map the key name to the corresponding action code
-                    val code = when (keyName) {
-                        "back" -> 1
-                        "home" -> 2
-                        "recent" -> 3
-                        else -> 0
-                    }
-                    // Send the action event if the mainService is available
-                    context.mainService?.handlePostEvent(JSONObject().apply {
-                        put("eventType", "action")
-                        put("value", code)
-                    })
-                    JSONObject().put("ok", true)
-                }
-            }
-
-            "takeScreenshot" -> {
-                var data = ""
-                if (MainService.isStart) {
-                    data = MainService.screenImgData
-                }
-
-                JSONObject().apply {
-                    put("imgData", "data:image/jpeg;base64," + data)
-                    put("imgLen", data.length)
-                }
-            }
-
-            "dumpWindowHierarchy" -> {
-                var xml = ""
-                if (InputService.isOpen) {
-                    xml = InputService.ctx?.getDumpAsUiAutomatorXml().toString();
-                }
-                JSONObject().apply {
-                    put("xml", xml)
-                }
-            }
-
-            "screenWithXml" -> {
-                var imgData = ""
-                if (MainService.isStart) {
-                    imgData = MainService.screenImgData
-                }
-
-                var xml = ""
-                if (InputService.isOpen) {
-                    xml = InputService.ctx?.getDumpAsUiAutomatorXml().toString();
-                }
-                JSONObject().apply {
-                    put("xml", xml)
-                    put("imgData", "data:image/jpeg;base64," + imgData)
-                    put("imgLen", imgData.length)
-                }
-            }
-
-            else -> {
-                JSONObject().put("err", "Unknown method: $method")
-            }
-        }
-    }
 
     private fun handleScreeRequest(): Response {
-        val payload = JSONObject();
+        val payload = JSONObject()
         var imgData = ""
         if (MainService.isStart) {
             imgData = MainService.screenImgData
@@ -402,11 +168,11 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
 
         var xml = ""
         if (InputService.isOpen) {
-            xml = InputService.ctx?.getDumpAsUiAutomatorXml().toString();
+            xml = InputService.ctx?.getDumpAsUiAutomatorXml().toString()
         }
 
         if (imgData.isNotEmpty() && MainService.isStart) {
-            payload.put("imgData", "data:image/jpeg;base64," + imgData)
+            payload.put("imgData", "data:image/jpeg;base64,$imgData")
             payload.put("imgLen", imgData.length)
         }
 
@@ -440,7 +206,6 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
     }
 
     companion object {
-        // Extension function to check if string is JSON
         private fun String.isJson(): Boolean {
             return try {
                 toJsonObject()
@@ -450,9 +215,8 @@ class LocalServer(private val context: MainActivity, port: Int) : NanoHTTPD("0.0
             }
         }
 
-        // Extension function to parse JSON
-        private fun String.toJsonObject(): org.json.JSONObject {
-            return org.json.JSONObject(this)
+        private fun String.toJsonObject(): JSONObject {
+            return JSONObject(this)
         }
     }
 }

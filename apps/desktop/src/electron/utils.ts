@@ -4,7 +4,6 @@ import os from 'os';
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export function openTerminal(command: string, showWin?: boolean): number | undefined {
     if (!showWin) {
-        // If we shouldn't show window, just run the command in background
         const p = spawn(command, [], {
             detached: true,
             stdio: 'ignore',

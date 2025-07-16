@@ -1,9 +1,10 @@
 import View from '../View';
 import CCAgentClient, { DeviceInfo } from '../../services/cicy/CCWSAgentClient';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
-import { Button, Divider } from 'antd';
+import { Button, Divider, Drawer } from 'antd';
 import { onEvent } from '../../utils/utils';
 import { useEffect, useState } from 'react';
+import { AppsView } from './apps/AppsView';
 
 export const MobileInfoView = ({
     deviceInfo,
@@ -23,6 +24,7 @@ export const MobileInfoView = ({
     const [rustOnline, setRustOnline] = useState(false);
     const [appOnline, setAppOnline] = useState(false);
     const [chatOnline, setChatOnline] = useState(false);
+    const [showApps, setShowApps] = useState(false);
 
     async function getOnline() {
         return agent.getClients().then(res => {
@@ -62,6 +64,16 @@ export const MobileInfoView = ({
             </ProDescriptions>
             <Divider />
             <View rowVCenter mt12>
+                <View mr12 hide={!deviceInfo.ccAgentAppInstalled}>
+                    <Button
+                        onClick={async () => {
+                            setShowApps(true);
+                        }}
+                        size="small"
+                    >
+                        所有App
+                    </Button>
+                </View>
                 <View mr12 hide={!deviceInfo.ccAgentAppInstalled}>
                     <Button
                         onClick={async () => {
@@ -127,6 +139,17 @@ export const MobileInfoView = ({
                         );
                     })}
             </ProDescriptions>
+            <Drawer
+                width={'360px'}
+                title={'Apps'}
+                closable={{ 'aria-label': 'Close Button' }}
+                onClose={() => {
+                    setShowApps(false);
+                }}
+                open={showApps}
+            >
+                {showApps && <AppsView agent={agent} deviceInfo={deviceInfo} />}
+            </Drawer>
         </View>
     );
 };

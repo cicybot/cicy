@@ -4,8 +4,85 @@ import { useEffect, useState } from 'react';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import { CCWSClient } from '../../services/cicy/CCWSClient';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
-import { useMainWindowContext } from '../../providers/MainWindowProvider';
+import { MainWindowAppInfo, useMainWindowContext } from '../../providers/MainWindowProvider';
+import ProxyService from '../../services/common/ProxyService';
+import { useTimeoutLoop } from '@cicy/utils';
+import BrowserService from '../../services/cicy/BrowserService';
 
+const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
+    const [isOnLine, setIsOnLine] = useState(false);
+    useTimeoutLoop(async () => {
+        const res = await new BackgroundApi().isPortOnline(ProxyService.getProxyPort());
+        setIsOnLine(res.result);
+    }, 1000);
+    return (
+        <>
+            <ProDescriptions column={1}>
+                <ProDescriptions.Item label={'代理池'}>
+                    <ProField text={ProxyService.getMetaCmd(appInfo)} mode="read" />
+                </ProDescriptions.Item>
+            </ProDescriptions>
+            <View h={12}></View>
+            <ProDescriptions column={1}>
+                <ProDescriptions.Item label={'端口'}>
+                    <ProField text={ProxyService.getProxyPort()} mode="read" />
+                    <View rowVCenter>
+                        <View ml12>
+                            <Button
+                                size={'small'}
+                                onClick={async () => {
+                                    await new BackgroundApi().killPort(ProxyService.getProxyPort());
+                                    new BackgroundApi().openTerminal(
+                                        ProxyService.getMetaCmd(appInfo),
+                                        true
+                                    );
+                                }}
+                            >
+                                {isOnLine ? '重启' : '启动'}
+                            </Button>
+                        </View>
+                        <View ml12>
+                            <Button
+                                size={'small'}
+                                onClick={() => {
+                                    new BackgroundApi().openPath(appInfo.meta.configPath);
+                                }}
+                            >
+                                打开配置文件
+                            </Button>
+                        </View>
+                        <View ml12>
+                            <Button
+                                size="small"
+                                disabled={!isOnLine}
+                                onClick={() => {
+                                    new BrowserService(
+                                        `https://yacd.metacubex.one/?hostname=127.0.0.1&port=${ProxyService.getProxyWebuiPort()}&secret=#/proxies`
+                                    ).openWindow({ noWebview: true });
+                                }}
+                            >
+                                节点
+                            </Button>
+                        </View>
+                        <View ml12>
+                            <Button
+                                size="small"
+                                disabled={!isOnLine}
+                                onClick={() => {
+                                    new BrowserService(
+                                        `https://yacd.metacubex.one/?hostname=127.0.0.1&port=${ProxyService.getProxyWebuiPort()}&secret=#/rules`
+                                    ).openWindow({ noWebview: true });
+                                }}
+                            >
+                                规则
+                            </Button>
+                        </View>
+                    </View>
+                </ProDescriptions.Item>
+            </ProDescriptions>
+        </>
+    );
+};
 function extractIPAndLocation(html: string) {
     // Regular expression to extract IP address and location
     const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
@@ -106,32 +183,22 @@ const Setting = () => {
                     </ProDescriptions>
                     <Divider />
                     <ProDescriptions column={2}>
-                        <ProDescriptions.Item label={'公开目录'}>
-                            <ProField text={appInfo.publicDir} mode="read" />
+                        <ProDescriptions.Item label={'程序目录'}>
+                            <ProField text={appInfo.appDir} mode="read" />
                         </ProDescriptions.Item>
                         <View ml12>
                             <Button
                                 size={'small'}
                                 onClick={() => {
-                                    new BackgroundApi().openPath(appInfo.publicDir);
+                                    new BackgroundApi().openPath(appInfo.appDir);
                                 }}
                             >
                                 打开
                             </Button>
                         </View>
                     </ProDescriptions>
-                    {/*<Divider />*/}
-                    {/*<ProDescriptions column={1}>*/}
-                    {/*    {Object.keys(appInfo || {}).map((key: string) => {*/}
-                    {/*        //@ts-ignore*/}
-                    {/*        const text = appInfo[key];*/}
-                    {/*        return (*/}
-                    {/*            <ProDescriptions.Item key={key} label={key.replace('ccAgent', '')}>*/}
-                    {/*                <ProField text={text + ''} mode="read" />*/}
-                    {/*            </ProDescriptions.Item>*/}
-                    {/*        );*/}
-                    {/*    })}*/}
-                    {/*</ProDescriptions>*/}
+                    <Divider />
+                    <ProxyPool appInfo={appInfo}></ProxyPool>
                 </View>
             </View>
         </View>
