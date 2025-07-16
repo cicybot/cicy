@@ -36,8 +36,6 @@ export const UploadAgentButton = ({
                         abi = 'arm64';
                     } else if (abi.includes('armeabi')) {
                         abi = 'armv7a';
-                        alert('armv7a is not support');
-                        return;
                     } else {
                         abi = 'x86_64';
                     }

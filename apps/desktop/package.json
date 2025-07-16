@@ -1,7 +1,7 @@
 {
     "name": "@cicy/desktop",
     "license": "Apache-2.0",
-    "version": "1.0.76",
+    "version": "1.0.77",
     "description": "CiCy desktop",
     "main": ".webpack/main",
     "repository": {

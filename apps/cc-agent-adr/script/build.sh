@@ -53,8 +53,41 @@ PROJECT_DIR=$(dirname "$(dirname "$(dirname "${CUR_DIR}")")")
 echo PROJECT_DIR: $PROJECT_DIR
 cd $PROJECT_DIR/apps/cc-agent-adr
 sed -i '' "s/const val UseLocal = .*/const val UseLocal = true/" app/src/main/java/com/web3desk/adr/common.kt
-cp app/libs/libclash-arm64.aar app/libs/libclash.aar
-./gradlew assembleDebug
-rm -rf $PROJECT_DIR/apps/desktop/public/static/assets/app-v0.0.0-arm64.apk
-mv app/build/outputs/apk/debug/app-debug.apk $PROJECT_DIR/apps/desktop/public/static/assets/app-v0.0.0-arm64.apk
-ls -alh $PROJECT_DIR/apps/desktop/public/static/assets/
+
+buildTarget() {
+  local target=$1
+  echo "[+] BuildTarget $target"
+  cp app/libs/libclash-"$target".aar app/libs/libclash.aar
+  ./gradlew assembleDebug
+  cp app/libs/libclash-arm64.aar app/libs/libclash.aar
+  rm -rf "$PROJECT_DIR"/apps/desktop/public/static/assets/app-v0.0.0-"$target".apk
+  mv app/build/outputs/apk/debug/app-debug.apk "$PROJECT_DIR"/apps/desktop/public/static/assets/app-v0.0.0-"$target".apk
+  ls -alh "$PROJECT_DIR"/apps/desktop/public/static/assets/
+}
+
+targets="arm64 armv7a x86_64"
+
+if [ "$1" = "arm64" ]; then
+  target="arm64"
+  buildTarget "$target"
+elif [ "$1" = "armv7a" ]; then
+  target="armv7a"
+  buildTarget "$target"
+elif [ "$1" = "x86_64" ]; then
+  target="x86_64"
+  buildTarget "$target"
+elif [ "$1" = "web" ]; then
+  cd $PROJECT_DIR
+  yarn install
+  yarn build:pkg
+  cd $PROJECT_DIR/apps/cc-agent-web
+  yarn build
+elif [ "$1" = "all" ]; then
+  for target in $targets; do
+      buildTarget "$target"
+  done
+else
+  echo "[-] Not found target!!"
+fi
+
+
