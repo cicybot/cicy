@@ -2,7 +2,13 @@ import View from '../View';
 import { ReactNode } from 'react';
 import { Breadcrumb } from 'antd';
 
-export const AndroidConnectorPage = ({ children }: { children?: ReactNode }) => {
+export const AndroidConnectorPage = ({
+    title,
+    children
+}: {
+    title?: string;
+    children?: ReactNode;
+}) => {
     return (
         <View w100p h100vh overflowYAuto relative>
             <View pl12 mt12 mb12>
@@ -12,7 +18,7 @@ export const AndroidConnectorPage = ({ children }: { children?: ReactNode }) => 
                             title: 'Home'
                         },
                         {
-                            title: 'Android Connector'
+                            title: title || 'Android Connector'
                         }
                     ]}
                 />

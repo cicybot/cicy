@@ -56,6 +56,7 @@ export default class BrowserService {
             noWebview: true
         });
     }
+
     async openWindow(options?: { url?: string; noWebview?: boolean }) {
         if (options?.noWebview && !window.backgroundApi) {
             window.open(this.url);

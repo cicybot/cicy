@@ -4,8 +4,9 @@ import { AndroidIcon } from '../Icons';
 import { AndroidConnectorPage } from './AndroidConnectorPage';
 import { useTimeoutLoop } from '@cicy/utils';
 import { AndroidConnectorInner } from './AndroidConnectorInner';
+import { AndroidLeiDian } from './AndroidLeiDian';
 
-export const AndroidConnector = () => {
+export const AndroidConnector = ({ isLeiDian }: { isLeiDian?: boolean }) => {
     const { clients: clientsData, refetch: refetchClients } = useWsClients();
 
     const clients = (clientsData || [])
@@ -35,6 +36,9 @@ export const AndroidConnector = () => {
                 </View>
             </AndroidConnectorPage>
         );
+    }
+    if (isLeiDian) {
+        return <AndroidLeiDian allClients={clientsData} clients={clients}></AndroidLeiDian>;
     }
     return (
         <AndroidConnectorInner allClients={clientsData} clients={clients}></AndroidConnectorInner>

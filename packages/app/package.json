@@ -11,6 +11,7 @@
         "@cicy/utils": "1.0.0",
         "ace-builds": "^1.36.5",
         "antd": "^5.25.3",
+        "antd-mobile": "5.39.0",
         "axios": "^1.9.0",
         "buffer": "^6.0.3",
         "fast-xml-parser": "^5.2.5",

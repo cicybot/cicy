@@ -26,6 +26,7 @@ const ProxyMitmproxy = () => {
             setIsServerOnline(false);
         }
     }
+
     useEffect(() => {
         isPortOnline().catch(console.error);
         service.initScript().then(res => {

@@ -1,8 +1,8 @@
-import { CCWSClient, ClientIds } from './CCWSClient';
+import { CCWSClient, getMainWindowClientId } from './CCWSClient';
 
 export class CCWSMainWindowClient extends CCWSClient {
     constructor() {
-        super(ClientIds.MainWindow);
+        super(getMainWindowClientId());
     }
 
     async _baseWindow(windowId: string, method: string, params?: object) {

@@ -5,19 +5,25 @@ import { useEffect, useState } from 'react';
 import { isAndroidApp, sendAndroidApiJsonRpc } from '../utils/utils';
 import { Proxy } from './Proxy';
 
-export const Settings = ({ chatConnected, appInfo }: { chatConnected: boolean; appInfo: any }) => {
-    const { clientId } = appInfo;
+export const Settings = ({
+    chatConnected,
+    agentAppInfo
+}: {
+    chatConnected: boolean;
+    agentAppInfo: any;
+}) => {
+    const { clientId } = agentAppInfo;
     const agent = new CCWSAgentClient(clientId);
     const [deviceInfo, setDeviceInfo] = useState<any>({});
     const [showVpnConfig, setShowVpnConfig] = useState(false);
     const [changeProxy, setChangeProxy] = useState(false);
 
-    agent.setAppInfo(appInfo);
+    agent.setAgentAppInfo(agentAppInfo);
     agent.isInApp(isAndroidApp());
     if (deviceInfo) {
         agent.setDeviceInfo(deviceInfo);
     }
-    const { ccAgentAccessibility, ipAddress, ccAgentMediaProjection } = appInfo;
+    const { ccAgentAccessibility, ipAddress, ccAgentMediaProjection } = agentAppInfo;
     const [rustConnected, setRustConnected] = useState(false);
 
     useEffect(() => {
@@ -26,15 +32,17 @@ export const Settings = ({ chatConnected, appInfo }: { chatConnected: boolean; a
                 setRustConnected(res);
             });
             const { result } = sendAndroidApiJsonRpc('deviceInfo');
-            setDeviceInfo(result);
+            if (result) {
+                setDeviceInfo(result);
+            }
         }, 200);
     }, []);
     return (
         <View>
             <View>
-                <View>{appInfo.clientId}</View>
+                <View>{agentAppInfo.clientId}</View>
             </View>
-            <View mt12>App Version: {appInfo.version}</View>
+            <View mt12>App Version: {agentAppInfo.version}</View>
 
             <View mt12>
                 <View>Agent: {'' + rustConnected}</View>
@@ -49,20 +57,20 @@ export const Settings = ({ chatConnected, appInfo }: { chatConnected: boolean; a
             </View>
 
             <View mt12>
-                <View>ServerUrl: {appInfo.serverUrl}</View>
+                <View>ServerUrl: {agentAppInfo.serverUrl}</View>
             </View>
 
             <View mt12>
-                <View>Agent Pid: {deviceInfo.ccAgentRustPid}</View>
+                <View>Agent Pid: {deviceInfo?.ccAgentRustPid}</View>
             </View>
 
-            <View mt12>Agent Version: {deviceInfo.agentRustVersion || 'loading...'}</View>
+            <View mt12>Agent Version: {deviceInfo?.agentRustVersion || 'loading...'}</View>
 
-            <View mt12>Vpn : {appInfo.isVpnConnected + ''}</View>
+            <View mt12>Vpn : {agentAppInfo.isVpnConnected + ''}</View>
 
             <View mt12 rowVCenter>
-                <View>通知: {appInfo.notificationsIsGranted ? '已授权' : '未授权'}</View>
-                <View ml12 hide={appInfo.notificationsIsGranted}>
+                <View>通知: {agentAppInfo.notificationsIsGranted ? '已授权' : '未授权'}</View>
+                <View ml12 hide={agentAppInfo.notificationsIsGranted}>
                     <Button
                         size="small"
                         onClick={async () => {
@@ -111,22 +119,22 @@ export const Settings = ({ chatConnected, appInfo }: { chatConnected: boolean; a
                 </View>
             </View>
             <View mt12 rowVCenter>
-                <View>Vpn: {appInfo.isVpnConnected ? '已开启' : '未开启'}</View>
+                <View>Vpn: {agentAppInfo.isVpnConnected ? '已开启' : '未开启'}</View>
                 <View ml12>
                     <Button
                         size="small"
                         onClick={async () => {
-                            if (!appInfo.isVpnConnected) {
+                            if (!agentAppInfo.isVpnConnected) {
                                 sendAndroidApiJsonRpc('startVpn');
                             } else {
                                 sendAndroidApiJsonRpc('stopVpn');
                             }
                         }}
                     >
-                        {appInfo.isVpnConnected ? '关闭' : '打开'}
+                        {agentAppInfo.isVpnConnected ? '关闭' : '打开'}
                     </Button>
                 </View>
-                <View ml12 hide={!appInfo.isVpnConnected}>
+                <View ml12 hide={!agentAppInfo.isVpnConnected}>
                     <Button
                         size="small"
                         onClick={async () => {
@@ -167,7 +175,7 @@ export const Settings = ({ chatConnected, appInfo }: { chatConnected: boolean; a
                 open={showVpnConfig}
             >
                 <View mt12 rowVCenter>
-                    <pre>{appInfo.vpnInfo.configYaml}</pre>
+                    <pre>{agentAppInfo.vpnInfo.configYaml}</pre>
                 </View>
             </Drawer>
             <Drawer
@@ -179,11 +187,12 @@ export const Settings = ({ chatConnected, appInfo }: { chatConnected: boolean; a
                 open={changeProxy}
             >
                 <View mt12 rowVCenter hide={!changeProxy}>
-                    <Proxy appInfo={appInfo}></Proxy>
+                    <Proxy agentAppInfo={agentAppInfo}></Proxy>
                 </View>
             </Drawer>
 
-            <View hide json={appInfo}></View>
+            <View json={deviceInfo || '{}'}></View>
+            <View json={agentAppInfo}></View>
         </View>
     );
 };

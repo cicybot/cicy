@@ -1,6 +1,46 @@
 
 use std::process::{Command};
 use log::{info, error};
+use regex::Regex;
+use crate::shell;
+
+pub fn get_local_ip_address() -> String {
+    let cmd = if cfg!(target_os = "windows") {
+        "ipconfig"
+    }else{
+        "ifconfig"
+    };
+
+    let output = match shell::exec_cmd(cmd) {
+        Ok(output) => output,
+        Err(_) => return String::new(),
+    };
+    // Match IPv4 addresses after "inet" but filter out unwanted ones later
+    let re = Regex::new(r"\b([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})").unwrap();
+
+    let mut ips = Vec::new();
+
+    for line in output.lines() {
+        let line = line.trim();
+        if cfg!(target_os = "windows") && !line.starts_with("IPv4") {
+            continue;
+        }
+
+        if let Some(caps) = re.captures(line) {
+            if let Some(ip_match) = caps.get(1) {
+                let ip = ip_match.as_str();
+                if
+                !ip.ends_with(".255") &&
+                    !ip.ends_with(".0")
+                {
+                    ips.push(ip.to_string());
+                }
+            }
+        }
+    }
+
+    ips.join(",")
+}
 
 pub fn is_android_linux() -> bool {
     std::env::var("ANDROID_ASSETS").is_ok()

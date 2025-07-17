@@ -7,6 +7,15 @@ export enum WsCloseCode {
     WS_CLIENT_CLOSE_RECONNECT = 3003
 }
 
+export function getMainWindowClientId() {
+    let clientId = sessionStorage.getItem('MasterWebContentClientId') || '';
+    if (!clientId) {
+        clientId = `MasterWebContent-${navigator.platform}-` + Date.now();
+        sessionStorage.setItem('MasterWebContentClientId', clientId);
+    }
+    return clientId;
+}
+
 export enum ClientIds {
     MainWebContent = 'MainWebContent',
     MainWindow = 'MainWebContent'
@@ -135,7 +144,14 @@ export class CCWSClient {
     }
 
     static getServerUrl(serverIp?: string) {
-        return __serverUrl.replace('127.0.0.1', serverIp || '127.0.0.1');
+        return __serverUrl;
+    }
+
+    static formatServerUrl(ip: string) {
+        const url = CCWSClient.getServerUrl();
+        const t = url.split('://');
+        const t2 = t[1].split(':');
+        return `${t[0]}://${ip}:${t2.slice(1).join(':')}`;
     }
 
     static isLocalServer() {
@@ -148,9 +164,11 @@ export class CCWSClient {
             .replace('/ws', '')
             .replace('127.0.0.1', serverIp);
     }
+
     static isLogged() {
         return isLogged;
     }
+
     static async waitForIsLogged() {
         if (isLogged) {
             return true;
@@ -166,6 +184,7 @@ export class CCWSClient {
     static _setServerUrl(serverUrl: string) {
         __serverUrl = serverUrl;
     }
+
     static setServerUrl(serverUrl: string) {
         console.log('setServerUrl', {
             serverUrl,

@@ -1,19 +1,14 @@
 import View from '../View';
-import CCAgentClient, { DeviceInfo } from '../../services/cicy/CCWSAgentClient';
+import CCAgentClient from '../../services/cicy/CCWSAgentClient';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import { Button, Divider, Drawer } from 'antd';
 import { onEvent } from '../../utils/utils';
 import { useEffect, useState } from 'react';
 import { AppsView } from './apps/AppsView';
 
-export const MobileInfoView = ({
-    deviceInfo,
-    agent
-}: {
-    agent: CCAgentClient;
-    deviceInfo: DeviceInfo;
-}) => {
-    const keys = Object.keys(deviceInfo);
+export const MobileInfoView = ({ agent }: { agent: CCAgentClient }) => {
+    const agentAppInfo = agent.agentAppInfo();
+    const keys = Object.keys(agentAppInfo);
     const keysFilter: string[] = [
         'ccAgentAccessibility',
         'ccAgentMediaProjection',
@@ -28,7 +23,7 @@ export const MobileInfoView = ({
 
     async function getOnline() {
         return agent.getClients().then(res => {
-            const { clientId } = deviceInfo;
+            const { clientId } = agentAppInfo;
             const { clients } = res;
             setRustOnline(clients.indexOf(clientId) > -1);
             setAppOnline(clients.indexOf(clientId + '-APP') > -1);
@@ -43,28 +38,28 @@ export const MobileInfoView = ({
         <View>
             <ProDescriptions column={1}>
                 <ProDescriptions.Item label={'客户端ID'}>
-                    <ProField text={deviceInfo.clientId} mode="read" />
+                    <ProField text={agentAppInfo.clientId} mode="read" />
                 </ProDescriptions.Item>
                 <ProDescriptions.Item label={'服务端地址'}>
-                    <ProField text={deviceInfo.serverUrl} mode="read" />
+                    <ProField text={agentAppInfo.serverUrl} mode="read" />
                 </ProDescriptions.Item>
                 <ProDescriptions.Item label={'本机IP'}>
-                    <ProField text={deviceInfo.ipAddress} mode="read" />
+                    <ProField text={agentAppInfo.ipAddress} mode="read" />
                 </ProDescriptions.Item>
             </ProDescriptions>
             <Divider />
             <ProDescriptions column={2}>
                 <ProDescriptions.Item label={'无障碍'}>
-                    <ProField text={deviceInfo.ccAgentAccessibility + ''} mode="read" />
+                    <ProField text={agentAppInfo.ccAgentAccessibility + ''} mode="read" />
                 </ProDescriptions.Item>
 
                 <ProDescriptions.Item label={'屏幕录制'}>
-                    <ProField text={deviceInfo.ccAgentMediaProjection + ''} mode="read" />
+                    <ProField text={agentAppInfo.ccAgentMediaProjection + ''} mode="read" />
                 </ProDescriptions.Item>
             </ProDescriptions>
             <Divider />
             <View rowVCenter mt12>
-                <View mr12 hide={!deviceInfo.ccAgentAppInstalled}>
+                <View mr12 hide={!agentAppInfo.ccAgentAppInstalled}>
                     <Button
                         onClick={async () => {
                             setShowApps(true);
@@ -74,21 +69,7 @@ export const MobileInfoView = ({
                         所有App
                     </Button>
                 </View>
-                <View mr12 hide={!deviceInfo.ccAgentAppInstalled}>
-                    <Button
-                        onClick={async () => {
-                            onEvent('showLoading');
-                            await agent.startAgentApp();
-                            await getOnline();
-                            onEvent('hideLoading');
-                        }}
-                        size="small"
-                    >
-                        启动App
-                    </Button>
-                </View>
-
-                <View mr12 hide={deviceInfo.ccAgentMediaProjection}>
+                <View mr12 hide={agentAppInfo.ccAgentMediaProjection}>
                     <Button
                         onClick={async () => {
                             onEvent('showLoading');
@@ -100,7 +81,7 @@ export const MobileInfoView = ({
                         开启录制
                     </Button>
                 </View>
-                <View mr12 hide={deviceInfo.ccAgentAccessibility}>
+                <View mr12 hide={agentAppInfo.ccAgentAccessibility}>
                     <Button
                         onClick={async () => {
                             onEvent('showLoading');
@@ -148,7 +129,7 @@ export const MobileInfoView = ({
                 }}
                 open={showApps}
             >
-                {showApps && <AppsView agent={agent} deviceInfo={deviceInfo} />}
+                {showApps && <AppsView agent={agent} />}
             </Drawer>
         </View>
     );

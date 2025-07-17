@@ -1,5 +1,3 @@
-import { ClientIds } from '../services/cicy/CCWSClient';
-
 export const isAndroidAgentRustClient = (clientId: string) => {
     return (
         clientId.startsWith('ADR-') &&
@@ -28,11 +26,11 @@ export const isBrowserClient = (clientId: string) => {
 };
 
 export const isMainWindow = (clientId: string) => {
-    return clientId === ClientIds.MainWindow;
+    return clientId.startsWith('MainWebContent');
 };
 
 export const isMainWebContent = (clientId: string) => {
-    return clientId === ClientIds.MainWebContent;
+    return clientId.startsWith('MainWebContent');
 };
 
 export const isMasterWebContent = (clientId: string) => {

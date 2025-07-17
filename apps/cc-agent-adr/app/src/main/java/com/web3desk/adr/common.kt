@@ -23,9 +23,9 @@ import java.util.concurrent.TimeUnit
 
 const val LOCAL_SERVER_PORT = 4448
 const val VERSION = "1.0.1"
-const val UseLocal = true
+const val UseLocal = false
 const val HOME_URL_LOCAL = "http://localhost:4448/?v=1"
-const val HOME_URL = "http://192.168.246.244:5173"
+const val HOME_URL = "http://192.168.198.244:5173"
 
 // Activity requestCode
 const val REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION = 101

@@ -21,6 +21,7 @@ const ProxyPorts = () => {
     );
 
     const [proxyServer, setProxyServer] = useLocalStorageState('proxy_server', '127.0.0.1');
+
     async function fetchMetaAccountPorts() {
         let result = '';
         if (appInfo.isWin) {

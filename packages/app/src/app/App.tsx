@@ -10,8 +10,8 @@ import Clients from '../pages/home/Clients';
 import Home from '../pages/home/Home';
 import Sites from '../pages/home/Sites';
 import Setting from '../pages/home/Setting';
+import LeiDian from '../pages/home/LeiDian';
 import BrowserAccounts from '../pages/home/BrowserAccounts';
-import Proxy from '../pages/home/Proxy';
 import { ModelHelper } from '../services/model/ModelHelper';
 
 const router = createHashRouter([
@@ -44,8 +44,8 @@ const router = createHashRouter([
                 Component: Sites
             },
             {
-                path: 'proxy',
-                Component: Proxy
+                path: 'leidian',
+                Component: LeiDian
             },
             {
                 path: 'browserAccounts',
@@ -58,9 +58,11 @@ const router = createHashRouter([
         ]
     }
 ]);
+
 async function init() {
     ModelHelper.init().catch(console.error);
 }
+
 const App = () => {
     useEffectOnce(() => {
         init().catch(console.error);

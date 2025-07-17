@@ -655,6 +655,7 @@ __metadata:
     "@types/styled-components": "npm:^5.1.26"
     ace-builds: "npm:^1.36.5"
     antd: "npm:^5.25.3"
+    antd-mobile: "npm:5.39.0"
     assert: "npm:^2.1.0"
     axios: "npm:^1.9.0"
     buffer: "npm:^6.0.3"

@@ -9,6 +9,7 @@ export interface MainWindowAppInfo {
     isWin: boolean;
     pathSep: string;
     ip: string;
+    ipList: { adr: string; ip: string; interfaceName: string }[];
     meta: {
         configPath: string;
         dataDir: string;
@@ -19,9 +20,11 @@ export interface MainWindowAppInfo {
     version: string;
     isDev: boolean;
 }
+
 export interface MainWindowState {
     serverIp: string;
     appInfo: MainWindowAppInfo;
+    initAppInfo: () => void;
 }
 
 const MainWindowContext = createContext<MainWindowState>({} as MainWindowState);
@@ -30,7 +33,7 @@ export const MainWindowProvider = ({ children }: { children: ReactNode }) => {
     const { Provider } = MainWindowContext;
     const [serverIp, setServerIp] = useState(null);
     const [appInfo, setAppInfo] = useState(null);
-    useEffect(() => {
+    const initAppInfo = () => {
         new BackgroundApi().mainWindowInfo().then((res: any) => {
             setAppInfo(res.result);
             ProxyService.init(res.result).catch(console.error);
@@ -41,10 +44,13 @@ export const MainWindowProvider = ({ children }: { children: ReactNode }) => {
                 setServerIp(res.ip);
             }
         });
+    };
+    useEffect(() => {
+        initAppInfo();
     }, []);
 
     return (
-        <Provider value={{ appInfo: appInfo!, serverIp: serverIp! }}>
+        <Provider value={{ initAppInfo, appInfo: appInfo!, serverIp: serverIp! }}>
             {Boolean(appInfo && serverIp) && children}
         </Provider>
     );

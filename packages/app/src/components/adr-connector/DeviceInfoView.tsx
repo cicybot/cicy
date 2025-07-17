@@ -9,6 +9,7 @@ import Loading from '../UI/Loading';
 import { useTimeoutLoop } from '@cicy/utils';
 import { CCWSClient } from '../../services/cicy/CCWSClient';
 import { onEvent } from '../../utils/utils';
+
 export const DeviceInfoView = ({
     deviceInfo,
     allClients,
@@ -24,8 +25,10 @@ export const DeviceInfoView = ({
     deviceInfo: any;
     fetchDeviceInfo: any;
 }) => {
-    const serverUrl = CCWSClient.getServerUrl(serverIp);
     const [screen, setScreen] = useState('');
+
+    const cacheServerIp = localStorage.getItem('cacheServerIp') || '';
+    const serverUrl = cacheServerIp ? CCWSClient.formatServerUrl(cacheServerIp) : '';
     const fetchScreen = async () => {
         const img = await connector.deviceScreenShot(deviceInfo);
         setScreen(img);
@@ -54,7 +57,7 @@ export const DeviceInfoView = ({
                 </View>
                 <View ml12>
                     <Button
-                        disabled={!Boolean(deviceInfo && deviceInfo.ccAgentRustPid)}
+                        disabled={!wsOnlineAgentApp}
                         size="small"
                         type="primary"
                         onClick={() => {
@@ -110,7 +113,16 @@ export const DeviceInfoView = ({
                                 </View>
                             </ProDescriptions.Item>
                             <ProDescriptions.Item label="本机IP">
-                                <ProField text={deviceInfo.ipAddress} mode="read" />
+                                <View column>
+                                    {deviceInfo.ipAddress.split(',').map((row: string) => {
+                                        return (
+                                            <View key={row}>
+                                                <ProField text={row} mode="read" />
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+
                                 <View ml12>
                                     <ProField
                                         text={`${deviceInfo.isRoot ? 'Root' : ''}`}
@@ -336,28 +348,26 @@ export const DeviceInfoView = ({
                         <ProDescriptions column={1}>
                             <ProDescriptions.Item label="服务端地址">
                                 <ProField text={deviceInfo.serverUrl} mode={'read'} />
-
-                                <View ml12 hide={deviceInfo.serverUrl === serverUrl}>
-                                    <Button
-                                        onClick={async () => {
-                                            await connector.deviceAdbShell(
-                                                `echo ${serverUrl} > /data/local/tmp/config_server.txt`
-                                            );
-                                            setTimeout(() => {
-                                                fetchDeviceInfo();
-                                            }, 1000);
-                                        }}
-                                        size="small"
-                                    >
-                                        修改
-                                    </Button>
-                                </View>
                             </ProDescriptions.Item>
-                            <View
-                                hide={deviceInfo.serverUrl === serverUrl}
-                                color={deviceInfo.serverUrl !== serverUrl ? 'red' : 'green'}
-                            >
-                                {serverUrl}
+                            <View hide={!serverUrl || serverUrl === deviceInfo.serverUrl}>
+                                <View rowVCenter>
+                                    <View mr12>
+                                        <Button
+                                            size={'small'}
+                                            onClick={async () => {
+                                                await connector.deviceAdbShell(
+                                                    `echo ${serverUrl} > /data/local/tmp/config_server.txt`
+                                                );
+                                                setTimeout(() => {
+                                                    fetchDeviceInfo();
+                                                }, 1000);
+                                            }}
+                                        >
+                                            使用些URL
+                                        </Button>
+                                    </View>
+                                    <View>{serverUrl}</View>
+                                </View>
                             </View>
                         </ProDescriptions>
                     </View>

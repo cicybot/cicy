@@ -1,6 +1,6 @@
 use std::process::{Command};
 use serde_json::{Value};
-use crate::utils::is_android_linux;
+use crate::utils::{get_local_ip_address, is_android_linux};
 
 pub fn get_device_info() -> serde_json::Value {
 
@@ -11,7 +11,6 @@ pub fn get_device_info() -> serde_json::Value {
         echo brand:$(getprop ro.product.brand)
         echo model:$(getprop ro.product.model)
         echo abi:$(getprop ro.product.cpu.abi)
-        echo ipAddress:$(ifconfig | grep 'inet addr' | grep Bcast | awk '{print $2}')
         echo vpn:$(ifconfig | grep 'tun')
         echo serverUrl:$(cat /data/local/tmp/config_server.txt 2>/dev/null)
         echo isRoot:$(ls //system/bin/su 2>/dev/null)
@@ -44,7 +43,6 @@ pub fn get_device_info() -> serde_json::Value {
             let clean_value = match key.to_string().as_str() {
                 "size" => value.trim().strip_prefix("Physical size: ").unwrap_or(value.trim()).to_string(),
                 "dpi" => value.trim().strip_prefix("Physical density: ").unwrap_or(value.trim()).to_string(),
-                "ipAddress" => value.trim().strip_prefix("addr:").unwrap_or(value.trim()).to_string(),
                 _ => value.trim().to_string(),
             };
             map.insert(key.to_string(), serde_json::Value::String(clean_value));
@@ -64,6 +62,11 @@ pub fn get_device_info() -> serde_json::Value {
     map.insert(
         "agentRustVersion".to_string(),
         Value::String(env!("CARGO_PKG_VERSION").to_string()),
+    );
+
+    map.insert(
+        "ipAddress".to_string(),
+        Value::String(get_local_ip_address()),
     );
 
     serde_json::Value::Object(map)

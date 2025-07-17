@@ -62,6 +62,7 @@ export default class ProxyService {
         }
         await ProxyService.initForwardScript(appInfo);
     }
+
     static async initForwardScript(appInfo: MainWindowAppInfo) {
         const path = ProxyService.getMitmForwardPath(appInfo);
         const res = await new BackgroundApi().utils({
@@ -82,15 +83,19 @@ export default class ProxyService {
             return res.result.trim();
         }
     }
+
     static getProxyPort() {
         return 4445;
     }
+
     static getProxyWebuiPort() {
         return 4455;
     }
+
     static getAccountIndexByPort(port: number) {
         return port - 10000;
     }
+
     static getMetaAccountProxyPort(accountIndex: number) {
         return 10000 + accountIndex;
     }
@@ -105,6 +110,7 @@ export default class ProxyService {
             await this.saveMetaAccountConfig(accountIndex, metaConfigPath);
         }
     }
+
     static async saveMetaAccountConfig(accountIndex: number, metaConfigPath: string) {
         const port = ProxyService.getMetaAccountProxyPort(accountIndex);
         await new BackgroundApi().utils({
@@ -115,6 +121,7 @@ export default class ProxyService {
             ]
         });
     }
+
     static async startServer(
         bin: string,
         dataDir: string,
@@ -128,6 +135,7 @@ export default class ProxyService {
             showWin
         );
     }
+
     static async testConfig(bin: string, configPath: string) {
         try {
             const { result, err } = await new BackgroundApi().metaConfigTest(bin, configPath);
@@ -144,6 +152,7 @@ export default class ProxyService {
         }
         return true;
     }
+
     static async isMetaAccountConfigPathExists(accountIndex: number, metaConfigPath: string) {
         const res = await new BackgroundApi().utils({
             method: 'fileExists',
@@ -151,10 +160,12 @@ export default class ProxyService {
         });
         return res.result;
     }
+
     static getMetaAccountConfigPath(accountIndex: number, metaConfigPath: string) {
         const port = ProxyService.getMetaAccountProxyPort(accountIndex);
         return metaConfigPath.replace('.yaml', `_meta_${port}.yaml`);
     }
+
     static getMetaAccountConfig(port: number) {
         let config = DEFAULT_META_ACCOUNT_CONFIG_YAML.replace(/@port@/g, port + '');
         config = config.replace(
@@ -165,6 +176,7 @@ export default class ProxyService {
 
         return config;
     }
+
     static getMetaAccountCacheProxyServerHost() {
         let host = '127.0.0.1';
 
@@ -175,9 +187,11 @@ export default class ProxyService {
         let port = ProxyService.getProxyPort();
         return port + '';
     }
+
     static getMetaConfig() {
         return DEFAULT_META_CONFIG_YAML;
     }
+
     static testSpeed(account: BrowserAccountInfo) {
         const startTime = Date.now();
         let httpsProxy = undefined;
@@ -215,13 +229,16 @@ export default class ProxyService {
                 }
             });
     }
+
     static getMetaCmd({ meta }: MainWindowAppInfo) {
         const { bin, dataDir, configPath } = meta;
         return `${bin} -d ${dataDir} -f ${configPath}`;
     }
+
     static getMitmForwardPath(appInfo: MainWindowAppInfo) {
         return `${appInfo.appDataPath}${appInfo.pathSep}script_forward.py`;
     }
+
     static getMetaAccountCmd(
         type: 'mitmdump' | 'mitmweb',
         appInfo: MainWindowAppInfo,

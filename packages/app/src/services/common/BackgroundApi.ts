@@ -10,6 +10,7 @@ export class BackgroundApi {
     send(msg: { action: string; payload?: any }) {
         return this.api.message(msg);
     }
+
     openPath(path: string) {
         return this.send({
             action: 'openPath',
@@ -18,6 +19,7 @@ export class BackgroundApi {
             }
         });
     }
+
     setWebContentConfig(
         windowId: string,
         webContentsId: number,
@@ -42,6 +44,7 @@ export class BackgroundApi {
             }
         });
     }
+
     isPortOnline(port: number) {
         return this.utils({
             method: 'isPortOnline',
@@ -70,6 +73,7 @@ export class BackgroundApi {
     metaConfigTest(bin: string, path: string) {
         return this.shell(`${bin} -t ${path}`);
     }
+
     openTerminal(cmd: string, showWin?: boolean) {
         return this.utils({
             method: 'openTerminal',
@@ -103,6 +107,7 @@ export class BackgroundApi {
             payload
         });
     }
+
     async axios(
         url: string,
         params?: {

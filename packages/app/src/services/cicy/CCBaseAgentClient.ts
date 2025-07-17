@@ -17,33 +17,32 @@ export default class CCBaseAgentClient {
         if (!this.clientId) {
             throw new Error('no clientId');
         }
-        return new CCWSClient(this.clientId).sendAction(action, paylaod || {}).then(res => {
-            if (res.err) {
-                throw new Error(res.err);
-            }
-            let { result } = res;
-            if (result.includes('\r\n')) {
-                result = result.replace(/\r\n/g, '\n');
-            }
-            return result.trim();
-        });
+        const res = await new CCWSClient(this.clientId).sendAction(action, paylaod || {});
+        if (res.err) {
+            throw new Error(res.err);
+        }
+        let { result } = res;
+        if (result.includes('\r\n')) {
+            result = result.replace(/\r\n/g, '\n');
+        }
+        return result.trim();
     }
 
     async _apiShell(method: string, params: string | any[]) {
-        return this._api('shell', {
+        return await this._api('shell', {
             method,
             params: typeof params === 'string' ? [params] : params || []
         });
     }
 
     async _apiFile(method: string, params: string | any[]) {
-        return this._api('file', {
+        return await this._api('file', {
             method,
             params: typeof params === 'string' ? [params] : params || []
         });
     }
 
-    async dowloadUrl(url: string, filePath: string) {
-        return this._apiFile('download', [url, filePath]);
+    async downloadUrl(url: string, filePath: string) {
+        return await this._apiFile('download', [url, filePath]);
     }
 }

@@ -24,7 +24,7 @@ const AndroidDetail = () => {
         connectCCServer(clientId + '-MANAGE', {
             onLogged: () => {
                 setWsConnected(true);
-                agent.isOnline().then(isOnline => {
+                agent.isAppOnline().then(isOnline => {
                     setIsOnLine(isOnline);
                 });
             },

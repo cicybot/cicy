@@ -16,26 +16,24 @@ import {
     type XmlNode
 } from '../../pages/android/utils';
 import Loading from '../UI/Loading';
-import CCAgentClient, { DeviceInfo } from '../../services/cicy/CCWSAgentClient';
+import CCAgentClient from '../../services/cicy/CCWSAgentClient';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import { InspectView } from './InspectView';
 import { AiView } from './AiView';
 import { MobileInfoView } from './MobileInfoView';
 import { CCWSMainWindowClient } from '../../services/cicy/CCWSMainWindowClient';
-import { AppsView } from './apps/AppsView';
+import { MainWindowAppInfo } from '../../providers/MainWindowProvider';
 
-function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInfo }) {
+function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any }) {
     const [img, setImg] = useState('');
-    const [appInfo, setAppInfo] = useState(null);
+    const [appInfo, setAppInfo] = useState<MainWindowAppInfo | null>(null);
 
     const [settingDrawer, showSettingDawer] = useState(false);
     const [autoScreen, setAutoScreen] = useLocalStorageState('autoScreen', false);
     const [isInspect, setInspect] = useState(false);
-    const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(deviceInfo_);
+    const [agentAppInfo, setAgentAppInfo] = useState<any>(agentAppInfo_);
     const currentImageWidth = 300;
-    const [originScreenWidth, originScreenHeight] = deviceInfo.size
-        .split('x')
-        .map(r => parseInt(r));
+    const { width: originScreenWidth, height: originScreenHeight } = agentAppInfo;
     const [nodesMap, setNodesMap] = useState<Record<string, XmlNode>>({});
     const [nodeBoundsMap, setNodeBoundsMap] = useState<Record<string, Rect>>({});
     const [currentClickPoint, setCurrentClickPoint] = useState<{ x: number; y: number }>({
@@ -61,16 +59,19 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
             setSelectedNode(null);
         }
     }, [selectedNode, nodesMap, isInspect]);
-    const agent = new CCAgentClient(deviceInfo.clientId);
-    agent.setAppInfo(appInfo);
-    agent.setDeviceInfo(deviceInfo);
+    const agent = new CCAgentClient(agentAppInfo.clientId);
+    appInfo && agent.setAppInfo(appInfo);
+    agent.setAgentAppInfo(agentAppInfo);
     const fetchDeviceInfo = () =>
-        agent.getDeviceInfo().then(res => {
-            setDeviceInfo(res);
+        agent.getAgentAppInfo().then(res => {
+            setAgentAppInfo(res);
             return res;
         });
 
     const getScreenImage = async () => {
+        if (agentAppInfo.ccAgentMediaProjection) {
+            return;
+        }
         const { imgData, hierarchy } = await agent.getScreen();
         setImg(imgData);
         if (hierarchy && hierarchy.startsWith('<error')) {
@@ -230,6 +231,13 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
         'selected'
     ];
 
+    if (!agentAppInfo.ccAgentMediaProjection) {
+        return (
+            <View w100vw h100vh center>
+                <View>没有开启屏幕录制</View>
+            </View>
+        );
+    }
     return (
         <View style={{ position: 'fixed', top: 0, left: 0, display: 'flex', flexDirection: 'row' }}>
             <View pl12 pr12 w={currentImageWidth + 32} relative>
@@ -389,7 +397,7 @@ function AndroidDetailInner({ deviceInfo: deviceInfo_ }: { deviceInfo: DeviceInf
                 }}
                 open={settingDrawer}
             >
-                {settingDrawer && <MobileInfoView agent={agent} deviceInfo={deviceInfo} />}
+                {settingDrawer && <MobileInfoView agent={agent} />}
             </Drawer>
         </View>
     );

@@ -11,22 +11,22 @@ function App() {
     const isConnected = useRef(false);
     const [showSettings, setShowSettings] = useState(false);
     const [chatConnected, setChatConnected] = useState(false);
-    const [appInfo, setAppInfo] = useState<any>({});
+    const [agentAppInfo, setAppInfo] = useState<any>({});
     async function onFetchAppInfo(clientId?: string) {
         if (isAndroidApp()) {
-            const { result } = sendAndroidApiJsonRpc('appInfo');
+            const { result } = sendAndroidApiJsonRpc('agentAppInfo');
             setAppInfo(result);
             return result;
         } else {
-            const appInfo = await new CCWSAgentClient(clientId!).jsonrpcApp('appInfo');
-            setAppInfo(appInfo);
-            return appInfo;
+            const agentAppInfo = await new CCWSAgentClient(clientId!).jsonrpcApp('agentAppInfo');
+            setAppInfo(agentAppInfo);
+            return agentAppInfo;
         }
     }
     async function onLogged(clientId: string) {
         setChatConnected(true);
-        const appInfo = await new CCWSAgentClient(clientId).jsonrpcApp('appInfo');
-        setAppInfo(appInfo);
+        const agentAppInfo = await new CCWSAgentClient(clientId).jsonrpcApp('agentAppInfo');
+        setAppInfo(agentAppInfo);
     }
 
     function initConnect(serverUrl: string, clientId: string) {
@@ -52,7 +52,6 @@ function App() {
     useEffect(() => {
         if (isConnected.current) return;
         isConnected.current = true;
-
         if (isAndroidApp()) {
             sendAndroidApiJsonRpc('webviewIsReady');
             //@ts-ignore
@@ -115,8 +114,8 @@ function App() {
                 onClose={() => setShowSettings(false)}
                 open={showSettings}
             >
-                {Boolean(showSettings && appInfo.ipAddress) && (
-                    <Settings chatConnected={chatConnected} appInfo={appInfo}></Settings>
+                {Boolean(showSettings && agentAppInfo.ipAddress) && (
+                    <Settings chatConnected={chatConnected} agentAppInfo={agentAppInfo}></Settings>
                 )}
             </Drawer>
         </View>

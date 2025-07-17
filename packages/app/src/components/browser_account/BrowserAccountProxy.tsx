@@ -9,7 +9,6 @@ import { useTimeoutLoop } from '@cicy/utils';
 import { formatRelativeTime, onEvent } from '../../utils/utils';
 import { useMainWindowContext } from '../../providers/MainWindowProvider';
 import ProxyService from '../../services/common/ProxyService';
-import ProxyMitmService from '../../services/common/ProxyMitmService';
 
 export const BrowserAccountProxy = ({
     browserAccount: browserAccount1
@@ -21,8 +20,6 @@ export const BrowserAccountProxy = ({
 
     const { appInfo } = useMainWindowContext();
     const { configPath: metaConfigPath, bin, dataDir } = appInfo.meta;
-    const serviceMitm = new ProxyMitmService(appInfo.appDataPath, appInfo.isWin);
-    // serviceMitm.setWebUI();
     const port = ProxyService.getMetaAccountProxyPort(id);
     const configPath = ProxyService.getMetaAccountConfigPath(id, metaConfigPath);
     const [isServerOnline, setIsServerOnline] = useState(false);
@@ -62,6 +59,7 @@ export const BrowserAccountProxy = ({
             message.error(e.message);
         }
     }
+
     async function testConfig() {
         await ProxyService.testConfig(bin, configPath);
     }
@@ -185,7 +183,7 @@ curl -v -x http://127.0.0.1:${ProxyService.getMetaAccountProxyPort(
             </View>
             <View h={12}></View>
 
-            <View w100p h={88} hide={!config.mitm}>
+            <View w100p h={88}>
                 <AceEditorView
                     readOnly
                     options={{

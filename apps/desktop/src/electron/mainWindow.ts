@@ -18,7 +18,7 @@ import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
 import os from 'os';
-import { getLocalIPAddress, killPort } from '@cicy/cicy-ws';
+import { getLocalIPAddressList, killPort } from '@cicy/cicy-ws';
 import util from 'util';
 import { exec } from 'child_process';
 const execPromise = util.promisify(exec);
@@ -85,7 +85,10 @@ export class MainWindow {
         })();
     }
     static getInfo() {
-        return getAppInfo();
+        return {
+            ...getAppInfo(),
+            ...MainWindow.getIpInfo(),
+        };
     }
     static getOptions() {
         const icon = this.getIcon();
@@ -226,13 +229,27 @@ export class MainWindow {
             }
         }
     }
+    static getIpInfo() {
+        let ip = '127.0.0.1';
+        const ipList = getLocalIPAddressList();
 
+        if (ipList.length > 0) {
+            const rows = ipList
+                .filter(row => !row.interfaceName.startsWith('tun'))
+                .filter(row => !row.interfaceName.startsWith('bridge'));
+            if (rows.length > 0) {
+                ip = rows[0].adr;
+            }
+        }
+        return { ip, ipList };
+    }
     static async openMainWindow() {
         if (this.mainWindow !== undefined && this.mainWindow !== null) return this.mainWindow;
         const userDataPath = app.getPath('userData');
         const appDataPath = path.join(os.homedir(), '.cicy');
         const version = app.getVersion();
-        const ip = getLocalIPAddress();
+        const { ipList, ip } = MainWindow.getIpInfo();
+
         const isWin = process.platform === 'win32';
         const pathSep = isWin ? '\\' : '/';
 
@@ -242,8 +259,10 @@ export class MainWindow {
             const bin = path.join(publicDir, 'static', 'meta', 'bin', `meta${isWin ? '.exe' : ''}`);
             return { bin, dataDir, configPath };
         };
+
         setAppInfo({
-            ip: ip ? ip.adr : '127.0.0.1',
+            ip,
+            ipList,
             isWin,
             pathSep,
             appDataPath,
@@ -275,6 +294,8 @@ export class MainWindow {
         console.log('[+] CurrentUrl:', this.currentUrl);
         console.log('[+] userDataPath:', userDataPath);
         console.log('[+] publicDir:', publicDir);
+        console.log('[+] ipList:', ipList);
+        console.log('[+] ip:', ip);
 
         try {
             const data = fs.readFileSync(path.resolve(publicDir, 'opencv.js'), 'utf8');
@@ -308,7 +329,7 @@ export class MainWindow {
                     return openCvData;
                 }
                 case 'getAppInfo': {
-                    return getAppInfo();
+                    return MainWindow.getInfo()
                 }
                 case 'initCCServer': {
                     await initCCServer(
@@ -320,7 +341,7 @@ export class MainWindow {
                     return true;
                 }
                 case 'initConnector': {
-                    await initConnector(payload.serverUrl);
+                    await initConnector(payload.serverUrl,payload.ts);
                     return true;
                 }
                 default: {

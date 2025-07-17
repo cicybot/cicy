@@ -1,7 +1,5 @@
-import { arrayBufferToBase64 } from '../../utils/utils';
-import { sleep } from '@cicy/utils';
-
 import { CCWSClient } from './CCWSClient';
+import { MainWindowAppInfo } from '../../providers/MainWindowProvider';
 
 export interface DeviceInfo {
     abi: string;
@@ -26,21 +24,32 @@ export default class CCWSAgentClient extends CCWSClient {
     accessibility: boolean;
     mediaProjection: boolean;
     deviceInfo?: DeviceInfo;
+    _agentAppInfo?: any;
     appInfo?: any;
     isApp?: boolean;
+
     constructor(clientId: string) {
         super(clientId);
         this.accessibility = false;
         this.mediaProjection = false;
     }
 
-    setAppInfo(appInfo: any) {
+    setAppInfo(appInfo: MainWindowAppInfo) {
         this.appInfo = appInfo;
+    }
+
+    agentAppInfo() {
+        return this._agentAppInfo;
+    }
+
+    setAgentAppInfo(appInfo: any) {
+        this._agentAppInfo = appInfo;
     }
 
     isInApp(isApp: boolean) {
         this.isApp = isApp;
     }
+
     setDeviceInfo(deviceInfo: DeviceInfo) {
         this.deviceInfo = deviceInfo;
     }
@@ -193,39 +202,11 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async getScreen() {
-        const { ip } = this.appInfo || {};
-        const { ipAddress, ccAgentMediaProjection, ccAgentAppRunning } = this.deviceInfo!;
-        if (this.isIpTheSaveSection(ip, ipAddress)) {
-            if (ccAgentAppRunning && ccAgentMediaProjection) {
-                const res = await fetch(`http://${ipAddress}:4448/screen`);
-                const { result } = await res.json();
-                const { imgData, xml: hierarchy } = result;
-                return { imgData, hierarchy };
-            } else {
-                const res = await fetch(`http://${ipAddress}:4447/screen`);
-                const arrayBuffer = await res.arrayBuffer();
-                const imgData = `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
-                return {
-                    imgData,
-                    hierarchy: ''
-                };
-            }
-        } else {
-            if (ccAgentAppRunning && ccAgentMediaProjection) {
-                let { imgData, imgLen, xml: hierarchy } = await this.jsonrpcApp('screenWithXml');
-                if (imgLen === 0) {
-                    imgData = '';
-                }
-                return { imgData, hierarchy };
-            } else {
-                const imgData = await this.getScreenFromScreencap();
-                await sleep(200);
-                return {
-                    imgData,
-                    hierarchy: ''
-                };
-            }
+        let { imgData, imgLen, xml: hierarchy } = await this.jsonrpcApp('screenWithXml');
+        if (imgLen === 0) {
+            imgData = '';
         }
+        return { imgData, hierarchy };
     }
 
     async getDeviceInfo(): Promise<DeviceInfo> {
@@ -234,10 +215,22 @@ export default class CCWSAgentClient extends CCWSClient {
         return deviceInfo;
     }
 
+    async getAgentAppInfo(): Promise<DeviceInfo> {
+        const agentAppInfo = await this.jsonrpcApp('appInfo');
+        this.agentAppInfo = agentAppInfo;
+        return agentAppInfo;
+    }
+
     async isOnline() {
         const res = await super.isOnline(this.clientId);
         return !!res;
     }
+
+    async isAppOnline() {
+        const res = await super.isOnline(this.clientId + '-APP');
+        return !!res;
+    }
+
     async getVpnStatus() {
         let { err, config, allowList, isVpnRunning } = await new CCWSAgentClient(
             this.clientId
@@ -261,6 +254,7 @@ export default class CCWSAgentClient extends CCWSClient {
             isVpnRunning: !!isVpnRunning
         };
     }
+
     async getCurrentPackage() {
         const res = this.shell(
             'dumpsys activity activities | grep -E "mResumedActivity|mCurrentFocus"'

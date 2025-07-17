@@ -24,6 +24,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import cn.mapleafgo.mobile.Mobile
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     var mainService: MainService? = null
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             Context.RECEIVER_NOT_EXPORTED
         )
         loadHomePage()
-        startVpn()
+//        startVpn()
     }
 
     fun isVpnRunning(): Boolean {

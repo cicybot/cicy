@@ -3,6 +3,7 @@ interface AppInfo {
     isWin: boolean;
     pathSep: string;
     ip: string;
+    ipList: { adr: string; interfaceName: string }[];
     meta: {
         configPath: string;
         dataDir: string;

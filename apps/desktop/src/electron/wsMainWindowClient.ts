@@ -19,7 +19,7 @@ declare const DEV_URL: string;
 const execPromise = util.promisify(exec);
 const CURRENT_CLIENT_ID = 'MainWindow';
 const serverUrl = 'ws://127.0.0.1:4444/ws';
-
+let _ts = 0
 const CaptureCache: Map<
     string,
     {
@@ -641,15 +641,16 @@ export async function initCCClient() {
             }
         }
     }).connectCCServer();
-    initConnector(serverUrl).catch(console.error);
+    initConnector(serverUrl,_ts).catch(console.error);
 }
 
 export function setServerUrl(serverUrl: string) {
     CCClientWebsocket.setServerUrl(serverUrl);
-    initConnector(serverUrl).catch(console.error);
+    initConnector(serverUrl,_ts).catch(console.error);
 }
 
-export async function initConnector(serverUrl: string) {
+export async function initConnector(serverUrl: string,ts:number) {
+
     const platform = process.platform;
     const arch = process.arch;
     const prefix = platform === 'win32' ? '.exe' : '';
@@ -674,7 +675,7 @@ export async function initConnector(serverUrl: string) {
         }
     }
 
-    const cmd = `"${pathCmd}" -d --ws-server "${serverUrl}" --client-id CONNECTOR-ELECTRON`;
+    const cmd = `"${pathCmd}" -d --ws-server "${serverUrl}" --client-id CONNECTOR-ELECTRON-${platform}-${ts}`;
 
     console.log('initConnector rust: ', {
         platform,

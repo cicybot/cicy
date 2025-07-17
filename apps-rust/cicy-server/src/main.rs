@@ -5,6 +5,7 @@ mod shared_state;
 mod websocket;
 mod api;
 mod swagger;
+mod shell;
 
 use clap::Parser;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, Record, WriteMode};
@@ -256,6 +257,7 @@ fn change_to_exe_dir(dir:&str) -> std::io::Result<()> {
 async fn main() {
     let args = Args::parse();
     println!("args: {:?}",args);
+
     if let Err(e) = change_to_exe_dir(&args.dir) {
         eprintln!("Failed to change to executable directory: {}", e);
         return;

@@ -5,8 +5,8 @@ import { CheckList } from 'antd-mobile';
 import { Tabs } from 'antd-mobile';
 import { useState } from 'react';
 
-export const Proxy = ({ appInfo }: { appInfo: any }) => {
-    const [selectedApps, setSelectedApps] = useState(appInfo.vpnInfo.allowList.split('|'));
+export const Proxy = ({ agentAppInfo }: { agentAppInfo: any }) => {
+    const [selectedApps, setSelectedApps] = useState(agentAppInfo.vpnInfo.allowList.split('|'));
     const [currentTab, setCurrentTab] = useState('proxy');
 
     const [apps, setApps] = useState<{ name: string; icon: string; packageName: string }[]>([]);
@@ -32,17 +32,17 @@ export const Proxy = ({ appInfo }: { appInfo: any }) => {
                         readonly={false}
                         name=""
                         initialValues={{
-                            proxyPoolHost: appInfo.vpnInfo.proxyPoolHost || '127.0.0.1',
-                            proxyPoolPort: appInfo.vpnInfo.proxyPoolPort || '4445',
-                            accountIndex: appInfo.vpnInfo.accountIndex || '10000',
-                            allowList: appInfo.vpnInfo.allowList || ''
+                            proxyPoolHost: agentAppInfo.vpnInfo.proxyPoolHost || '127.0.0.1',
+                            proxyPoolPort: agentAppInfo.vpnInfo.proxyPoolPort || '4445',
+                            accountIndex: agentAppInfo.vpnInfo.accountIndex || '10000',
+                            allowList: agentAppInfo.vpnInfo.allowList || ''
                         }}
                         onFinish={async (value: any) => {
                             sendAndroidApiJsonRpc('editVpnConfig', [
                                 value.proxyPoolHost,
                                 value.proxyPoolPort,
                                 value.accountIndex,
-                                appInfo.vpnInfo.allowList
+                                agentAppInfo.vpnInfo.allowList
                             ]);
                             window.dispatchEvent(new CustomEvent('fetchAppInfo'));
                         }}
@@ -62,9 +62,9 @@ export const Proxy = ({ appInfo }: { appInfo: any }) => {
                             onChange={(a: any[]) => {
                                 setSelectedApps(a);
                                 sendAndroidApiJsonRpc('editVpnConfig', [
-                                    appInfo.vpnInfo.proxyPoolHost,
-                                    appInfo.vpnInfo.proxyPoolPort,
-                                    appInfo.vpnInfo.accountIndex,
+                                    agentAppInfo.vpnInfo.proxyPoolHost,
+                                    agentAppInfo.vpnInfo.proxyPoolPort,
+                                    agentAppInfo.vpnInfo.accountIndex,
                                     a.join('|')
                                 ]);
                                 window.dispatchEvent(new CustomEvent('fetchAppInfo'));
@@ -81,7 +81,7 @@ export const Proxy = ({ appInfo }: { appInfo: any }) => {
                     </View>
                 </Tabs.Tab>
             </Tabs>
-            {/*<View json={appInfo}></View>*/}
+            {/*<View json={agentAppInfo}></View>*/}
         </View>
     );
 };

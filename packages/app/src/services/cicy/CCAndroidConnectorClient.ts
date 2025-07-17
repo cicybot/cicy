@@ -46,7 +46,7 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
     }
 
     async deviceScreenShot(deviceInfo: DeviceInfo) {
-        const { ccAgentRustPid, ccAgentAppRunning, ipAddress, ccAgentMediaProjection } = deviceInfo;
+        // const { ccAgentRustPid, ccAgentAppRunning, ipAddress, ccAgentMediaProjection } = deviceInfo;
         try {
             // if (ccAgentAppRunning && ccAgentMediaProjection) {
             //     const res = await fetch(`http://${ipAddress}:4448/screen`);

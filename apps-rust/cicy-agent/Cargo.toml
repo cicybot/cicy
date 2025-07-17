@@ -1,6 +1,6 @@
 [package]
 name = "cicy-agent"
-version = "1.0.83"
+version = "1.0.84"
 authors = ["Barry"]
 edition = "2024"
 license = "MIT"
@@ -10,6 +10,7 @@ publish = false
 name = "cicy-agent"
 
 [dependencies]
+regex = "1.11.1"
 clap = { version = "4", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = "0.20"

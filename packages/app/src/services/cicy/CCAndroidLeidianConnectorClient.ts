@@ -1,31 +1,21 @@
 import CCBaseAgentClient from './CCBaseAgentClient';
 
-const LEIDIAN_CONFIG_PATH = `D:\\leidian\\LDPlayer9\\vms\\config`;
+const LEIDIAN_DIR = `D:\\leidian\\LDPlayer9`;
+const LEIDIAN_CONSOLE = `${LEIDIAN_DIR}\\ldconsole.exe`;
+const LEIDIAN_CONFIG_PATH = `${LEIDIAN_DIR}\\vms\\config`;
 
 export interface VmInfo {
-    index: string;
+    index: number;
     name: string;
-    windows_id: string;
-    bind_windows_id: string;
-    is_running: string;
-    pid: string;
-    vm_pid: string;
-    width: string;
-    height: string;
-    dpi: string;
-}
-
-export interface LdInstanceInfo {
-    seq: string;
     adb: number;
-    name: string;
-    hwnd: string;
-    bind_windows_id: string;
-    status: string;
-    pid: string;
-    vm_pid: string;
-    resolution: string;
-    dpi: string;
+    windows_id: number;
+    bind_windows_id: number;
+    is_running: boolean;
+    pid: number;
+    vm_pid: number;
+    width: number;
+    height: number;
+    dpi: number;
 }
 
 export default class CCAndroidLeidianConnectorClient extends CCBaseAgentClient {
@@ -39,8 +29,25 @@ export default class CCAndroidLeidianConnectorClient extends CCBaseAgentClient {
         this.index = index;
     }
 
+    getLeidainDir() {
+        return LEIDIAN_DIR;
+    }
+
+    getConsolePath() {
+        return LEIDIAN_CONSOLE;
+    }
+
     async console(cmd: string) {
-        return this._apiShell('exec', `ldconsole ${cmd}`);
+        return await this._apiShell('exec', `${this.getConsolePath()} ${cmd}`);
+    }
+
+    async isInstalled() {
+        try {
+            return await this.console(`-h`);
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
     }
 
     async getConfig() {
@@ -111,72 +118,39 @@ export default class CCAndroidLeidianConnectorClient extends CCBaseAgentClient {
         return await this.getConfig();
     }
 
-    async getVmList(): Promise<{ rows: Record<string, VmInfo> }> {
+    async getVmList(): Promise<{ rows: VmInfo[] }> {
+        const rows: VmInfo[] = [];
         try {
-            const result: Record<string, VmInfo> = {};
-            const output = await this.console(`list2`);
-            // 0,100004118316807,1771730,7278636,1,37004,35356,720,1280,320
-            // 99999,电脑桌面,0,0,1,0,0,1280,719,0
+            // const output1 = await this.console(`list2`);
+            const output = `0,100004118316807,1771730,7278636,1,37004,35356,720,1280,320
+99999,电脑桌面,0,0,1,0,0,1280,719,0`;
             if (output) {
                 for (const item of output.trim().split('\n')) {
                     const itemSplit = item.split(',');
-                    const index = itemSplit[0];
+                    const index = parseInt(itemSplit[0]);
                     const name = itemSplit[1];
 
-                    if (index !== '99999') {
-                        result[name] = {
+                    if (index !== 99999) {
+                        rows.push({
                             index,
                             name,
-                            windows_id: itemSplit[2],
-                            bind_windows_id: itemSplit[3],
-                            is_running: itemSplit[4],
-                            pid: itemSplit[5],
-                            vm_pid: itemSplit[6],
-                            width: itemSplit[7],
-                            height: itemSplit[8],
-                            dpi: itemSplit[9].trim()
-                        };
-                    }
-                }
-            }
-            return { rows: result };
-        } catch (error) {
-            console.error('Error getting VM list:', error);
-            return { rows: {} };
-        }
-    }
-
-    async getLdList(): Promise<{ rows: LdInstanceInfo[] }> {
-        try {
-            const result: LdInstanceInfo[] = [];
-            const output = await this.console(` list2`);
-            if (output) {
-                for (const item of output.trim().split('\n')) {
-                    const itemSplit = item.split(',');
-                    const index = itemSplit[0];
-                    const name = itemSplit[1];
-
-                    if (index !== '99999') {
-                        result.push({
-                            seq: index,
-                            adb: 5554 + parseInt(index) * 2,
-                            name: name,
-                            hwnd: itemSplit[2],
-                            bind_windows_id: itemSplit[3],
-                            status: itemSplit[4],
-                            pid: itemSplit[5],
-                            vm_pid: itemSplit[6],
-                            resolution: `${itemSplit[7]}x${itemSplit[8]}`,
-                            dpi: itemSplit[9].trim()
+                            adb: 5554 + index * 2,
+                            windows_id: parseInt(itemSplit[2]),
+                            bind_windows_id: parseInt(itemSplit[3]),
+                            is_running: itemSplit[4] === '1',
+                            pid: parseInt(itemSplit[5]),
+                            vm_pid: parseInt(itemSplit[6]),
+                            width: parseInt(itemSplit[7]),
+                            height: parseInt(itemSplit[8]),
+                            dpi: parseInt(itemSplit[9].trim())
                         });
                     }
                 }
             }
-            return { rows: result };
         } catch (error) {
-            console.error('Error getting LD list:', error);
-            return { rows: [] };
+            console.error('Error getting VM list:', error);
         }
+        return { rows };
     }
 
     async consoleIndex(method: string, cmd?: string) {

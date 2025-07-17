@@ -36,6 +36,7 @@ const Proxy = () => {
             setIsServerOnline(false);
         }
     }
+
     async function fetchMetaAccountPorts() {
         let result = '';
         if (appInfo.isWin) {
@@ -57,6 +58,7 @@ const Proxy = () => {
 
         return rows;
     }
+
     useTimeoutLoop(async () => {
         await fetchMetaAccountPorts();
         await isPortOnline();

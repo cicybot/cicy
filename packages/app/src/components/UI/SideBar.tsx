@@ -9,9 +9,9 @@ type MenuItem = Required<MenuProps>['items'][number];
 const items: MenuItem[] = [
     { key: '/clients', icon: <LinkOutlined />, label: '客户端' },
     { key: '/android', icon: <AndroidOutlined />, label: '安卓连接器' },
+    { key: '/leidian', icon: <SettingOutlined />, label: '安卓模拟器' },
     { key: '/sites', icon: <WindowsOutlined />, label: '站点' },
     { key: '/browserAccounts', icon: <SettingOutlined />, label: '浏览器帐户' },
-    // { key: '/proxy', icon: <SettingOutlined />, label: '代理' },
     { key: '/setting', icon: <SettingOutlined />, label: '设置' }
 ];
 

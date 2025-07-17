@@ -1,8 +1,8 @@
-import CCAgentClient, { DeviceInfo } from '../../../services/cicy/CCWSAgentClient';
+import CCAgentClient from '../../../services/cicy/CCWSAgentClient';
 import View from '../../View';
 import { useEffect, useState } from 'react';
 
-export function AppsView({ agent, deviceInfo }: { deviceInfo: DeviceInfo; agent: CCAgentClient }) {
+export function AppsView({ agent }: { agent: CCAgentClient }) {
     const [apps, setApps] = useState<any[]>([]);
     useEffect(() => {
         agent.jsonrpcApp('getInstalledApps').then(({ apps }: { apps: any[] }) => {

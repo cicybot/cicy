@@ -142,11 +142,9 @@ class CiCyVpnService : VpnService() {
             setMtu(MTU)
             addDnsServer("8.8.8.8")
             addDnsServer("114.114.114.114")
-
             // 路由配置
             addRoute("0.0.0.0", 0)
-            addAddress("198.18.0.1", 30)
-
+            addAddress("10.255.0.1", 24)
             // 应用过滤逻辑
             when {
                 allowedApps.isNotEmpty() -> {

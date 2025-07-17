@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router';
 import SizeBar from '../../components/UI/SideBar';
 import View from '../../components/View';
-import { CCWSClient, ClientIds, connectCCServer } from '../../services/cicy/CCWSClient';
+import { CCWSClient, connectCCServer, getMainWindowClientId } from '../../services/cicy/CCWSClient';
 import { MainClientMessageHandler } from '../../services/cicy/MainClientMessageHandler';
 import Loading from '../../components/UI/Loading';
 import { MainWindowProvider } from '../../providers/MainWindowProvider';
@@ -10,28 +10,27 @@ import { sleep } from '@cicy/utils';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
 import { v4 as uuid } from 'uuid';
 
-const Home = () => {
+const HomePage = () => {
     const [wsConnected, setWsConnected] = useState(false);
     useEffect(() => {
         (async () => {
-            let clientId = '';
+            let clientId = getMainWindowClientId();
             if (window.backgroundApi) {
-                clientId = ClientIds.MainWebContent;
-            } else {
-                clientId = sessionStorage.getItem('MasterWebContentClientId') || '';
-                if (!clientId) {
-                    clientId = 'MasterWebContent-' + Date.now();
-                    sessionStorage.setItem('MasterWebContentClientId', clientId);
+                let serverPort = localStorage.getItem('serverPort');
+                if (!serverPort) {
+                    serverPort = '4444';
+                    localStorage.setItem('serverPort', serverPort);
                 }
-            }
-            if (window.backgroundApi) {
-                const serverPort = 4444;
                 let serverIp = localStorage.getItem('serverIp');
+
+                if (!serverIp) {
+                    serverIp = '0.0.0.0';
+                    localStorage.setItem('serverIp', serverIp);
+                }
                 let token = localStorage.getItem('token');
                 if (!token) {
                     token = uuid();
                     localStorage.setItem('token', token);
-
                     const serverUrl = `ws://127.0.0.1:${serverPort}/ws?token=${token}`;
                     localStorage.setItem('serverUrl', serverUrl);
                     CCWSClient._setServerUrl(serverUrl);
@@ -39,11 +38,7 @@ const Home = () => {
                     CCWSClient._setServerUrl(localStorage.getItem('serverUrl')!);
                 }
 
-                if (!serverIp) {
-                    serverIp = '0.0.0.0';
-                    localStorage.setItem('serverIp', serverIp);
-                }
-                await new BackgroundApi().killPort(serverPort);
+                await new BackgroundApi().killPort(parseInt(serverPort));
                 window.backgroundApi
                     .message({
                         action: 'initCCServer',
@@ -57,6 +52,11 @@ const Home = () => {
                     .catch(console.error);
                 await sleep(1000);
             }
+            let ts = localStorage.getItem('initConnectorTs');
+            if (!ts) {
+                ts = Date.now() + '';
+                localStorage.setItem('initConnectorTs', ts);
+            }
             connectCCServer(clientId, {
                 onLogged: () => {
                     setWsConnected(true);
@@ -64,7 +64,8 @@ const Home = () => {
                         window.backgroundApi.message({
                             action: 'initConnector',
                             payload: {
-                                serverUrl: CCWSClient.getServerUrl()
+                                serverUrl: CCWSClient.getServerUrl(),
+                                ts: parseInt(ts!)
                             }
                         });
                 },
@@ -77,7 +78,6 @@ const Home = () => {
             });
         })();
     }, []);
-
     if (!wsConnected) {
         return (
             <View h100vh w100vw center>
@@ -101,4 +101,4 @@ const Home = () => {
     );
 };
 
-export default Home;
+export default HomePage;

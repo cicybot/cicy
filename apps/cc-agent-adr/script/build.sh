@@ -52,7 +52,7 @@ get_cur_dir
 PROJECT_DIR=$(dirname "$(dirname "$(dirname "${CUR_DIR}")")")
 echo PROJECT_DIR: $PROJECT_DIR
 cd $PROJECT_DIR/apps/cc-agent-adr
-sed -i '' "s/const val UseLocal = .*/const val UseLocal = true/" app/src/main/java/com/web3desk/adr/common.kt
+#sed -i '' "s/const val UseLocal = .*/const val UseLocal = true/" app/src/main/java/com/web3desk/adr/common.kt
 
 buildTarget() {
   local target=$1
