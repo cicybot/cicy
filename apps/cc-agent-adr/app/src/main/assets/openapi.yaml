@@ -1,0 +1,149 @@
+openapi: 3.0.0
+info:
+  title: CiCy Agent API
+  version: 1.0.0
+
+
+security:
+  - BearerAuth: []
+
+paths:
+  /vpnConfig.yaml:
+    get:
+      summary: vpnConfig
+      responses:
+        '200':
+          description: vpnConfig response
+          content:
+            text/plain:
+  /jsonrpc:
+    post:
+      summary: json rpc
+      description: |
+        ### deviceInfo:
+
+        ```json
+        {
+          "method": "deviceInfo"
+        }
+        ```
+        ### agentAppInfo:
+
+        ```json
+        {
+          "method": "agentAppInfo"
+        }
+        ```
+        ### onStartRecording:
+
+        ```json
+        {
+          "method": "onStartRecording"
+        }
+        ```
+        ### onStopRecording:
+
+        ```json
+        {
+          "method": "onStopRecording"
+        }
+        
+        ```
+        
+        ### onStartInput:
+
+        ```json
+        {
+          "method": "onStartInput"
+        }
+        ```
+        
+        ### onStopInput:
+
+        ```json
+        {
+          "method": "onStopInput"
+        }
+        ```
+        
+        ### pressKey:
+
+        ```json
+        {
+          "method": "pressKey",
+          "params":["recent"]
+        }
+        ```
+        
+        ### screenWithXml:
+
+        ```json
+        {
+          "method": "screenWithXml"
+        }
+        
+        ```
+        
+        ### getVpnConfig:
+
+        ```json
+        {
+          "method": "getVpnConfig"
+        }
+        
+        ```
+        
+        ### getInstalledApps:
+
+        ```json
+        {
+          "method": "getInstalledApps"
+        }
+        
+        ```
+      tags:
+        - jsonrpc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonRpcRequest'
+      responses:
+        '200':
+          description: BaseResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+        '500':
+          description: Internal server error
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # Optional, can remove if not using JWT
+      description: "Simple token authentication (just 'Bearer your-token')"
+  schemas:
+    BaseResponse:
+      type: object
+      properties:
+        err:
+          type: string
+        result:
+          type: object
+    JsonRpcRequest:
+      type: object
+      required:
+        - method
+        - params
+      properties:
+        method:
+          type: string
+        params:
+          type: array
+          items:
+            type: string

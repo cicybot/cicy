@@ -121,9 +121,9 @@ export default class CCAndroidLeidianConnectorClient extends CCBaseAgentClient {
     async getVmList(): Promise<{ rows: VmInfo[] }> {
         const rows: VmInfo[] = [];
         try {
-            // const output1 = await this.console(`list2`);
-            const output = `0,100004118316807,1771730,7278636,1,37004,35356,720,1280,320
-99999,电脑桌面,0,0,1,0,0,1280,719,0`;
+            const output = await this.console(`list2`);
+            // const output = `0,100004118316807,1771730,7278636,1,37004,35356,720,1280,320
+            // 99999,电脑桌面,0,0,1,0,0,1280,719,0`;
             if (output) {
                 for (const item of output.trim().split('\n')) {
                     const itemSplit = item.split(',');
