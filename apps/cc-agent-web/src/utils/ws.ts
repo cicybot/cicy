@@ -1,5 +1,0 @@
-export const WsCloseCode = {
-    WS_CLOSE_STOP_RECONNECT: 3001,
-    WS_CLOSE_RECONNECT: 3002,
-    WS_CLIENT_CLOSE_RECONNECT: 3003
-};
