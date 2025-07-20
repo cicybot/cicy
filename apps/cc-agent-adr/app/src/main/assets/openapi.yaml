@@ -8,6 +8,14 @@ security:
   - BearerAuth: []
 
 paths:
+  /agentAppInfo:
+    get:
+      summary: agentAppInfo
+      responses:
+        '200':
+          description: agentAppInfo response
+          content:
+            application/json:
   /vpnConfig.yaml:
     get:
       summary: vpnConfig
@@ -16,6 +24,28 @@ paths:
           description: vpnConfig response
           content:
             text/plain:
+  /api:
+    post:
+      summary: api
+      parameters:
+        - name: method
+          in: query
+          description: The method to call
+          required: true
+          schema:
+            type: string
+            enum:
+              - agentAppInfo
+              - deviceInfo
+              - startVpn
+              - stopVpn
+              - importVpn
+            default: agentAppInfo
+      responses:
+        '200':
+          description: agentAppInfo response
+          content:
+            application/json:
   /jsonrpc:
     post:
       summary: json rpc
@@ -135,6 +165,14 @@ components:
           type: string
         result:
           type: object
+    actionRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+
     JsonRpcRequest:
       type: object
       required:

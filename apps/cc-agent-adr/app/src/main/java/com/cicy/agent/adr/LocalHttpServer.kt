@@ -14,6 +14,16 @@ class LocalHttpServer(private val service: Service,private var messageHandler: M
         val response = when (val path = uri.removePrefix("/")) {
             "jsonrpc" -> handleJSONRpcRequest(session)
             "vpnConfig.yaml"->handleVpnConfigRequest()
+            "agentAppInfo"->{
+                handleApiRequest("agentAppInfo")
+            }
+            "api"->{
+                val allParams = session.parameters.mapValues {
+                    it.value.firstOrNull() ?: ""
+                }
+                val method = allParams["method"]
+                handleApiRequest(method.toString())
+            }
             "openapi.json" -> handleOpenapiJsonRequest()
             else -> handleFileRequest(path)
         }
@@ -32,6 +42,23 @@ class LocalHttpServer(private val service: Service,private var messageHandler: M
             Response.Status.OK,
             "text/plain",
             config.getString("configYaml")
+        )
+    }
+
+    private fun handleApiRequest(method:String): Response {
+        val result = messageHandler.process(method, JSONArray())
+        val responseJson = JSONObject()
+        if (result.optString("err").isEmpty()) {
+            responseJson.put("result", result)
+        } else {
+            responseJson.put("err", result["err"])
+        }
+        responseJson.put("jsonrpc", "2.0")
+        responseJson.put("id", "1")
+        return newFixedLengthResponse(
+            Response.Status.OK,
+            "application/json",
+            responseJson.toString()
         )
     }
 

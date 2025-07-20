@@ -8,7 +8,7 @@ import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.content.res.AssetManager
+import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +20,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -32,14 +33,13 @@ import com.cicy.agent.adr.MessageActivityHandler
 import com.cicy.agent.adr.MessageHandler
 import com.cicy.agent.adr.PermissionRequestTransparentActivity
 import com.cicy.agent.adr.RecordingService
-import com.cicy.agent.adr.getAbi
 import com.cicy.agent.adr.isX86_64
-import com.cicy.agent.adr.vpn.CiCyVpnService
 import com.web3desk.adr.R
-import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
-import java.io.FileOutputStream
+import java.net.URLEncoder
+import androidx.core.net.toUri
+import com.cicy.agent.adr.REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION
+import com.cicy.agent.adr.RES_FAILED
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private var webviewIsReady: Boolean = false
 
     var clashRunning = false;
+
     var recordingService: RecordingService? = null
 
     lateinit var localBroadcastManager: LocalBroadcastManager
@@ -68,13 +69,6 @@ class MainActivity : AppCompatActivity() {
                     android.Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-            }
-
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.QUERY_ALL_PACKAGES
-                ) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(android.Manifest.permission.QUERY_ALL_PACKAGES)
             }
         }
 
@@ -203,12 +197,6 @@ class MainActivity : AppCompatActivity() {
                 put("action", "on_media_projection_canceled")
             }.toString())
         }
-
-        if (requestCode == VPN_REQUEST_CODE) {
-            val intent = Intent(this, CiCyVpnService::class.java)
-            startForegroundService(intent)
-            Mobile.startService()
-        }
         onStateChanged()
     }
 
@@ -239,52 +227,67 @@ class MainActivity : AppCompatActivity() {
         return clashRunning
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun startVpn(): String {
-        if(!clashRunning){
-            if(isX86_64()){
-
-            }else{
-                messageHandler.initVpn()
-                val intent = VpnService.prepare(this)
-                if (intent != null) {
-                    startActivityForResult(intent, VPN_REQUEST_CODE)
-                } else {
-                    onActivityResult(VPN_REQUEST_CODE, RESULT_OK, null)
-                }
-
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("clashmeta://install-config?action=start")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
-            return "clash trigger start"
 
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+                Log.d("VPNControl", "VPN start intent launched")
+            } else {
+                Log.e("VPNControl", "No activity found to handle the intent")
+            }
+        } catch (e: Exception) {
+            Log.e("VPNControl", "Failed to start VPN", e)
         }
-        return "clashRunning already running"
+
+        return "clash trigger start"
     }
 
     fun stopVpn():String {
-        if(clashRunning) {
-            if(isX86_64()){
-
-            }else{
-                sendBroadcast(Intent("signal_stop_cicy"))
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("clashmeta://install-config?action=stop")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
-            return "clash trigger stop"
+
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+                Log.d("VPNControl", "VPN stop intent launched")
+            } else {
+                Log.e("VPNControl", "No activity found to handle the intent")
+            }
+        } catch (e: Exception) {
+            Log.e("VPNControl", "Failed to stop VPN", e)
         }
-        return "clash not running"
+        return "clash trigger stop"
     }
 
     fun importVpn(){
-//        launch {
-//            val uuid = withProfile {
-//                val name = getString(R.string.new_profile)
-//                create(Profile.Type.Url, name).also {
-//                    patch(it, name, "http://127.0.0.1:${LocalServer.PORT}/vpnConfig.yaml", 0)
-//                    coroutineScope {
-//                        commit(it)
-//                    }
-//                }
-//            }
-//            startActivity(PropertiesActivity::class.intent.setUUID(uuid))
-//        }
+        val configUrl = "http://127.0.0.1:${LocalServer.PORT}/vpnConfig.yaml"
+        val encodedUrl = URLEncoder.encode(configUrl, "UTF-8")
+
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = "clashmeta://install-config?action=import&url=$encodedUrl".toUri()
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                intent.data = "clash://install-config?url=$encodedUrl".toUri()
+                if (intent.resolveActivity(packageManager) != null) {
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(this, "Clash app not found", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to import config: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
 

@@ -1,5 +1,4 @@
 package com.cicy.agent.adr
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.res.AssetManager
@@ -45,17 +44,8 @@ class MessageActivityHandler(
             ""
         }
     }
-    private fun get_X86_64_Config(): String {
-        return try {
-            getContext().resources?.openRawResource(R.raw.config_x86_64)?.bufferedReader().use { it?.readText()
-                ?: "" }
-        } catch (e: Exception) {
-            Log.e("LeafVpnService", "Error reading default config", e)
-            ""
-        }
-    }
 
-    private fun getDefaultConfig(): String {
+    private fun getVpnDefaultConfig(): String {
         return try {
             getContext().resources?.openRawResource(R.raw.config)?.bufferedReader().use { it?.readText()
                 ?: "" }
@@ -71,15 +61,8 @@ class MessageActivityHandler(
         val proxyPoolPort = sharedPref?.getString("proxyPoolPort", "") ?: "4445"
         val accountIndex = sharedPref?.getString("accountIndex", "") ?: "10000"
         val allowList = sharedPref?.getString("allowList", "") ?: ""
-        val aib = getAbi()
-        var configYaml = ""
-        var nodeName = "HTTP"
-        if(isX86_64()){
-            configYaml = get_X86_64_Config()
-            nodeName = "HTTP_NODE"
-        }else{
-            configYaml = getDefaultConfig()
-        }
+        var configYaml = getVpnDefaultConfig()
+        var nodeName = "HTTP_NODE"
         if (proxyPoolHost.isNotEmpty() && !proxyPoolHost.equals("127.0.0.1")) {
             configYaml = configYaml.replace(
                 "# - proxy",

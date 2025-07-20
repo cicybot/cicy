@@ -28,6 +28,7 @@
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
 
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission
@@ -53,20 +54,6 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
-        <service
-            android:name="com.cicy.agent.adr.InputService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="mediaProjection"
-            android:label="CiCy"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
-        </service>
 
         <activity
             android:name="com.cicy.agent.app.MainActivity"
@@ -90,6 +77,22 @@
             </intent-filter>
         </activity>
 
+
+        <service
+            android:name="com.cicy.agent.adr.InputService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="mediaProjection"
+            android:label="CiCy"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
         <activity
             android:name="com.cicy.agent.adr.PermissionRequestTransparentActivity"
             android:excludeFromRecents="true"
@@ -101,17 +104,9 @@
             android:foregroundServiceType="mediaProjection" />
 
         <service
-            android:name="com.cicy.agent.adr.vpn.CiCyVpnService"
-            android:permission="android.permission.BIND_VPN_SERVICE"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="android.net.VpnService" />
-            </intent-filter>
-        </service>
-
-        <service
             android:name="com.cicy.agent.adr.LocalServer"
             android:enabled="true"
+            android:foregroundServiceType="dataSync"
             android:exported="false" />
 
     </application>
