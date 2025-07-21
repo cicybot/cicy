@@ -1,4 +1,5 @@
 package com.cicy.agent.adr
+
 /**
  * Capture screen,get video and audio,send to rust.
  * Dispatch notifications
@@ -12,9 +13,8 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.PendingIntent.FLAG_IMMUTABLE
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.app.Service
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -46,7 +46,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.web3desk.adr.R
+import com.cicy.agent.R
 import org.json.JSONObject
 import kotlin.math.max
 import kotlin.math.min
@@ -463,8 +463,6 @@ class RecordingService : Service() {
             addCategory(Intent.CATEGORY_LAUNCHER)
             putExtra("type", type)
         }
-        val pendingIntent =
-            PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
         val notification = notificationBuilder
             .setOngoing(true)
             .setSmallIcon(R.mipmap.ic_stat_logo)
@@ -474,7 +472,20 @@ class RecordingService : Service() {
             .setContentTitle(DEFAULT_NOTIFY_TITLE)
             .setContentText(RECORDING_NOTIFY_TEXT)
             .setOnlyAlertOnce(true)
-            .setContentIntent(pendingIntent)
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this,
+                    0,
+                    Intent().setComponent(
+                        ComponentName(
+                            "com.cicy.agent",
+                            "com.cicy.agent.app.MainActivity"
+                        )
+                    )
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                    pendingIntentFlags(PendingIntent.FLAG_UPDATE_CURRENT)
+                )
+            )
             .setColor(ContextCompat.getColor(this, R.color.primary))
             .setWhen(System.currentTimeMillis())
             .build()

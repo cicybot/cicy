@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.web3desk.adr'
+    namespace 'com.cicy.agent'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.cc.agent.adr"
+        applicationId "com.cicy.agent"
         minSdk 24
         targetSdk 33
         versionCode 1
@@ -64,7 +64,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation (name:'libclash', ext:'aar')
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'com.squareup.okhttp3:okhttp:4.9.1'
     implementation 'com.github.getActivity:XXPermissions:20.0'

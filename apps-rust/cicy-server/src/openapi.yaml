@@ -20,6 +20,7 @@ paths:
             text/plain:
               schema:
                 type: string
+
   /api/ws/info:
     get:
       summary: websocket info

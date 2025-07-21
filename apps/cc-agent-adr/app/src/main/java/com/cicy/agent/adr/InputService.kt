@@ -20,7 +20,9 @@ import android.view.ViewGroup.LayoutParams
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.EditText
-import java.util.*
+import java.util.LinkedList
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -56,7 +58,7 @@ class InputService : AccessibilityService() {
     companion object {
         @SuppressLint("StaticFieldLeak")
         var ctx: InputService? = null
-        val isOpen: Boolean
+        val isReady: Boolean
             get() = ctx != null
     }
 

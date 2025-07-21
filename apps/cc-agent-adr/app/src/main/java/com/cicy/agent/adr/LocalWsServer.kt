@@ -22,7 +22,7 @@ interface WsOptions {
 }
 
 class LocalWsServer(private val clientId: String, private val options: WsOptions? = null) {
-    private val tag = "CCWebSocketClient"
+    private val tag = "LocalWsServer"
     private var webSocket: WebSocket? = null
     private val isConnecting = AtomicBoolean(false)
     private val shouldReconnect = AtomicBoolean(true)

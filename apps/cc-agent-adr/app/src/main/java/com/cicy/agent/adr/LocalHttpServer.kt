@@ -1,42 +1,50 @@
 package com.cicy.agent.adr
+
 import android.app.Service
+import com.google.gson.Gson
 import fi.iki.elonen.NanoHTTPD
 import org.json.JSONArray
 import org.json.JSONObject
 import org.yaml.snakeyaml.Yaml
 import java.io.InputStream
-import com.google.gson.Gson
 
-class LocalHttpServer(private val service: Service,private var messageHandler: MessageHandler, port: Int) : NanoHTTPD("0.0.0.0", port) {
+class LocalHttpServer(
+    private val service: Service,
+    private var messageHandler: MessageHandler,
+    port: Int
+) : NanoHTTPD("0.0.0.0", port) {
     override fun serve(session: IHTTPSession?): Response {
         if (session == null) return newFixedLengthResponse("Session is null")
         val uri = session.uri ?: "/index.html"
         val response = when (val path = uri.removePrefix("/")) {
             "jsonrpc" -> handleJSONRpcRequest(session)
-            "vpnConfig.yaml"->handleVpnConfigRequest()
-            "agentAppInfo"->{
+            "clashConfig.yaml" -> handleClashConfigRequest()
+            "agentAppInfo" -> {
                 handleApiRequest("agentAppInfo")
             }
-            "api"->{
+
+            "api" -> {
                 val allParams = session.parameters.mapValues {
                     it.value.firstOrNull() ?: ""
                 }
                 val method = allParams["method"]
                 handleApiRequest(method.toString())
             }
+
             "openapi.json" -> handleOpenapiJsonRequest()
             else -> handleFileRequest(path)
         }
         return response
     }
+
     private fun convertYamlToJson(yamlContent: String): String {
         val yaml = Yaml()
         val obj = yaml.load<Any>(yamlContent)
         return Gson().toJson(obj)
     }
 
-    private fun handleVpnConfigRequest():Response{
-        val config = messageHandler.process("getVpnConfig", JSONArray())
+    private fun handleClashConfigRequest(): Response {
+        val config = messageHandler.process("getClashConfig", JSONArray())
 
         return newFixedLengthResponse(
             Response.Status.OK,
@@ -45,7 +53,7 @@ class LocalHttpServer(private val service: Service,private var messageHandler: M
         )
     }
 
-    private fun handleApiRequest(method:String): Response {
+    private fun handleApiRequest(method: String): Response {
         val result = messageHandler.process(method, JSONArray())
         val responseJson = JSONObject()
         if (result.optString("err").isEmpty()) {

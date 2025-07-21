@@ -1,4 +1,6 @@
 package com.cicy.agent.adr
+
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -17,22 +19,19 @@ const val RES_FAILED = -100
 // Activity requestCode
 const val REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION = 101
 const val REQ_REQUEST_MEDIA_PROJECTION = 201
-const val VPN_REQUEST_CODE = 102
-const val REQUEST_CODE_NOTIFICATION = 2001
 
 // intent action, extra
 const val ACT_REQUEST_MEDIA_PROJECTION = "REQUEST_MEDIA_PROJECTION"
 const val ACT_INIT_MEDIA_PROJECTION_AND_SERVICE = "INIT_MEDIA_PROJECTION_AND_SERVICE"
 const val EXT_MEDIA_PROJECTION_RES_INTENT = "MEDIA_PROJECTION_RES_INTENT"
 
-const val DEFAULT_NOTIFY_TITLE = "CiCy Agent"
+const val DEFAULT_NOTIFY_TITLE = "CiCy"
 const val RECORDING_NOTIFY_TEXT = "Recording is running"
 const val LOCAL_SERVER_NOTIFY_TEXT = "Server is running"
 
-const val RECORDING_NOTIFY_ID = 1
+const val RECORDING_NOTIFY_ID = 23
 const val LOCAL_SERVER_NOTIFY_ID = 2
 const val NOTIFY_ID_OFFSET = 600
-
 
 
 fun getClientNotifyID(clientID: Int): Int {
@@ -91,6 +90,7 @@ fun getAbi(): String? {
 fun isX86_64(): Boolean {
     return Build.SUPPORTED_ABIS[0].equals("x86_64")
 }
+
 fun requestPermission(context: Context, type: String) {
     XXPermissions.with(context)
         .permission(type)
@@ -113,3 +113,17 @@ fun padKeyTo8Bytes(key: String): String {
         key.padEnd(8, '0')  // Pad with '0' if the key is shorter than 8 characters
     }
 }
+
+
+fun pendingIntentFlags(flags: Int, mutable: Boolean = false): Int {
+    return if (Build.VERSION.SDK_INT >= 24) {
+        if (Build.VERSION.SDK_INT > 30 && mutable) {
+            flags or PendingIntent.FLAG_MUTABLE
+        } else {
+            flags or PendingIntent.FLAG_IMMUTABLE
+        }
+    } else {
+        flags
+    }
+}
+

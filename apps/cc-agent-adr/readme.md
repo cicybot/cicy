@@ -3,7 +3,7 @@
 
     adb shell am clear-debug-app
 
-    adb shell dumpsys meminfo com.cicy.agent.alpha | grep -E "PSS|TOTAL"
+    adb shell dumpsys meminfo com.cicy.agent | grep -E "PSS|TOTAL"
     adb shell dumpsys meminfo com.github.metacubex.clash.alpha | grep -E "PSS|TOTAL"
     
     

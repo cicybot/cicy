@@ -1,4 +1,5 @@
 package com.cicy.agent.adr
+
 import android.content.Context
 import android.content.Intent
 import android.content.res.AssetManager
@@ -8,18 +9,15 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import cn.mapleafgo.mobile.Mobile
+import com.cicy.agent.R
 import com.cicy.agent.app.MainActivity
 import com.hjq.permissions.XXPermissions
-import com.web3desk.adr.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 
@@ -31,7 +29,7 @@ class MessageActivityHandler(
         return context
     }
 
-    fun readFileFromAssets(filename: String): String {
+    private fun readFileFromAssets(filename: String): String {
         return try {
             val assetManager: AssetManager = context.assets
             val inputStream = assetManager.open(filename)
@@ -47,22 +45,25 @@ class MessageActivityHandler(
 
     private fun getVpnDefaultConfig(): String {
         return try {
-            getContext().resources?.openRawResource(R.raw.config)?.bufferedReader().use { it?.readText()
-                ?: "" }
+            getContext().resources?.openRawResource(R.raw.config)?.bufferedReader().use {
+                it?.readText()
+                    ?: ""
+            }
         } catch (e: Exception) {
             Log.e("LeafVpnService", "Error reading default config", e)
             ""
         }
     }
 
-    private fun getVpnConfig(): JSONObject {
-        val sharedPref = getContext().getSharedPreferences("vpn_preferences", Context.MODE_PRIVATE)
+    private fun getClashConfig(): JSONObject {
+        val sharedPref =
+            getContext().getSharedPreferences("clash_preferences", Context.MODE_PRIVATE)
         val proxyPoolHost = sharedPref?.getString("proxyPoolHost", "") ?: ""
         val proxyPoolPort = sharedPref?.getString("proxyPoolPort", "") ?: "4445"
         val accountIndex = sharedPref?.getString("accountIndex", "") ?: "10000"
         val allowList = sharedPref?.getString("allowList", "") ?: ""
         var configYaml = getVpnDefaultConfig()
-        var nodeName = "HTTP_NODE"
+        val nodeName = "HTTP_NODE"
         if (proxyPoolHost.isNotEmpty() && !proxyPoolHost.equals("127.0.0.1")) {
             configYaml = configYaml.replace(
                 "# - proxy",
@@ -85,8 +86,8 @@ class MessageActivityHandler(
         }
     }
 
-    fun editVpnConfig(params: JSONArray):String {
-        val sharedPref = context.getSharedPreferences("vpn_preferences", Context.MODE_PRIVATE)
+    private fun editClashConfig(params: JSONArray): String {
+        val sharedPref = context.getSharedPreferences("clash_preferences", Context.MODE_PRIVATE)
         val editor = sharedPref.edit().apply {
             putString("proxyPoolHost", params.optString(0, ""))
             putString("proxyPoolPort", params.optString(1, "4455"))
@@ -95,42 +96,13 @@ class MessageActivityHandler(
         }
         val success = editor.commit()
         if (success) {
-            initVpn()
             return "Save successful"
         } else {
             return "Save failed"
         }
     }
-    fun initVpn() {
-        val vpnConfig = getVpnConfig()
-        val configYaml = vpnConfig.getString("configYaml")
-        val configFile = File(context.filesDir, "config.yaml")
-        FileOutputStream(configFile).use { fos ->
-            fos.write(configYaml.toByteArray())
-        }
 
-        val mmdbFile = File(context.filesDir, "Country.mmdb")
-        if (!mmdbFile.exists()) {
-            val assetManager: AssetManager = context.assets
-            val inputStream = assetManager.open("Country.mmdb")
-            val outputStream = FileOutputStream(mmdbFile)
-            inputStream.use { input ->
-                outputStream.use { output ->
-                    input.copyTo(output)
-                }
-            }
-        }
-        Log.d(logTag, "[+] config.path ${configFile.absolutePath}")
-        Log.d(logTag, "[+] config.exists ${configFile.exists()}")
 
-        Log.d(logTag, "[+] mmdbFile.path ${mmdbFile.absolutePath}")
-        Log.d(logTag, "[+] mmdbFile.exists ${mmdbFile.exists()}")
-
-        Log.d(logTag, "[+] Home dir ${context.filesDir.absolutePath}")
-
-        Mobile.setConfig(configFile.absolutePath)
-        Mobile.setHomeDir(context.filesDir.absolutePath)
-    }
     private fun getDeviceInfo(): JSONObject {
         val httpClient = HttpClient()
         try {
@@ -194,10 +166,10 @@ class MessageActivityHandler(
             put("clientId", getClientId())
             put("serverUrl", serverUrl)
             put("model", model)
-            put("ccAgentAccessibility", InputService.isOpen)
-            put("ccAgentMediaProjection", RecordingService.isStart)
-            put("displayWidth", screenWidth)
-            put("displayHeight", screenHeight)
+            put("inputIsReady", InputService.isReady)
+            put("RecordingIsReady", RecordingService.isReady)
+            put("width", screenWidth)
+            put("hegith", screenHeight)
             put("dpi", context.resources.displayMetrics.density)
             put("ipAddress", ipAddress)
             put("brand", brand)
@@ -208,39 +180,36 @@ class MessageActivityHandler(
             put("buildId", id)
             put("version", "1.0.1")
             put("isClashRunning", getContext().isClashRunning())
-            put("vpnInfo", getVpnConfig())
+            put("clashConfig", getClashConfig())
 //            put("notificationsIsGranted", false)
 //            put("queryAllPackagesListIsGranted", false)
         }
         return payload
     }
 
-    fun processAsync(messageAsync:String) {
+    private fun onStartInput() {
+        if (!InputService.isReady) {
+            startAction(context, Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        }
+    }
+
+    private fun onStopInput() {
+        if (InputService.isReady) {
+            InputService.ctx?.disableSelf()
+        }
+    }
+
+    fun processAsync(messageAsync: String) {
         when (messageAsync) {
-            "vpn.state_changed.connected" ->{
-                getContext().clashRunning = true;
-            }
-            "vpn.state_changed.disconnected" ->{
-                getContext().clashRunning = false;
-            }
             "onStartRecording" -> getContext().startRecording()
-            "on_screen_recording" -> Toast.makeText(
-                context,
-                "正在录制屏幕...",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            "on_screen_stopped_recording" -> Toast.makeText(
-                context,
-                "结束录制屏幕",
-                Toast.LENGTH_SHORT
-            ).show()
-
+            "onStopRecording" -> getContext().stopRecording()
+            "onStartInput" -> onStartInput()
+            "onStopInput" -> onStopInput()
             else -> {}
         }
     }
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun process(message: String, callbackId:String?): JSONObject {
+
+    fun process(message: String, callbackId: String?): JSONObject {
         var response = JSONObject().apply {
             put("err", "")
         }
@@ -254,21 +223,19 @@ class MessageActivityHandler(
                 "agentAppInfo" -> {
                     response = getAgentAppInfo()
                 }
+
                 "onStartRecording" -> getContext().startRecording()
                 "onStopRecording" -> getContext().stopRecording()
                 "onStartInput" -> {
-                    if(!InputService.isOpen){
-                        startAction(context, Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                    }
+                    onStartInput()
                 }
+
                 "onStopInput" -> {
-                    if(InputService.isOpen){
-                        InputService.ctx?.disableSelf()
-                    }
+                    onStopInput()
                 }
 
                 "click" -> {
-                    if (!InputService.isOpen) {
+                    if (!InputService.isReady) {
                         response.put("err", "InputService is not open")
                     } else {
                         getContext().recordingService?.handlePostEvent(JSONObject().apply {
@@ -281,7 +248,7 @@ class MessageActivityHandler(
                 }
 
                 "inputText" -> {
-                    if (!InputService.isOpen) {
+                    if (!InputService.isReady) {
                         response.put("err", "InputService is not open")
                     } else {
                         val text = params[0].toString()
@@ -290,7 +257,7 @@ class MessageActivityHandler(
                 }
 
                 "pressKey" -> {
-                    if (!InputService.isOpen) {
+                    if (!InputService.isReady) {
                         response.put("err", "InputService is not open")
                     } else {
                         // Extract the key name from the params array
@@ -311,20 +278,22 @@ class MessageActivityHandler(
                 }
 
                 "takeScreenshot" -> {
-                    var data = ""
-                    if (RecordingService.isStart) {
-                        data = RecordingService.screenImgData
+                    var imgData = ""
+                    var imgLen = 0
+                    if (RecordingService.isReady) {
+                        imgLen = RecordingService.screenImgData.length
+                        imgData = "data:image/jpeg;base64,${RecordingService.screenImgData}"
                     }
 
                     response = JSONObject().apply {
-                        put("imgData", "data:image/jpeg;base64,$data")
-                        put("imgLen", data.length)
+                        put("imgData", imgData)
+                        put("imgLen", imgLen)
                     }
                 }
 
                 "dumpWindowHierarchy" -> {
                     var xml = ""
-                    if (InputService.isOpen) {
+                    if (InputService.isReady) {
                         xml = InputService.ctx?.getDumpAsUiAutomatorXml().toString()
                     }
                     response = JSONObject().apply {
@@ -334,21 +303,22 @@ class MessageActivityHandler(
 
                 "screenWithXml" -> {
                     var imgData = ""
-                    if (RecordingService.isStart) {
-                        imgData = RecordingService.screenImgData
+                    var imgLen = 0
+                    if (RecordingService.isReady) {
+                        imgLen = RecordingService.screenImgData.length
+                        imgData = "data:image/jpeg;base64,${RecordingService.screenImgData}"
                     }
 
                     var xml = ""
-                    if (InputService.isOpen) {
+                    if (InputService.isReady) {
                         xml = InputService.ctx?.getDumpAsUiAutomatorXml().toString()
                     }
                     response = JSONObject().apply {
                         put("xml", xml)
-                        put("imgData", "data:image/jpeg;base64,$imgData")
-                        put("imgLen", imgData.length)
+                        put("imgData", imgData)
+                        put("imgLen", imgLen)
                     }
                 }
-
 
                 "startAction" -> {
                     startAction(context, params.get(0) as String)
@@ -366,20 +336,31 @@ class MessageActivityHandler(
                     }
                 }
 
-                "importVpn" -> {
-                    getContext().importVpn()
+                "updateClash" -> {
+                    getContext().updateClash()
                 }
-                "getVpnConfig"->{
-                    response = getVpnConfig()
+
+                "getClashConfig" -> {
+                    response = getClashConfig()
                 }
-                "editVpnConfig"->{
-                    val res = editVpnConfig(params)
+
+                "editClashConfig" -> {
+                    val res = editClashConfig(params)
+                    getContext().updateClash()
                     response = JSONObject().apply {
                         put("res", res)
                     }
                 }
-                "startVpn" -> {
-                    val res = getContext().startVpn()
+
+                "startClash" -> {
+                    val res = getContext().startClash()
+                    response = JSONObject().apply {
+                        put("res", res)
+                    }
+                }
+
+                "stopClash" -> {
+                    val res = getContext().stopClash()
                     response = JSONObject().apply {
                         put("res", res)
                     }
@@ -405,12 +386,6 @@ class MessageActivityHandler(
                         put("ok", true)
                     }
                 }
-                "stopVpn" -> {
-                    val res = getContext().stopVpn()
-                    response = JSONObject().apply {
-                        put("res", res)
-                    }
-                }
 
                 "requestNotificationPermission" -> {
                     requestPermission(context, android.Manifest.permission.POST_NOTIFICATIONS)
@@ -427,13 +402,13 @@ class MessageActivityHandler(
         } catch (e: Exception) {
             response.put("err", "Invalid message format: ${e.message}")
         }
-        if(callbackId !== null){
+        if (callbackId !== null) {
             val responseIntent = Intent(MessageHandler.ACTION_RESPONSE).apply {
                 putExtra(MessageHandler.EXTRA_CALLBACK_ID, callbackId)
                 putExtra(MessageHandler.EXTRA_RESULT, response.toString())
             }
             getContext().localBroadcastManager.sendBroadcast(responseIntent)
         }
-        return response;
+        return response
     }
 }

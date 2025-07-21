@@ -1,4 +1,5 @@
 package com.cicy.agent.app
+
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.ComponentName
@@ -9,7 +10,6 @@ import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -22,24 +22,22 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
+import androidx.annotation.CallSuper
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import cn.mapleafgo.mobile.Mobile
+import com.cicy.agent.R
 import com.cicy.agent.adr.ACT_REQUEST_MEDIA_PROJECTION
 import com.cicy.agent.adr.LocalServer
 import com.cicy.agent.adr.MessageActivityHandler
 import com.cicy.agent.adr.MessageHandler
 import com.cicy.agent.adr.PermissionRequestTransparentActivity
-import com.cicy.agent.adr.RecordingService
-import com.cicy.agent.adr.isX86_64
-import com.web3desk.adr.R
-import org.json.JSONObject
-import java.net.URLEncoder
-import androidx.core.net.toUri
 import com.cicy.agent.adr.REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION
 import com.cicy.agent.adr.RES_FAILED
+import com.cicy.agent.adr.RecordingService
+import org.json.JSONObject
+import androidx.core.net.toUri
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -67,7 +65,8 @@ class MainActivity : AppCompatActivity() {
             if (ContextCompat.checkSelfPermission(
                     this,
                     android.Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED) {
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             }
         }
@@ -187,7 +186,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -200,6 +198,7 @@ class MainActivity : AppCompatActivity() {
         onStateChanged()
     }
 
+
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, serviceBinder: IBinder?) {
             val binder = serviceBinder as RecordingService.LocalBinder
@@ -210,7 +209,8 @@ class MainActivity : AppCompatActivity() {
             recordingService = null
         }
     }
-    fun startRecording(){
+
+    fun startRecording() {
         if (!RecordingService.isReady) {
             Intent(this, RecordingService::class.java).also {
                 bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun stopRecording(){
+    fun stopRecording() {
         recordingService?.destroy()
     }
 
@@ -227,77 +227,48 @@ class MainActivity : AppCompatActivity() {
         return clashRunning
     }
 
-    fun startVpn(): String {
+    private fun postIntent(action:String, port:String?) {
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("clashmeta://install-config?action=start")
+                data = "cicyclash://api?action=${action}&port=${port ?: ""}".toUri()
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
 
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                Log.d("VPNControl", "VPN start intent launched")
             } else {
-                Log.e("VPNControl", "No activity found to handle the intent")
+                Toast.makeText(this,"No activity found to handle the intent", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
-            Log.e("VPNControl", "Failed to start VPN", e)
+            Toast.makeText(this,"Failed to start VPN  Intent", Toast.LENGTH_LONG).show()
         }
+    }
 
+    fun startClash(): String {
+        postIntent("start",null)
         return "clash trigger start"
     }
 
-    fun stopVpn():String {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("clashmeta://install-config?action=stop")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-                Log.d("VPNControl", "VPN stop intent launched")
-            } else {
-                Log.e("VPNControl", "No activity found to handle the intent")
-            }
-        } catch (e: Exception) {
-            Log.e("VPNControl", "Failed to stop VPN", e)
-        }
+    fun stopClash(): String {
+        postIntent("stop",null)
         return "clash trigger stop"
     }
-
-    fun importVpn(){
-        val configUrl = "http://127.0.0.1:${LocalServer.PORT}/vpnConfig.yaml"
-        val encodedUrl = URLEncoder.encode(configUrl, "UTF-8")
-
-        try {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = "clashmeta://install-config?action=import&url=$encodedUrl".toUri()
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-            } else {
-                intent.data = "clash://install-config?url=$encodedUrl".toUri()
-                if (intent.resolveActivity(packageManager) != null) {
-                    startActivity(intent)
-                } else {
-                    Toast.makeText(this, "Clash app not found", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Failed to import config: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
+    fun updateClash() {
+        postIntent("updateClash","4477")
     }
-
 
     private fun requestMediaProjection() {
         val intent = Intent(this, PermissionRequestTransparentActivity::class.java).apply {
             action = ACT_REQUEST_MEDIA_PROJECTION
         }
-        startActivityForResult(intent,
+        startActivityForResult(
+            intent,
             REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION
         )
+    }
+
+    @CallSuper
+    open fun updateRecordingStatus(state: String) {
     }
 
     private val serviceRequestReceiver = object : BroadcastReceiver() {
@@ -305,13 +276,21 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action != MessageHandler.ACTION_REQUEST) return
             val messageAsync = intent.getStringExtra(MessageHandler.EXTRA_MESSAGE_ASYNC)
-            if(messageAsync !== null){
+            if (messageAsync !== null) {
                 messageHandler.processAsync(messageAsync)
+                when (messageAsync) {
+                    "on_screen_recording" -> updateRecordingStatus(messageAsync)
+                    "on_recording_state_changed" -> updateRecordingStatus(messageAsync)
+                    "on_screen_stopped_recording" -> updateRecordingStatus(messageAsync)
+                }
+                sendMessageToWebView(JSONObject().apply {
+                    put("action", messageAsync)
+                }.toString())
             }
             val message = intent.getStringExtra(MessageHandler.EXTRA_MESSAGE)
-            if(message !== null){
+            if (message !== null) {
                 val callbackId = intent.getStringExtra(MessageHandler.EXTRA_CALLBACK_ID)
-                messageHandler.process(message,callbackId)
+                messageHandler.process(message, callbackId)
             }
         }
     }

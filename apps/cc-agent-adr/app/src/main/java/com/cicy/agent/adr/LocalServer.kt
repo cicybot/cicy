@@ -1,8 +1,11 @@
 package com.cicy.agent.adr
+
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -10,14 +13,13 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import com.web3desk.adr.R
+import com.cicy.agent.R
 import okhttp3.WebSocket
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
 class LocalServer : Service() {
-    private val notificationId = 101
 
     private var httpServer: LocalHttpServer? = null
     private var isRunning = false
@@ -31,7 +33,7 @@ class LocalServer : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = createNotification()
-        startForeground(getClientNotifyID(notificationId), notification)
+        startForeground(getClientNotifyID(LOCAL_SERVER_NOTIFY_ID), notification)
         startServer()
         return START_STICKY
     }
@@ -48,6 +50,20 @@ class LocalServer : Service() {
             .setContentText(LOCAL_SERVER_NOTIFY_TEXT)
             .setSmallIcon(R.mipmap.ic_stat_logo) // Make sure you have this icon
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this,
+                    0,
+                    Intent().setComponent(
+                        ComponentName(
+                            "com.cicy.agent",
+                            "com.cicy.agent.app.MainActivity"
+                        )
+                    )
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                    pendingIntentFlags(PendingIntent.FLAG_UPDATE_CURRENT)
+                )
+            )
             .build()
     }
 
@@ -64,6 +80,8 @@ class LocalServer : Service() {
         service.createNotificationChannel(channel)
         return channelId
     }
+
+
     override fun onCreate() {
         super.onCreate()
         messageHandler = MessageHandler(this)
@@ -79,7 +97,7 @@ class LocalServer : Service() {
         if (isRunning) return
         try {
             initWsClient()
-            httpServer = LocalHttpServer(this,messageHandler, PORT)
+            httpServer = LocalHttpServer(this, messageHandler, PORT)
             httpServer?.start()
             messageHandler.sendAsyncMessageToActivity("onStartRecording")
             isRunning = true

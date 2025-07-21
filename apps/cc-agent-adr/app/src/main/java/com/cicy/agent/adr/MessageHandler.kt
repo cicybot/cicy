@@ -1,4 +1,5 @@
 package com.cicy.agent.adr
+
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -6,15 +7,19 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.*
+import java.util.UUID
 
 class MessageHandler(private val service: Service) {
+    private val tag = "MessageHandler"
     private val pendingCallbacks = mutableMapOf<String, (Result<String>) -> Unit>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -95,9 +100,42 @@ class MessageHandler(private val service: Service) {
             LocalBroadcastManager.getInstance(service).sendBroadcast(intent)
         }
 
+
+    private fun postIntent(action:String, port:String?) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = "cicyclash://api?action=${action}&port=${port ?: ""}".toUri()
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+
+            if (intent.resolveActivity(service.packageManager) != null) {
+                service.startActivity(intent)
+            }else{
+                Log.e(tag,"No activity found to handle the intent")
+
+            }
+        } catch (e: Exception) {
+            Log.e(tag,"Failed to start VPN  Intent ${e}")
+        }
+    }
+
+
     fun process(method: String, params: JSONArray): JSONObject {
         return when (method) {
             "version" -> {
+                JSONObject().put("ok", true)
+            }
+            "startClash" -> {
+                postIntent("start",null)
+                JSONObject().put("ok", true)
+            }
+
+            "stopClash" -> {
+                postIntent("stop",null)
+                JSONObject().put("ok", true)
+            }
+            "updateClash" -> {
+                postIntent("updateClash","4477")
                 JSONObject().put("ok", true)
             }
 

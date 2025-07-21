@@ -16,12 +16,12 @@ paths:
           description: agentAppInfo response
           content:
             application/json:
-  /vpnConfig.yaml:
+  /clashConfig.yaml:
     get:
-      summary: vpnConfig
+      summary: Clash Config
       responses:
         '200':
-          description: vpnConfig response
+          description: Clash Config response
           content:
             text/plain:
   /api:
@@ -37,9 +37,16 @@ paths:
             enum:
               - agentAppInfo
               - deviceInfo
-              - startVpn
-              - stopVpn
-              - importVpn
+              - startClash
+              - stopClash
+              - updateClash
+              - getClashConfig
+              - onStartRecording
+              - onStopRecording
+              - onStartInput
+              - onStopInput
+              - screenWithXml
+              - getInstalledApps
             default: agentAppInfo
       responses:
         '200':
@@ -50,51 +57,6 @@ paths:
     post:
       summary: json rpc
       description: |
-        ### deviceInfo:
-
-        ```json
-        {
-          "method": "deviceInfo"
-        }
-        ```
-        ### agentAppInfo:
-
-        ```json
-        {
-          "method": "agentAppInfo"
-        }
-        ```
-        ### onStartRecording:
-
-        ```json
-        {
-          "method": "onStartRecording"
-        }
-        ```
-        ### onStopRecording:
-
-        ```json
-        {
-          "method": "onStopRecording"
-        }
-        
-        ```
-        
-        ### onStartInput:
-
-        ```json
-        {
-          "method": "onStartInput"
-        }
-        ```
-        
-        ### onStopInput:
-
-        ```json
-        {
-          "method": "onStopInput"
-        }
-        ```
         
         ### pressKey:
 
@@ -104,32 +66,13 @@ paths:
           "params":["recent"]
         }
         ```
-        
-        ### screenWithXml:
+        ### EditClashConfig:
 
         ```json
         {
-          "method": "screenWithXml"
+          "method": "editClashConfig",
+          "params":["192.168.124.244","4445","10000",""]
         }
-        
-        ```
-        
-        ### getVpnConfig:
-
-        ```json
-        {
-          "method": "getVpnConfig"
-        }
-        
-        ```
-        
-        ### getInstalledApps:
-
-        ```json
-        {
-          "method": "getInstalledApps"
-        }
-        
         ```
       tags:
         - jsonrpc

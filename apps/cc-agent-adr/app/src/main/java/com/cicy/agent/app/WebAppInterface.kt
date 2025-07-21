@@ -16,9 +16,9 @@ class WebAppInterface(private val context: MainActivity) {
             val method = jsonRequest.getString("method")
             val params = jsonRequest.optJSONArray("params") ?: JSONArray()
             val result = MessageActivityHandler(context).process(JSONObject().apply {
-                put("method",method)
-                put("params",params)
-            }.toString(),null)
+                put("method", method)
+                put("params", params)
+            }.toString(), null)
 
             val responseJson = JSONObject()
             if (result.optString("err").isEmpty()) {
