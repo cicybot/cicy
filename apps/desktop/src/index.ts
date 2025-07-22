@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut, powerMonitor } from 'electron';
+import { app, BrowserWindow, globalShortcut, powerMonitor, WebContents } from 'electron';
 import log from 'electron-log/main';
 import { updateElectronApp } from 'update-electron-app';
 import { MainWindow } from './electron/mainWindow';
@@ -10,8 +10,8 @@ import {
 } from './electron/protocol';
 
 import { delay } from './electron/utils';
-import WebContentsRequest from './electron/webContentsRequest';
 import { s3 } from './electron/db';
+import WebContentsService from './electron/webContentsService';
 
 app.setName('CiCy');
 
@@ -37,9 +37,6 @@ app.on('web-contents-created', (_event, contents) => {
     const session = contents.session;
 
     session.webRequest.onBeforeSendHeaders((details, callback) => {
-        if (WebContentsRequest.fromWebContentsId(details.webContentsId)) {
-            WebContentsRequest.fromWebContentsId(details.webContentsId).process(details);
-        }
         callback(details);
     });
 });
@@ -92,6 +89,24 @@ app.on('activate', () => {
     }
 });
 
+// Ignore SSL certificate errors
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+    event.preventDefault();
+    callback(true);
+});
+
+app.on('login', (event, webContents, details, authInfo, callback) => {
+    console.log('>>> [login] authInfo', authInfo);
+
+    if (authInfo.isProxy) {
+        const auth = WebContentsService.getAuthByWebContentsId(webContents.id);
+        console.log('>>> [login] auth', auth);
+        if (auth && auth.proxyUsername && auth.proxyPassword) {
+            event.preventDefault();
+            callback(auth.proxyUsername, auth.proxyPassword);
+        }
+    }
+});
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 

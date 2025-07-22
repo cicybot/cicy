@@ -1,4 +1,4 @@
-import { Breadcrumb, Button, Divider, Input, Tabs, type TabsProps } from 'antd';
+import { Alert, Breadcrumb, Button, Divider, Input, message, Tabs, type TabsProps } from 'antd';
 import View from '../../components/View';
 import { useEffect, useState } from 'react';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
@@ -7,6 +7,8 @@ import { MainWindowAppInfo, useMainWindowContext } from '../../providers/MainWin
 import ProxyService from '../../services/common/ProxyService';
 import { useTimeoutLoop } from '@cicy/utils';
 import BrowserService from '../../services/cicy/BrowserService';
+import { onEvent } from '../../utils/utils';
+import { AceEditorView } from '../../components/ace/AceEditorView';
 
 const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
     const [isOnLine, setIsOnLine] = useState(false);
@@ -16,16 +18,13 @@ const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
     }, 1000);
     return (
         <>
-            <ProDescriptions column={1}>
-                <ProDescriptions.Item label={'代理池'}>
-                    <ProField text={ProxyService.getMetaCmd(appInfo)} mode="read" />
-                </ProDescriptions.Item>
-            </ProDescriptions>
             <View h={12}></View>
             <ProDescriptions column={1}>
-                <ProDescriptions.Item label={'端口'}>
-                    <ProField text={ProxyService.getProxyPort()} mode="read" />
+                <ProDescriptions.Item label={'代理池'}>
                     <View rowVCenter>
+                        <View mr12>端口</View>
+                        <ProField text={ProxyService.getProxyPort()} mode="read" />
+
                         <View ml12>
                             <Button
                                 size={'small'}
@@ -79,6 +78,117 @@ const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
                     </View>
                 </ProDescriptions.Item>
             </ProDescriptions>
+
+            <View w100p h={88} mt12 pr12 borderBox>
+                <AceEditorView
+                    readOnly
+                    options={{
+                        showLineNumbers: false,
+                        wrap: true
+                    }}
+                    value={`${ProxyService.getMetaCmd(appInfo)}`}
+                    mode={'sh'}
+                    id={'env1'}
+                ></AceEditorView>
+            </View>
+
+            <View w100p h={44} mt12 pr12 borderBox>
+                <AceEditorView
+                    readOnly
+                    options={{
+                        showLineNumbers: false,
+                        wrap: true
+                    }}
+                    value={`curl -v -x http://127.0.0.1:${ProxyService.getProxyPort()} https://api.myip.com`}
+                    mode={'sh'}
+                    id={'env11'}
+                ></AceEditorView>
+            </View>
+        </>
+    );
+};
+
+const ProxyMitm = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
+    const [isOnLine, setIsOnLine] = useState(false);
+    useTimeoutLoop(async () => {
+        const res = await new BackgroundApi().isPortOnline(ProxyService.getProxyMitmPort());
+        setIsOnLine(res.result);
+    }, 1000);
+
+    async function startServer() {
+        try {
+            await new BackgroundApi().killPort(ProxyService.getProxyMitmPort());
+
+            await new BackgroundApi().openTerminal(
+                ProxyService.getMetaAccountCmd('mitmweb', appInfo),
+                true
+            );
+        } catch (e) {
+            //@ts-ignore
+            message.error(e.message);
+        }
+    }
+
+    return (
+        <>
+            <View h={12}></View>
+            <ProDescriptions column={1}>
+                <ProDescriptions.Item label={'中间人代理'}>
+                    <View rowVCenter>
+                        <View mr12>端口</View>
+                        <ProField text={ProxyService.getProxyMitmPort()} mode="read" />
+
+                        <View ml12>
+                            <Button
+                                size={'small'}
+                                onClick={async () => {
+                                    onEvent('showLoading');
+                                    await startServer();
+                                    onEvent('hideLoading');
+                                }}
+                            >
+                                {isOnLine ? '重启' : '启动'}
+                            </Button>
+                        </View>
+                        <View ml12>
+                            <Button
+                                size={'small'}
+                                onClick={() => {
+                                    new BackgroundApi().openPath(
+                                        ProxyService.getMitmForwardPath(appInfo)
+                                    );
+                                }}
+                            >
+                                打开脚本
+                            </Button>
+                        </View>
+                    </View>
+                </ProDescriptions.Item>
+            </ProDescriptions>
+            <View w100p h={88} mt12 pr12 borderBox>
+                <AceEditorView
+                    readOnly
+                    options={{
+                        showLineNumbers: false,
+                        wrap: true
+                    }}
+                    value={`${ProxyService.getMetaAccountCmd('mitmweb', appInfo)}`}
+                    mode={'sh'}
+                    id={'env1'}
+                ></AceEditorView>
+            </View>
+            <View w100p h={44} mt12 pr12 borderBox>
+                <AceEditorView
+                    readOnly
+                    options={{
+                        showLineNumbers: false,
+                        wrap: true
+                    }}
+                    value={`curl -v -x http://127.0.0.1:${ProxyService.getProxyMitmPort()} https://api.myip.com`}
+                    mode={'sh'}
+                    id={'env2'}
+                ></AceEditorView>
+            </View>
         </>
     );
 };
@@ -134,14 +244,21 @@ const Setting = () => {
                             <ProField text={appInfo.ip} mode="read" />
                         </ProDescriptions.Item>
                     </ProDescriptions>
-                    <View mt12 pl={44} fontSize={12} hide={appInfo.ipList.length < 2}>
-                        {appInfo.ipList.map(row => {
-                            return (
-                                <View key={row.adr} mb={8}>
-                                    {row.adr} - {row.interfaceName}
-                                </View>
-                            );
-                        })}
+                    <View mt12 pl={44} w={'50%'} fontSize={12} hide={appInfo.ipList.length < 2}>
+                        <Alert
+                            type="warning"
+                            description={
+                                <>
+                                    {appInfo.ipList.map(row => {
+                                        return (
+                                            <View key={row.adr} mb={8}>
+                                                {row.adr} - {row.interfaceName}
+                                            </View>
+                                        );
+                                    })}
+                                </>
+                            }
+                        ></Alert>
                     </View>
                     <View mb12></View>
                     <ProDescriptions column={3}>
@@ -222,7 +339,7 @@ const Setting = () => {
         },
         {
             key: '3',
-            label: 'CiCy客户端',
+            label: 'CiCy安卓连接器',
             children: (
                 <View>
                     <ProDescriptions column={1}>
@@ -242,10 +359,12 @@ const Setting = () => {
         },
         {
             key: '4',
-            label: '代理池',
+            label: '代理',
             children: (
                 <View>
                     <ProxyPool appInfo={appInfo}></ProxyPool>
+                    <Divider></Divider>
+                    <ProxyMitm appInfo={appInfo}></ProxyMitm>
                 </View>
             )
         }

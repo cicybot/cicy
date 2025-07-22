@@ -1,11 +1,11 @@
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Drawer, message } from 'antd';
+import { Button, Drawer } from 'antd';
 
 import { useBrowserAccounts } from '../../hooks/ws';
 import { onEvent } from '../../utils/utils';
 import { BrowserAccountInfo } from '../../services/model/BrowserAccount';
-import { EditOutlined } from '@ant-design/icons';
+import { MoreOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import View from '../View';
 import BrowserAccountDetail from '../browser_account/BrowserAccountDetail';
@@ -25,24 +25,10 @@ const BrowserAccountsTable = () => {
             }
         },
         {
-            title: 'IP',
-            dataIndex: 'ip',
-            render: (_, { config }) => {
-                if (config.testIp) {
-                    return (
-                        <>
-                            {config.testIp} ({config.testLocation})
-                        </>
-                    );
-                }
-                return <>{'-'}</>;
-            }
-        },
-        {
             title: '代理',
             dataIndex: 'proxy',
             render: (_, { id, config }) => {
-                let { proxyHost, proxyType } = config;
+                let { proxyHost, useMitm, proxyType } = config;
                 if (proxyType === 'direct' || !proxyType) {
                     return <>直连</>;
                 } else {
@@ -50,44 +36,49 @@ const BrowserAccountsTable = () => {
                         proxyHost = '127.0.0.1';
                     }
                     return (
-                        <>
-                            {proxyType}://{proxyHost}:{ProxyService.getMetaAccountProxyPort(id)}
-                        </>
+                        <View rowVCenter>
+                            {proxyType}://{proxyHost}:
+                            {useMitm
+                                ? ProxyService.getProxyMitmPort()
+                                : ProxyService.getProxyPort()}
+                            <View ml12>Account_{10000 + id}:pwd</View>
+                        </View>
                     );
                 }
             }
         },
         {
             title: '操作',
-            width: 120,
+            width: 44,
             valueType: 'option',
             key: 'option',
             render: (_, record) => [
-                <a
+                <Button
+                    size={'small'}
                     key="editable"
                     onClick={async () => {
                         setDetail(record);
                     }}
                     style={{ marginRight: 8 }}
                 >
-                    <EditOutlined />
-                </a>,
-                <a
-                    key="test"
-                    onClick={async () => {
-                        onEvent('showLoading');
-                        try {
-                            await ProxyService.testSpeed(record);
-                            await refresh();
-                        } catch (e) {
-                            message.error(e + '');
-                        }
-                        onEvent('hideLoading');
-                    }}
-                    style={{ marginRight: 8 }}
-                >
-                    测试
-                </a>
+                    <MoreOutlined />
+                </Button>
+                // <a
+                //     key="test"
+                //     onClick={async () => {
+                //         onEvent('showLoading');
+                //         try {
+                //             await ProxyService.testSpeed(record);
+                //             await refresh();
+                //         } catch (e) {
+                //             message.error(e + '');
+                //         }
+                //         onEvent('hideLoading');
+                //     }}
+                //     style={{ marginRight: 8 }}
+                // >
+                //     测试
+                // </a>
             ]
         }
     ];

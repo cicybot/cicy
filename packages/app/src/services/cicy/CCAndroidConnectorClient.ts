@@ -46,14 +46,14 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
     }
 
     async deviceScreenShot(deviceInfo: DeviceInfo) {
-        // const { ccAgentRustPid, ccAgentAppRunning, ipAddress, ccAgentMediaProjection } = deviceInfo;
+        // const { agentPid, agentAppRunning, ipAddress, recordingIsReady } = deviceInfo;
         try {
-            // if (ccAgentAppRunning && ccAgentMediaProjection) {
+            // if (agentAppRunning && recordingIsReady) {
             //     const res = await fetch(`http://${ipAddress}:4448/screen`);
             //     const { result } = await res.json();
             //     const { imgData } = result;
             //     return imgData;
-            // } else if (ccAgentRustPid) {
+            // } else if (agentPid) {
             //     const res = await fetch(`http://${ipAddress}:4447/screen`);
             //     const arrayBuffer = await res.arrayBuffer();
             //     return `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;

@@ -1,7 +1,6 @@
 import { WebContents, webContents } from 'electron';
 import WebSocket from 'ws';
 import { MainWindow } from './mainWindow';
-import WebContentsRequest from './webContentsRequest';
 import { CCClientWebsocket, isPortOnline, killPort } from '@cicy/cicy-ws';
 import { s3 } from './db';
 import { exec } from 'child_process';
@@ -14,12 +13,13 @@ import axios from 'axios';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import FileHelper from './FileHelper';
 import { killProcessByName, openTerminal } from './utils';
+import WebContentsService from './webContentsService';
 
 declare const DEV_URL: string;
 const execPromise = util.promisify(exec);
 const CURRENT_CLIENT_ID = 'MainWindow';
 const serverUrl = 'ws://127.0.0.1:4444/ws';
-let _ts = 0
+const _ts = 0;
 const CaptureCache: Map<
     string,
     {
@@ -140,7 +140,6 @@ const callFunction = async (obj: any, action: string) => {
     return res;
 };
 // eslint-disable-next-line complexity
-
 export async function handelUtilsMsg(payload?: { method?: string; params?: any }) {
     const { method, params } = payload || {};
     switch (method) {
@@ -288,32 +287,31 @@ export async function handelCallWebContentsMsg(
 
         switch (method) {
             case 'setConfig': {
-                const { requestFilters, proxyRules } = params || {};
+                const { proxyPassword, proxyUsername, proxyRules } = params || {};
 
-                const req = new WebContentsRequest(windowId).setWebContentsId(webContentsId);
-                if (requestFilters) {
-                    req.setFilters(requestFilters);
-                }
+                new WebContentsService(windowId).bindInfo(
+                    webContentsId,
+                    proxyUsername,
+                    proxyPassword
+                );
+
                 if (proxyRules) {
                     await webview.session.setProxy({
                         proxyRules
                     });
                 }
-                console.log('proxyRules set', { webContentsId, proxyRules });
+                console.log('proxyRules set', {
+                    webContentsId,
+                    proxyRules,
+                    proxyUsername,
+                    proxyPassword
+                });
                 res = {
                     err: ''
                 };
                 break;
             }
 
-            case 'getRequests': {
-                const requests = new WebContentsRequest(windowId).getRequests();
-                res = {
-                    requests,
-                    err: ''
-                };
-                break;
-            }
             case 'execJs': {
                 const { code } = params || {};
                 const execJsRes = await execJs(webview, code);
@@ -540,7 +538,7 @@ export const handleMsg = async (action: string, payload: any) => {
             case 'getWebContentsId': {
                 res = {
                     err: '',
-                    result: new WebContentsRequest(payload.windowId).getWebContentsId()
+                    result: new WebContentsService(payload.windowId).getWebContentsId()
                 };
                 break;
             }
@@ -641,16 +639,15 @@ export async function initCCClient() {
             }
         }
     }).connectCCServer();
-    initConnector(serverUrl,_ts).catch(console.error);
+    initConnector(serverUrl, _ts).catch(console.error);
 }
 
 export function setServerUrl(serverUrl: string) {
     CCClientWebsocket.setServerUrl(serverUrl);
-    initConnector(serverUrl,_ts).catch(console.error);
+    initConnector(serverUrl, _ts).catch(console.error);
 }
 
-export async function initConnector(serverUrl: string,ts:number) {
-
+export async function initConnector(serverUrl: string, ts: number) {
     const platform = process.platform;
     const arch = process.arch;
     const prefix = platform === 'win32' ? '.exe' : '';

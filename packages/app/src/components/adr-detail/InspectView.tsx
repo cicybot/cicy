@@ -27,7 +27,7 @@ export const InspectView = ({
 }) => {
     return (
         <View relative bgColor="white">
-            <View zIdx={100} abs wh={44} top={12} right={6}>
+            <View hide zIdx={100} abs wh={44} top={12} right={6}>
                 <Button
                     size="small"
                     onClick={() => {
@@ -45,8 +45,16 @@ export const InspectView = ({
                     height: '100vh'
                 }}
                 column
+                relative
             >
-                <View pt12 borderBox style={{ width: '100%', overflow: 'auto', height: '100vh' }}>
+                <View abs top0 xx0 pl12 pt12>
+                    调试节点：
+                </View>
+                <View
+                    pt={48}
+                    borderBox
+                    style={{ width: '100%', overflow: 'auto', height: '100vh' }}
+                >
                     <Tree
                         showLine
                         switcherIcon={<DownOutlined />}

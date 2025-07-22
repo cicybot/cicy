@@ -11,6 +11,7 @@ import BrowserService from '../../services/cicy/BrowserService';
 import {
     type ProColumns,
     ProForm,
+    ProFormCheckbox,
     ProFormGroup,
     ProFormSelect,
     ProFormText,
@@ -35,6 +36,8 @@ export const getUsernameByAuth = (auth: AccountAuthInfo) => {
 const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
     const browserAccount = row;
     const [sites, setSite] = useState<BrowserAccountSite[]>([]);
+    const [useMitm, setUseMitm] = useState(browserAccount.config.useMitm || false);
+
     const refresh = async () => {
         return new BrowserAccount(browserAccount.id).getSites().then(res => {
             setSite(res);
@@ -135,10 +138,16 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
                     <ProForm
                         readonly={false}
                         name=""
+                        onChange={(e: any) => {
+                            if (e.target.id === 'useMitm') {
+                                setUseMitm(e.target.checked);
+                            }
+                        }}
                         initialValues={{
                             userAgent: browserAccount.config.userAgent || '',
                             proxyType: browserAccount.config.proxyType || 'direct',
-                            proxyHost: browserAccount.config.proxyHost || '127.0.0.1'
+                            proxyHost: browserAccount.config.proxyHost || '127.0.0.1',
+                            useMitm: browserAccount.config.useMitm || false
                         }}
                         onFinish={async value => {
                             onEvent('showLoading');
@@ -160,7 +169,10 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
                             />
                             <ProFormText width="md" name="proxyHost" label="代理主机" />
                         </ProFormGroup>
-                        <View mb={24}>代理端口 {10000 + browserAccount.id}</View>
+                        <ProFormGroup title="">
+                            <ProFormCheckbox width="md" name="useMitm" label="使用中间人" />
+                        </ProFormGroup>
+                        <View mb={24}>代理端口 {useMitm ? 4446 : 4445}</View>
                     </ProForm>
                 </View>
             )

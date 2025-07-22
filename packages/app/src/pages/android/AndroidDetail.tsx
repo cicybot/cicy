@@ -45,15 +45,18 @@ const AndroidDetail = () => {
     }, 1000);
     if (!wsConnected) {
         return (
-            <View h100vh w100vw center>
+            <View h100vh w100vw center column>
                 <Loading></Loading>
+                <View mt12>正在连接...</View>
             </View>
         );
     }
     if (!isOnline) {
         return (
-            <View h100vh w100vw center>
+            <View h100vh w100vw center column>
                 <Loading></Loading>
+                <View mt12>{clientId}</View>
+                <View mt12>未启动</View>
             </View>
         );
     }

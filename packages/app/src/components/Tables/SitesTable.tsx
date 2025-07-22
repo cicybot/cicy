@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, ExportOutlined, WindowsOutlined } from '@ant-design/icons';
+import { DeleteOutlined, ExportOutlined, MoreOutlined, WindowsOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Avatar, Button, Drawer, Input, message, Popconfirm } from 'antd';
@@ -45,15 +45,6 @@ const SitesTable = () => {
             key: 'option',
             render: (_, record) => [
                 <a
-                    key="editable"
-                    onClick={async () => {
-                        setDetail(record);
-                    }}
-                    style={{ marginRight: 8 }}
-                >
-                    <EditOutlined />
-                </a>,
-                <a
                     style={{ marginRight: 8 }}
                     key="open"
                     onClick={async () => {
@@ -78,7 +69,17 @@ const SitesTable = () => {
                     <a>
                         <DeleteOutlined color="red" />
                     </a>
-                </Popconfirm>
+                </Popconfirm>,
+                <Button
+                    size={'small'}
+                    key="editable"
+                    onClick={async () => {
+                        setDetail(record);
+                    }}
+                    style={{ marginLeft: 8 }}
+                >
+                    <MoreOutlined />
+                </Button>
             ]
         }
     ];

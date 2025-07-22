@@ -12,6 +12,7 @@ import MenuBtn from './MenuBtn';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
 import ProxyService from '../../services/common/ProxyService';
 import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
+import { waitForResult } from '@cicy/utils';
 
 export let currentWebContentsId = 0;
 
@@ -79,51 +80,63 @@ const WebviewBrowserInner = ({
                     if (currentUrl.startsWith(BLANK_URL)) {
                         console.log(`[+] webContentsId`, webview.getWebContentsId());
                         const site = await siteService.getSiteInfo();
-                        let { proxyType, proxyHost } = browserAccountInfo.config;
+                        let { proxyType, useMitm, proxyHost } = browserAccountInfo.config;
                         if (!proxyHost) {
                             proxyHost = '127.0.0.1';
                         }
                         if (!proxyType) {
                             proxyType = 'direct';
                         }
-                        const proxyPort = ProxyService.getMetaAccountProxyPort(accountIndex);
+                        const proxyPort = useMitm
+                            ? ProxyService.getProxyMitmPort()
+                            : ProxyService.getProxyPort();
                         if (
                             proxyType !== 'direct' &&
                             (proxyHost === '127.0.0.1' || proxyHost === 'localhost')
                         ) {
                             const isPortOnline = await new BackgroundApi().isPortOnline(proxyPort);
                             if (!isPortOnline.result) {
-                                alert(`本地代理端口没开: ${proxyHost}:${proxyPort}`);
-                                location.reload();
-
-                                return;
+                                if (!useMitm) {
+                                    await new BackgroundApi().openTerminal(
+                                        ProxyService.getMetaCmd(appInfo),
+                                        true
+                                    );
+                                } else {
+                                    await new BackgroundApi().openTerminal(
+                                        ProxyService.getMetaAccountCmd('mitmdump', appInfo),
+                                        true
+                                    );
+                                }
+                                await waitForResult(async () => {
+                                    const isPortOnline = await new BackgroundApi().isPortOnline(
+                                        proxyPort
+                                    );
+                                    return isPortOnline.result;
+                                });
                             }
                         }
                         let proxyRules: string | undefined = undefined;
+
+                        let proxyUsername: string | undefined = undefined;
+                        let proxyPassword: string | undefined = undefined;
+
                         if (proxyType !== 'direct') {
                             proxyRules = `${proxyType}://${proxyHost}:${proxyPort}`;
+                            proxyUsername = `Account_${10000 + browserAccountInfo.id}`;
+                            proxyPassword = 'pwd';
                         }
                         setProxyRules(proxyRules || '');
-                        const account = await siteService.getAccount();
 
                         connectCCServer(windowId, {
                             onLogged: async () => {
                                 currentWebContentsId = webview.getWebContentsId();
-                                let requestFilters: undefined | string[] = undefined;
-                                if (
-                                    account &&
-                                    account.config &&
-                                    account.config.requestFilters &&
-                                    account.config.requestFilters.length > 0
-                                ) {
-                                    requestFilters = account.config.requestFilters;
-                                }
                                 await new BackgroundApi().setWebContentConfig(
                                     windowId,
                                     currentWebContentsId,
                                     {
                                         proxyRules,
-                                        requestFilters
+                                        proxyUsername,
+                                        proxyPassword
                                     }
                                 );
                                 if (site.url) {
@@ -134,9 +147,6 @@ const WebviewBrowserInner = ({
                             }
                         });
                     } else {
-                        await webview.executeJavaScript(`(()=>{
-                             console.log("init!")
-                        })()`);
                         const accountState = await siteService.getAccountState();
                         await siteService.saveAccountState({
                             ...accountState,
@@ -386,6 +396,7 @@ const WebviewBrowser = () => {
                     browserAccountInfo = await browserAccount.get();
                     setBrowserAccountInfo(browserAccountInfo);
                 } else {
+                    setBrowserAccountInfo(browserAccountInfo);
                     if (browserAccountInfo.config.userAgent) {
                         setBrowserAccountInfo(browserAccountInfo);
                         setUserAgent(browserAccountInfo.config!.userAgent!);
@@ -405,6 +416,7 @@ const WebviewBrowser = () => {
             setAppInfo(res.result);
         });
     }, []);
+    console.log({ userAgent, browserAccountInfo, appInfo });
     if (userAgent === null || browserAccountInfo == null || !appInfo) {
         return null;
     }

@@ -26,6 +26,8 @@ export const UploadAgentButton = ({
                     type="primary"
                     onClick={async () => {
                         const cacheServerIp = localStorage.getItem('cacheServerIp') || '';
+                        debugger;
+
                         if (!cacheServerIp) {
                             message.warning('请选择服务器IP');
                             setShowPickServerIp(true);
@@ -51,7 +53,7 @@ export const UploadAgentButton = ({
                             } else {
                                 abi = 'x86_64';
                             }
-                            let nameApkVer = `app-v${version}-${abi}.apk`;
+                            let nameApkVer = `app-v${version}.apk`;
 
                             let agentNameVer = `${agentName}-v${version}-${abi}`;
 
@@ -94,7 +96,7 @@ export const UploadAgentButton = ({
                             );
                             try {
                                 await connector.deviceAdbShell(
-                                    'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                    'am start -n com.cicy.agent.alpha/com.github.kr328.clash.MainActivity'
                                 );
                             } catch (e) {
                                 console.error(e);

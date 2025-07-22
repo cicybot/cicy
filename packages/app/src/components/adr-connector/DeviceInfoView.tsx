@@ -9,6 +9,8 @@ import Loading from '../UI/Loading';
 import { useTimeoutLoop } from '@cicy/utils';
 import { CCWSClient } from '../../services/cicy/CCWSClient';
 import { onEvent } from '../../utils/utils';
+import CCWSAgentClient from '../../services/cicy/CCWSAgentClient';
+import { VpnView } from '../vpn/VpnView';
 
 export const DeviceInfoView = ({
     deviceInfo,
@@ -41,9 +43,7 @@ export const DeviceInfoView = ({
     const width = 250;
     const height = (parseInt(orgHeight) * width) / parseInt(orgWidth);
     const { clientId } = deviceInfo;
-    const wsOnlineAgent = allClients.find(row => row === clientId);
     const wsOnlineAgentApp = allClients.find(row => row === clientId + '-APP');
-    console.log({ allClients, wsOnlineAgent, wsOnlineAgentApp });
     return (
         <View ml12 mr12 flx column>
             <View w100p rowVCenter borderBox mb12 jEnd pr12 mt12>
@@ -112,7 +112,7 @@ export const DeviceInfoView = ({
                                     <ProField text={`${deviceInfo.size}`} mode="read" />
                                 </View>
                             </ProDescriptions.Item>
-                            <ProDescriptions.Item label="本机IP">
+                            <ProDescriptions.Item label="安卓IP地址">
                                 <View column>
                                     {deviceInfo.ipAddress.split(',').map((row: string) => {
                                         return (
@@ -150,28 +150,22 @@ export const DeviceInfoView = ({
                                         }}
                                         size="small"
                                     >
-                                        {deviceInfo.ccAgentRustPid ? '重启' : '启动'}
+                                        {deviceInfo.agentPid ? '重启' : '启动'}
                                     </Button>
                                 </View>
-                                <ProField text={'PID:' + deviceInfo.ccAgentRustPid} mode="read" />
+                                <ProField text={'PID:' + deviceInfo.agentPid} mode="read" />
                             </ProDescriptions.Item>
 
                             <ProDescriptions.Item label="Version">
-                                <ProField text={deviceInfo.agentRustVersion + ''} mode={'read'} />
+                                <ProField text={deviceInfo.agentVersion + ''} mode={'read'} />
                             </ProDescriptions.Item>
-                        </ProDescriptions>
-                        <ProDescriptions>
-                            <View rowVCenter mt12>
-                                <View>连接状态: </View>
-                                <View>{wsOnlineAgent ? '在线' : '离线'}</View>
-                            </View>
                         </ProDescriptions>
 
                         <Divider></Divider>
                         <ProDescriptions column={2}>
-                            <ProDescriptions.Item label="Agent App" tooltip="主要适配未Root的设备">
+                            <ProDescriptions.Item label="Agent App" tooltip="适配未Root的设备">
                                 <ProField
-                                    text={deviceInfo.ccAgentAppInstalled + ''}
+                                    text={deviceInfo.agentAppInstalled + ''}
                                     mode={'read'}
                                     valueType="select"
                                     request={async () => [
@@ -180,13 +174,13 @@ export const DeviceInfoView = ({
                                     ]}
                                 />
 
-                                <View ml12 hide={!deviceInfo.ccAgentRustPid}>
+                                <View ml12 hide={!deviceInfo.agentPid}>
                                     <Button
                                         onClick={async () => {
                                             onEvent('showLoading');
-                                            if (deviceInfo.ccAgentAppInstalled) {
+                                            if (deviceInfo.agentAppInstalled) {
                                                 await connector.deviceAdbShell(
-                                                    'pm uninstall --user 0 com.cc.agent.adr'
+                                                    'pm uninstall --user 0 com.cicy.agent.alpha'
                                                 );
                                                 await connector.deviceAdbShell(
                                                     'pm install -r /data/local/tmp/app.apk'
@@ -198,7 +192,7 @@ export const DeviceInfoView = ({
                                             }
 
                                             await connector.deviceAdbShell(
-                                                'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                                'am start -n com.cicy.agent.alpha/com.github.kr328.clash.MainActivity'
                                             );
                                             onEvent('hideLoading');
                                             setTimeout(() => {
@@ -206,11 +200,9 @@ export const DeviceInfoView = ({
                                             }, 1000);
                                         }}
                                         size="small"
-                                        type={
-                                            !deviceInfo.ccAgentAppInstalled ? 'primary' : undefined
-                                        }
+                                        type={!deviceInfo.agentAppInstalled ? 'primary' : undefined}
                                     >
-                                        {deviceInfo.ccAgentAppInstalled ? '重新安装' : '安装'}
+                                        {deviceInfo.agentAppInstalled ? '重新安装' : '安装'}
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
@@ -219,7 +211,7 @@ export const DeviceInfoView = ({
                         <ProDescriptions>
                             <ProDescriptions.Item label="运行状态">
                                 <ProField
-                                    text={deviceInfo.ccAgentAppRunning + ''}
+                                    text={deviceInfo.agentAppRunning + ''}
                                     mode={'read'}
                                     valueType="select"
                                     request={async () => [
@@ -228,33 +220,33 @@ export const DeviceInfoView = ({
                                     ]}
                                 />
 
-                                <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
+                                <View ml12 hide={!deviceInfo.agentAppRunning}>
                                     <Button
                                         onClick={async () => {
                                             onEvent('showLoading');
                                             await connector.deviceAdbShell(
-                                                'am force-stop com.cc.agent.adr'
+                                                'am force-stop com.cicy.agent.alpha'
                                             );
                                             await connector.deviceAdbShell(
-                                                'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                                'am start -n com.cicy.agent.alpha/com.github.kr328.clash.MainActivity'
                                             );
                                             onEvent('hideLoading');
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
                                             }, 1000);
                                         }}
-                                        type={!deviceInfo.ccAgentAppRunning ? 'primary' : undefined}
+                                        type={!deviceInfo.agentAppRunning ? 'primary' : undefined}
                                         size="small"
                                     >
                                         重启
                                     </Button>
                                 </View>
-                                <View ml12 hide={!deviceInfo.ccAgentAppInstalled}>
+                                <View ml12 hide={!deviceInfo.agentAppInstalled}>
                                     <Button
                                         onClick={async () => {
                                             onEvent('showLoading');
                                             await connector.deviceAdbShell(
-                                                'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                                'am start -n com.cicy.agent.alpha/com.github.kr328.clash.MainActivity'
                                             );
                                             onEvent('hideLoading');
                                             setTimeout(() => {
@@ -278,7 +270,7 @@ export const DeviceInfoView = ({
                         <ProDescriptions column={2}>
                             <ProDescriptions.Item label="无障碍辅助">
                                 <ProField
-                                    text={deviceInfo.ccAgentAccessibility + ''}
+                                    text={deviceInfo.inputIsReady + ''}
                                     mode={'read'}
                                     valueType="select"
                                     request={async () => [
@@ -286,33 +278,30 @@ export const DeviceInfoView = ({
                                         { label: '未开启', value: 'false' }
                                     ]}
                                 />
-                                <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
+                                <View ml12 hide={!wsOnlineAgentApp}>
                                     <Button
-                                        disabled={!wsOnlineAgentApp}
                                         onClick={async () => {
-                                            new CCWSClient(deviceInfo.clientId + '-APP').sendAction(
-                                                'jsonrpc',
-                                                {
-                                                    method: deviceInfo.ccAgentAccessibility
-                                                        ? 'stopAccessibility'
-                                                        : 'startAccessibility'
-                                                }
+                                            const agent = new CCWSAgentClient(deviceInfo.clientId);
+                                            await agent.jsonrpcApp(
+                                                deviceInfo.inputIsReady
+                                                    ? 'onStopInput'
+                                                    : 'onStartInput'
                                             );
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
                                             }, 1000);
                                         }}
-                                        type={!deviceInfo.ccAgentAppRunning ? 'primary' : undefined}
+                                        type={!deviceInfo.agentAppRunning ? 'primary' : undefined}
                                         size="small"
                                     >
-                                        {deviceInfo.ccAgentAccessibility ? '关闭' : '开启'}
+                                        {deviceInfo.inputIsReady ? '关闭' : '开启'}
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
 
                             <ProDescriptions.Item label="屏幕录制">
                                 <ProField
-                                    text={deviceInfo.ccAgentMediaProjection + ''}
+                                    text={deviceInfo.recordingIsReady + ''}
                                     mode={'read'}
                                     valueType="select"
                                     request={async () => [
@@ -320,30 +309,32 @@ export const DeviceInfoView = ({
                                         { label: '未开启', value: 'false' }
                                     ]}
                                 />
-                                <View ml12 hide={!deviceInfo.ccAgentAppRunning}>
+                                <View ml12 hide={!wsOnlineAgentApp}>
                                     <Button
-                                        disabled={!wsOnlineAgentApp}
                                         onClick={async () => {
-                                            new CCWSClient(deviceInfo.clientId + '-APP').sendAction(
-                                                'jsonrpc',
-                                                {
-                                                    method: deviceInfo.ccAgentMediaProjection
-                                                        ? 'stopMediaProjection'
-                                                        : 'startMediaProjection'
-                                                }
+                                            const agent = new CCWSAgentClient(deviceInfo.clientId);
+                                            await agent.jsonrpcApp(
+                                                deviceInfo.recordingIsReady
+                                                    ? 'onStopRecording'
+                                                    : 'onStartRecording'
                                             );
                                             setTimeout(() => {
                                                 fetchDeviceInfo();
                                             }, 1000);
                                         }}
-                                        type={!deviceInfo.ccAgentAppRunning ? 'primary' : undefined}
+                                        type={!deviceInfo.agentAppRunning ? 'primary' : undefined}
                                         size="small"
                                     >
-                                        {deviceInfo.ccAgentMediaProjection ? '关闭' : '开启'}
+                                        {deviceInfo.recordingIsReady ? '关闭' : '开启'}
                                     </Button>
                                 </View>
                             </ProDescriptions.Item>
                         </ProDescriptions>
+                        <Divider></Divider>
+                        <VpnView
+                            clientId={clientId}
+                            wsOnlineAgentApp={!!wsOnlineAgentApp}
+                        ></VpnView>
                         <Divider></Divider>
                         <ProDescriptions column={1}>
                             <ProDescriptions.Item label="服务端地址">
@@ -363,7 +354,7 @@ export const DeviceInfoView = ({
                                                 }, 1000);
                                             }}
                                         >
-                                            使用些URL
+                                            使用此地址
                                         </Button>
                                     </View>
                                     <View>{serverUrl}</View>
