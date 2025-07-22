@@ -40,16 +40,18 @@ jobs:
       - name: Build Pkg
         shell: pwsh
         run: |
+          cd /tmp
           $APK_URL = "https://github.com/cicybot/ClashMetaForAndroid/releases/download/Alpha/cmfa-2.11.14-alpha-universal-release.apk"
           Write-Host "Downloading APK from $APK_URL"
           
           # Download the file
-          Invoke-WebRequest -Uri $APK_URL -Headers @{ "Authorization" = "Bearer ${{ secrets.GITHUB_TOKEN }}" } -OutFile "app.zip"
+          Invoke-WebRequest -Uri $APK_URL -Headers @{ "Authorization" = "Bearer ${{ secrets.GITHUB_TOKEN }}" } -OutFile "app-v0.0.0.apk"
+          Get-ChildItem
+          Compress-Archive -Path "app-v0.0.0.apk" -DestinationPath "app-v0.0.0.zip" -Force
+          Get-ChildItem
           Get-ChildItem
 
-          Get-ChildItem -Filter *.apk | Copy-Item -Destination "app.apk"
-          
-          # Optional: list files for debugging
-          Get-ChildItem
+
+
 
 
