@@ -30,14 +30,12 @@ jobs:
       MAKE_OUT_DIR: ${{ github.workspace }}/apps/desktop/out/make
       
     steps:
+      - name: Checkout to git repository
+      - uses: actions/checkout@v4
       - name: Build Pkg
         shell: pwsh
         run: |
-          $APK_URL = "https://github.com/cicybot/ClashMetaForAndroid/actions/runs/16441645914/artifacts/3586113763"
-          Write-Host "Downloading APK from $APK_URL"
-          
-          # Download the file
-          Invoke-WebRequest -Uri $APK_URL -Headers @{ "Authorization" = "Bearer ${{ secrets.GITHUB_TOKEN }}" } -OutFile "app.zip"
+          cd apps/desktop/public/static/assets
           Get-ChildItem
           # Unzip the file
           Expand-Archive -Path "app.zip" -DestinationPath .
