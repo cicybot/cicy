@@ -20,12 +20,13 @@ import os from 'os';
 import { getLocalIPAddressList } from '@cicy/cicy-ws';
 import util from 'util';
 import { exec } from 'child_process';
+import unzipper from 'unzipper';
 const execPromise = util.promisify(exec);
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
-export function initDir() {
-    const { appDataPath, meta } = getAppInfo();
+export async function initDir() {
+    const { appDataPath, publicDir, meta, isDev, version } = getAppInfo();
     if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
         fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
     }
@@ -38,6 +39,14 @@ export function initDir() {
     if (!fs.existsSync(path.join(appDataPath, 'meta'))) {
         fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
     }
+    const assetsDir = path.join(publicDir, 'static', 'assets');
+    if (!isDev) {
+        const directory = await unzipper.Open.file(path.join(assetsDir, `app-v${version}.apk.zip`));
+        await directory.extract({
+            path: assetsDir
+        });
+    }
+
     execPromise(`chmod +x "${meta.bin}"`).catch(console.error);
 }
 
