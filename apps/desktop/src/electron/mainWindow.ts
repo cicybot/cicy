@@ -40,7 +40,8 @@ export async function initDir() {
         fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
     }
     const assetsDir = path.join(publicDir, 'static', 'assets');
-    if (!isDev) {
+    const apkPath = path.join(publicDir, 'static', 'assets', `app-v${version}.apk`);
+    if (!isDev && !fs.existsSync(apkPath)) {
         const directory = await unzipper.Open.file(path.join(assetsDir, `app-v${version}.apk.zip`));
         await directory.extract({
             path: assetsDir
