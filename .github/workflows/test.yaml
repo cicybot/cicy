@@ -30,13 +30,6 @@ jobs:
       MAKE_OUT_DIR: ${{ github.workspace }}/apps/desktop/out/make
       
     steps:
-      - name: Checkout to git repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.VERSION_NODE }}
       - name: Build Pkg
         shell: pwsh
         run: |
