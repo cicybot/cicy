@@ -158,7 +158,6 @@ export async function handelUtilsMsg(payload?: { method?: string; params?: any }
             try {
                 let httpsAgent;
                 if (httpsProxy) {
-                    //'http://127.0.0.1:7897'
                     httpsAgent = new HttpsProxyAgent(httpsProxy);
                 }
 

@@ -1,2 +1,4 @@
-const App = ()=>{return <></>}
-export { App }
+const App = () => {
+    return <></>;
+};
+export { App };
