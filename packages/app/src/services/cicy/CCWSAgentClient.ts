@@ -129,7 +129,7 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async jsonrpcApp(method: string, params?: string | any[]) {
-        return this._action('jsonrpc', {
+        return await this._action('jsonrpc', {
             method,
             params: typeof params === 'string' ? [params] : params || []
         });

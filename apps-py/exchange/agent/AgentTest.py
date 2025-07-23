@@ -48,5 +48,36 @@ class AgentTest(unittest.TestCase):
                 print(line.strip())
 
 
+    def test_package_list(self):
+        res  = agent.shell("pm list packages -3")
+        # print("\n",res)
+
+        for line in res['result'].split("\n"):
+            print(line.strip())
+
+
+    def test_package_list_f(self):
+        res  = agent.shell("pm list packages -f")
+        # print("\n",res)
+
+        for line in res['result'].split("\n"):
+            print(line.strip())
+
+    def test_info(self):
+        res  = agent.shell("dumpsys package com.microsoft.emmx")
+        # print("\n",res)
+
+        for line in res['result'].split("\n"):
+            if "Main" in line.strip():
+                print(line.strip())
+
+    def test_start(self):
+        res  = agent.shell("am start -n com.microsoft.emmx/com.microsoft.ruby.Main")
+        # print("\n",res)
+
+        for line in res['result'].split("\n"):
+            print(line.strip())
+
+    # com.microsoft.emmx
 if __name__ == '__main__':
     unittest.main()

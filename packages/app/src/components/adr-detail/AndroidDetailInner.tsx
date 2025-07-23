@@ -107,14 +107,18 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
 
     useTimeoutLoop(async () => {
         if (autoScreen && img) {
-            await getScreenImage();
+            try {
+                await getScreenImage();
+            } catch (e) {}
         }
     }, 500);
     useTimeoutLoop(async () => {
-        if (!img) {
-            await getScreenImage();
-        }
-        await fetchDeviceInfo();
+        try {
+            if (!img) {
+                await getScreenImage();
+            }
+            await fetchDeviceInfo();
+        } catch (e) {}
     }, 1000);
 
     function onClickImage(e: React.MouseEvent<HTMLDivElement>) {

@@ -8,10 +8,10 @@ export enum WsCloseCode {
 }
 
 export function getMainWindowClientId() {
-    let clientId = sessionStorage.getItem('MasterWebContentClientId') || '';
+    let clientId = localStorage.getItem('MasterWebContentClientId') || '';
     if (!clientId) {
         clientId = `MasterWebContent-${navigator.platform}-` + Date.now();
-        sessionStorage.setItem('MasterWebContentClientId', clientId);
+        localStorage.setItem('MasterWebContentClientId', clientId);
     }
     return clientId;
 }
@@ -64,7 +64,7 @@ export class CCWSClient {
     }
 
     async sendAction(action: string, payload?: any) {
-        return this.send({
+        return await this.send({
             action,
             payload: payload || {}
         });
