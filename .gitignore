@@ -3,6 +3,7 @@
 # compiled output
 dist
 tmp
+*.pyc
 .benchmarks
 config_id.txt
 config_server.txt
