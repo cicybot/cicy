@@ -26,7 +26,7 @@ const execPromise = util.promisify(exec);
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
 export async function initDir() {
-    const { appDataPath, publicDir, meta, isDev, version } = getAppInfo();
+    let { appDataPath, publicDir, meta, isDev, version } = getAppInfo();
     if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
         fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
     }
@@ -40,12 +40,21 @@ export async function initDir() {
         fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
     }
     const assetsDir = path.join(publicDir, 'static', 'assets');
+    if (isDev) {
+        version = '0.0.0';
+    }
     const apkPath = path.join(publicDir, 'static', 'assets', `app-v${version}.apk`);
-    if (!isDev && !fs.existsSync(apkPath)) {
-        const directory = await unzipper.Open.file(path.join(assetsDir, `app-v${version}.apk.zip`));
-        await directory.extract({
-            path: assetsDir
-        });
+    if (!fs.existsSync(apkPath)) {
+        try {
+            const directory = await unzipper.Open.file(
+                path.join(assetsDir, `app-v${version}.apk.zip`)
+            );
+            await directory.extract({
+                path: assetsDir
+            });
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     execPromise(`chmod +x "${meta.bin}"`).catch(console.error);
