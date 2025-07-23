@@ -1,10 +1,11 @@
-import { Button, Checkbox, Drawer, message, TreeDataNode, TreeProps } from 'antd';
+import { Alert, Button, Checkbox, Drawer, message, TreeDataNode, TreeProps } from 'antd';
 import {
     ArrowLeftOutlined,
     HomeOutlined,
     SettingOutlined,
     WindowsOutlined
 } from '@ant-design/icons';
+
 import { useEffect, useRef, useState } from 'react';
 import View from '../View';
 
@@ -30,7 +31,8 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
 
     const [settingDrawer, showSettingDawer] = useState(false);
     const [autoScreen, setAutoScreen] = useLocalStorageState('autoScreen', false);
-    const [isInspect, setInspect] = useState(false);
+    // const [isInspect, setInspect] = useState(true);
+    const isInspect = true;
     const [agentAppInfo, setAgentAppInfo] = useState<any>(agentAppInfo_);
     const currentImageWidth = 300;
     const { width: originScreenWidth, height: originScreenHeight } = agentAppInfo;
@@ -62,6 +64,7 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
     const agent = new CCAgentClient(agentAppInfo.clientId);
     appInfo && agent.setAppInfo(appInfo);
     agent.setAgentAppInfo(agentAppInfo);
+    const [nodeError, setNodeError] = useState('');
     const fetchDeviceInfo = () =>
         agent.getAgentAppInfo().then(res => {
             setAgentAppInfo(res);
@@ -69,13 +72,15 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
         });
 
     const getScreenImage = async () => {
-        if (agentAppInfo.ccAgentMediaProjection) {
+        if (!agentAppInfo.recordingIsReady) {
             return;
         }
         const { imgData, hierarchy } = await agent.getScreen();
         setImg(imgData);
         if (hierarchy && hierarchy.startsWith('<error')) {
-            message.error(hierarchy);
+            setNodeError(hierarchy);
+        } else {
+            setNodeError('');
         }
         if (hierarchy && !hierarchy.startsWith('<error')) {
             const { treeData, nodesMap, nodeBoundsMap } = await convertXmlToTreeData(hierarchy);
@@ -126,8 +131,8 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
         const screenY = Math.round((pageY - rect.top) / scale);
 
         if (!isInspect) {
-            if (agent.isNotRootAndNoAccessibilityEnabled()) {
-                message.error('非root设置没有开启无障碍辅助');
+            if (!agent.inputIsReady()) {
+                message.error('没有开启无障碍辅助');
             } else {
                 agent.click(screenX, screenY);
             }
@@ -215,26 +220,21 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
         };
     };
 
-    const onChange = (key: string) => {
-        setInspect(key === 'inspect');
-        console.log('onChange tab', key);
-    };
-    const keysFilter = [
-        'nodeKey',
-        'clickable',
-        'text',
-        'resource-id',
-        'class',
-        'package',
-        'content-desc',
-        'bounds',
-        'selected'
-    ];
-
-    if (!agentAppInfo.ccAgentMediaProjection) {
+    if (!agentAppInfo.recordingIsReady) {
         return (
-            <View w100vw h100vh center>
-                <View>没有开启屏幕录制</View>
+            <View w100vw h100vh center column>
+                <View>{agentAppInfo.clientId}</View>
+                <View mt12>没有开启屏幕录制</View>
+                <View center mt12>
+                    <Button
+                        onClick={async () => {
+                            await agent.jsonrpcApp('onStartRecording');
+                        }}
+                        size={'small'}
+                    >
+                        开启
+                    </Button>
+                </View>
             </View>
         );
     }
@@ -246,8 +246,8 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
                         icon={<HomeOutlined></HomeOutlined>}
                         size="small"
                         onClick={() => {
-                            if (agent.isNotRootAndNoAccessibilityEnabled()) {
-                                message.error('非root设置没有开启无障碍辅助');
+                            if (!agent.inputIsReady()) {
+                                message.error('没有开启无障碍辅助');
                             } else {
                                 agent.pressKey('home');
                             }
@@ -258,8 +258,8 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
                         size="small"
                         style={{ marginTop: 12 }}
                         onClick={() => {
-                            if (agent.isNotRootAndNoAccessibilityEnabled()) {
-                                message.error('非root设置没有开启无障碍辅助');
+                            if (!agent.inputIsReady()) {
+                                message.error('没有开启无障碍辅助');
                             } else {
                                 agent.pressKey('back');
                             }
@@ -270,8 +270,8 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
                         size="small"
                         style={{ marginTop: 12 }}
                         onClick={() => {
-                            if (agent.isNotRootAndNoAccessibilityEnabled()) {
-                                message.error('非root设置没有开启无障碍辅助');
+                            if (!agent.inputIsReady()) {
+                                message.error('没有开启无障碍辅助');
                             } else {
                                 agent.pressKey('recent');
                             }
@@ -305,21 +305,21 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
                     >
                         自动
                     </Checkbox>
-                    <Checkbox
-                        style={{ marginLeft: 12 }}
-                        checked={isInspect}
-                        onChange={e => {
-                            if (e.target.checked) {
-                                if (!agent.isAccessibilityEnabled()) {
-                                    message.error('请先打开无障碍服务');
-                                    return;
-                                }
-                            }
-                            setInspect(e.target.checked);
-                        }}
-                    >
-                        调试节点
-                    </Checkbox>
+                    {/*<Checkbox*/}
+                    {/*    style={{ marginLeft: 12 }}*/}
+                    {/*    checked={isInspect}*/}
+                    {/*    onChange={e => {*/}
+                    {/*        if (e.target.checked) {*/}
+                    {/*            if (!agent.inputIsReady()) {*/}
+                    {/*                message.error('请先打开无障碍服务');*/}
+                    {/*                return;*/}
+                    {/*            }*/}
+                    {/*        }*/}
+                    {/*        setInspect(e.target.checked);*/}
+                    {/*    }}*/}
+                    {/*>*/}
+                    {/*    调试节点*/}
+                    {/*</Checkbox>*/}
                 </View>
                 <View
                     style={{
@@ -368,10 +368,26 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
                 relative
                 ml={8}
             >
-                <View hide={isInspect} wh100p borderBox px12>
+                <View hide={true} wh100p borderBox px12>
                     <AiView></AiView>
                 </View>
-                {isInspect && (
+                <View hide={agentAppInfo.inputIsReady} wh100p borderBox px12 center column>
+                    <View>
+                        <Alert type={'warning'} description={'无障碍辅助未开启'}></Alert>
+                    </View>
+                    <View mt12 rowVCenter>
+                        <Button
+                            size={'small'}
+                            type={'primary'}
+                            onClick={async () => {
+                                await agent.jsonrpcApp('onStartInput');
+                            }}
+                        >
+                            打开无障碍
+                        </Button>
+                    </View>
+                </View>
+                {agentAppInfo.inputIsReady && (
                     <InspectView
                         {...{
                             agent,
@@ -380,16 +396,19 @@ function AndroidDetailInner({ agentAppInfo: agentAppInfo_ }: { agentAppInfo: any
                             selectedKey,
                             expandedKeys,
                             selectedNode,
-                            setInspect,
+                            setInspect: () => {},
                             currentClickPoint,
                             setExpandedKeys
                         }}
                     ></InspectView>
                 )}
+                <View hide={!nodeError} abs bottom={0} xx0 w={'50%'} h={44} red>
+                    <Alert type={'error'} description={nodeError}></Alert>
+                </View>
             </View>
 
             <Drawer
-                width={'50%'}
+                width={'360px'}
                 title={'Settings'}
                 closable={{ 'aria-label': 'Close Button' }}
                 onClose={() => {

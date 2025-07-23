@@ -5,18 +5,24 @@ import { CCWSClient } from '../../services/cicy/CCWSClient';
 import View from '../View';
 import { useState } from 'react';
 import { CheckList } from 'antd-mobile';
+import { ProDescriptions, ProField } from '@ant-design/pro-components';
 
 export const UploadAgentButton = ({
     appInfo,
+    deviceInfo,
     connector,
     serverIp,
     fetchDeviceInfo
 }: {
+    deviceInfo?: any;
     serverIp: string;
     connector: CCAndroidConnectorClient;
     appInfo: null | any;
     fetchDeviceInfo: any;
 }) => {
+    const [ts, setTs] = useState(0);
+    const cacheServerIp = localStorage.getItem('cacheServerIp') || '';
+    const serverUrl = cacheServerIp ? CCWSClient.formatServerUrl(cacheServerIp) : '';
     const [showPickServerIp, setShowPickServerIp] = useState(false);
     return (
         <View rowVCenter>
@@ -26,6 +32,7 @@ export const UploadAgentButton = ({
                     type="primary"
                     onClick={async () => {
                         const cacheServerIp = localStorage.getItem('cacheServerIp') || '';
+
                         if (!cacheServerIp) {
                             message.warning('请选择服务器IP');
                             setShowPickServerIp(true);
@@ -51,7 +58,7 @@ export const UploadAgentButton = ({
                             } else {
                                 abi = 'x86_64';
                             }
-                            let nameApkVer = `app-v${version}-${abi}.apk`;
+                            let nameApkVer = `app-v${version}.apk`;
 
                             let agentNameVer = `${agentName}-v${version}-${abi}`;
 
@@ -94,7 +101,7 @@ export const UploadAgentButton = ({
                             );
                             try {
                                 await connector.deviceAdbShell(
-                                    'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+                                    'am start -n com.cicy.agent.alpha/com.github.kr328.clash.MainActivity'
                                 );
                             } catch (e) {
                                 console.error(e);
@@ -133,6 +140,7 @@ export const UploadAgentButton = ({
                     <View>
                         <CheckList
                             onChange={e => {
+                                setTs(Date.now());
                                 localStorage.setItem('cacheServerIp', '' + e[0]);
                             }}
                             defaultValue={[localStorage.getItem('cacheServerIp') || '']}
@@ -148,6 +156,34 @@ export const UploadAgentButton = ({
                                     );
                                 })}
                         </CheckList>
+                        <View px12 borderBox mt12 hide={!deviceInfo}>
+                            <ProDescriptions column={1}>
+                                <ProDescriptions.Item label="服务端地址">
+                                    <ProField text={deviceInfo.serverUrl} mode={'read'} />
+                                </ProDescriptions.Item>
+
+                                <View hide={!serverUrl || serverUrl === deviceInfo.serverUrl}>
+                                    <View rowVCenter>
+                                        <View mr12>
+                                            <Button
+                                                size={'small'}
+                                                onClick={async () => {
+                                                    await connector.deviceAdbShell(
+                                                        `echo ${serverUrl} > /data/local/tmp/config_server.txt`
+                                                    );
+                                                    setTimeout(() => {
+                                                        fetchDeviceInfo();
+                                                    }, 1000);
+                                                }}
+                                            >
+                                                使用此地址
+                                            </Button>
+                                        </View>
+                                        <View>{serverUrl}</View>
+                                    </View>
+                                </View>
+                            </ProDescriptions>
+                        </View>
                     </View>
                 )}
             </Drawer>

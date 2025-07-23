@@ -14,6 +14,10 @@ bind-address: '*'
 allow-lan: true
 log-level: info
 
+
+authentication:
+  - "any_username:pwd"
+  
 external-controller: '127.0.0.1:4455'
 external-controller-cors:
   allow-private-network: true
@@ -30,23 +34,6 @@ rules:
   - 'MATCH,DIRECT'
 `;
 
-export const DEFAULT_META_ACCOUNT_CONFIG_YAML = `
-mixed-port: @port@
-bind-address: '*'
-allow-lan: true
-mode: rule
-
-proxies:
-    - name: "http"
-      type: http
-      server: @proxy_server@
-      port: @proxy_port@
-      username: Account_@port@
-      password: password
-  
-rules:
-  - 'MATCH,http'
-`;
 export default class ProxyService {
     static async init(appInfo: MainWindowAppInfo) {
         const { configPath } = appInfo.meta;
@@ -84,42 +71,20 @@ export default class ProxyService {
         }
     }
 
+    static getProxyMitmPort() {
+        return 4446;
+    }
+
+    static getProxyMitmWebPort() {
+        return 4456;
+    }
+
     static getProxyPort() {
         return 4445;
     }
 
     static getProxyWebuiPort() {
         return 4455;
-    }
-
-    static getAccountIndexByPort(port: number) {
-        return port - 10000;
-    }
-
-    static getMetaAccountProxyPort(accountIndex: number) {
-        return 10000 + accountIndex;
-    }
-
-    static getMetaAccountProxyMitmPort(accountIndex: number) {
-        return 20000 + accountIndex;
-    }
-
-    static async initMetaAccountConfig(accountIndex: number, metaConfigPath: string) {
-        const res = await ProxyService.isMetaAccountConfigPathExists(accountIndex, metaConfigPath);
-        if (!res) {
-            await this.saveMetaAccountConfig(accountIndex, metaConfigPath);
-        }
-    }
-
-    static async saveMetaAccountConfig(accountIndex: number, metaConfigPath: string) {
-        const port = ProxyService.getMetaAccountProxyPort(accountIndex);
-        await new BackgroundApi().utils({
-            method: 'fileWriteString',
-            params: [
-                ProxyService.getMetaAccountConfigPath(accountIndex, metaConfigPath),
-                ProxyService.getMetaAccountConfig(port).trim()
-            ]
-        });
     }
 
     static async startServer(
@@ -153,49 +118,10 @@ export default class ProxyService {
         return true;
     }
 
-    static async isMetaAccountConfigPathExists(accountIndex: number, metaConfigPath: string) {
-        const res = await new BackgroundApi().utils({
-            method: 'fileExists',
-            params: [ProxyService.getMetaAccountConfigPath(accountIndex, metaConfigPath)]
-        });
-        return res.result;
-    }
-
-    static getMetaAccountConfigPath(accountIndex: number, metaConfigPath: string) {
-        const port = ProxyService.getMetaAccountProxyPort(accountIndex);
-        return metaConfigPath.replace('.yaml', `_meta_${port}.yaml`);
-    }
-
-    static getMetaAccountConfig(port: number) {
-        let config = DEFAULT_META_ACCOUNT_CONFIG_YAML.replace(/@port@/g, port + '');
-        config = config.replace(
-            /@proxy_server@/g,
-            ProxyService.getMetaAccountCacheProxyServerHost()
-        );
-        config = config.replace(/@proxy_port@/g, ProxyService.getMetaAccountCacheProxyServerPort());
-
-        return config;
-    }
-
-    static getMetaAccountCacheProxyServerHost() {
-        let host = '127.0.0.1';
-
-        return host;
-    }
-
-    static getMetaAccountCacheProxyServerPort() {
-        let port = ProxyService.getProxyPort();
-        return port + '';
-    }
-
-    static getMetaConfig() {
-        return DEFAULT_META_CONFIG_YAML;
-    }
-
-    static testSpeed(account: BrowserAccountInfo) {
+    static async testSpeed(account: BrowserAccountInfo) {
         const startTime = Date.now();
         let httpsProxy = undefined;
-        let { proxyType, proxyHost } = account.config;
+        let { proxyType, proxyHost, useMitm } = account.config;
         if (!proxyType) {
             proxyType = 'direct';
         }
@@ -203,31 +129,28 @@ export default class ProxyService {
             proxyHost = '127.0.0.1';
         }
         if (proxyType !== 'direct') {
-            httpsProxy = `${proxyType}://${proxyHost}:${ProxyService.getMetaAccountProxyPort(
-                account.id
-            )}`;
+            httpsProxy = `${proxyType}://${proxyHost}:${
+                useMitm ? ProxyService.getProxyMitmPort() : ProxyService.getProxyPort()
+            }`;
         }
-        return new BackgroundApi()
-            .axios('https://api.myip.com', {
-                timeout: 5000,
-                httpsProxy
-            })
-            .then(async (res: any) => {
-                if (res.err) {
-                    throw new Error(res.err);
-                } else {
-                    const { ip, country } = res.result;
-                    const testTs = Math.floor(startTime / 1000);
-                    await new BrowserAccount(account.id).save({
-                        ...account.config,
-                        testDelay: Date.now() - startTime,
-                        testTs,
-                        testLocation: country,
-                        testIp: ip
-                    });
-                    return [ip, country, Date.now() - startTime, testTs];
-                }
+        const res = await new BackgroundApi().axios('https://api.myip.com', {
+            timeout: 5000,
+            httpsProxy
+        });
+        if (res.err) {
+            throw new Error(res.err);
+        } else {
+            const { ip, country } = res.result;
+            const testTs = Math.floor(startTime / 1000);
+            await new BrowserAccount(account.id).save({
+                ...account.config,
+                testDelay: Date.now() - startTime,
+                testTs,
+                testLocation: country,
+                testIp: ip
             });
+            return [ip, country, Date.now() - startTime, testTs];
+        }
     }
 
     static getMetaCmd({ meta }: MainWindowAppInfo) {
@@ -239,16 +162,15 @@ export default class ProxyService {
         return `${appInfo.appDataPath}${appInfo.pathSep}script_forward.py`;
     }
 
-    static getMetaAccountCmd(
-        type: 'mitmdump' | 'mitmweb',
-        appInfo: MainWindowAppInfo,
-        browserAccount: BrowserAccountInfo
-    ) {
-        const port = ProxyService.getMetaAccountProxyPort(browserAccount.id);
-        return `${type} -s ${ProxyService.getMitmForwardPath(
+    static getMetaAccountCmd(cmdType: 'mitmdump' | 'mitmweb', appInfo: MainWindowAppInfo) {
+        const port = ProxyService.getProxyMitmPort();
+        const { isWin, publicDir, pathSep } = appInfo;
+        let cmd = cmdType + '';
+        if (isWin) {
+            cmd = `${publicDir}${pathSep}static${pathSep}mitmproxy${pathSep}${cmd}.exe`;
+        }
+        return `${cmd} -s ${ProxyService.getMitmForwardPath(
             appInfo
-        )} --web-port ${ProxyService.getMetaAccountProxyMitmPort(
-            browserAccount.id
-        )} --listen-port ${port} --mode upstream:http://127.0.0.1:${ProxyService.getProxyPort()} --upstream-auth Account_${port}:pwd`;
+        )} --web-port ${ProxyService.getProxyMitmWebPort()} --listen-host 0.0.0.0 --listen-port ${port} --mode upstream:http://127.0.0.1:${ProxyService.getProxyPort()} --upstream-auth any_username:pwd`;
     }
 }

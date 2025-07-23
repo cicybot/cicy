@@ -25,10 +25,12 @@ export class BackgroundApi {
         webContentsId: number,
         {
             proxyRules,
-            requestFilters
+            proxyPassword,
+            proxyUsername
         }: {
             proxyRules?: string;
-            requestFilters?: string[];
+            proxyUsername?: string;
+            proxyPassword?: string;
         }
     ) {
         return this.send({
@@ -38,7 +40,8 @@ export class BackgroundApi {
                 windowId,
                 method: 'setConfig',
                 params: {
-                    requestFilters,
+                    proxyUsername,
+                    proxyPassword,
                     proxyRules
                 }
             }

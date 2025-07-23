@@ -1,125 +1,106 @@
 import View from '../View';
 import CCAgentClient from '../../services/cicy/CCWSAgentClient';
-import { ProDescriptions, ProField } from '@ant-design/pro-components';
-import { Button, Divider, Drawer } from 'antd';
-import { onEvent } from '../../utils/utils';
+import { Drawer } from 'antd';
 import { useEffect, useState } from 'react';
 import { AppsView } from './apps/AppsView';
+import { List, Switch } from 'antd-mobile';
+import { useTimeoutLoop } from '@cicy/utils';
+import { ClashConfigView } from '../vpn/ClashConfigView';
+import { onEvent } from '../../utils/utils';
 
 export const MobileInfoView = ({ agent }: { agent: CCAgentClient }) => {
-    const agentAppInfo = agent.agentAppInfo();
-    const keys = Object.keys(agentAppInfo);
-    const keysFilter: string[] = [
-        'ccAgentAccessibility',
-        'ccAgentMediaProjection',
-        'clientId',
-        'ipAddress',
-        'serverUrl'
-    ];
-    const [rustOnline, setRustOnline] = useState(false);
-    const [appOnline, setAppOnline] = useState(false);
-    const [chatOnline, setChatOnline] = useState(false);
+    const [agentAppInfo, setAgentAppInfo] = useState<any>(agent.agentAppInfo());
+
     const [showApps, setShowApps] = useState(false);
-
-    async function getOnline() {
-        return agent.getClients().then(res => {
-            const { clientId } = agentAppInfo;
-            const { clients } = res;
-            setRustOnline(clients.indexOf(clientId) > -1);
-            setAppOnline(clients.indexOf(clientId + '-APP') > -1);
-            setChatOnline(clients.indexOf(clientId + '-CHAT') > -1);
-        });
-    }
-
+    const [clashConfig, setClashConfig] = useState<null | any>(null);
+    const getAgentAppInfo = async () => {
+        const res = await agent.getAgentAppInfo();
+        setAgentAppInfo(res);
+    };
     useEffect(() => {
-        getOnline();
+        getAgentAppInfo().catch(console.error);
     }, []);
+    useTimeoutLoop(async () => {
+        await getAgentAppInfo();
+    }, 1000);
     return (
-        <View>
-            <ProDescriptions column={1}>
-                <ProDescriptions.Item label={'客户端ID'}>
-                    <ProField text={agentAppInfo.clientId} mode="read" />
-                </ProDescriptions.Item>
-                <ProDescriptions.Item label={'服务端地址'}>
-                    <ProField text={agentAppInfo.serverUrl} mode="read" />
-                </ProDescriptions.Item>
-                <ProDescriptions.Item label={'本机IP'}>
-                    <ProField text={agentAppInfo.ipAddress} mode="read" />
-                </ProDescriptions.Item>
-            </ProDescriptions>
-            <Divider />
-            <ProDescriptions column={2}>
-                <ProDescriptions.Item label={'无障碍'}>
-                    <ProField text={agentAppInfo.ccAgentAccessibility + ''} mode="read" />
-                </ProDescriptions.Item>
+        <View px12 pt12>
+            <List header="基础信息">
+                <List.Item extra={agentAppInfo.clientId}>客户端ID</List.Item>
+                <List.Item extra={agentAppInfo.ipAddress}>本机IP</List.Item>
+                <List.Item extra={agentAppInfo.serverUrl}>服务端地址</List.Item>
+            </List>
+            <List header="权限">
+                <List.Item
+                    extra={
+                        <Switch
+                            onChange={v => {
+                                if (!agentAppInfo.inputIsReady) {
+                                    agent.jsonrpcApp('onStartInput');
+                                }
+                            }}
+                            checked={agentAppInfo.inputIsReady}
+                        />
+                    }
+                >
+                    无障碍辅助
+                </List.Item>
+                <List.Item extra={<Switch checked={agentAppInfo.recordingIsReady} />}>
+                    屏幕录制
+                </List.Item>
+            </List>
 
-                <ProDescriptions.Item label={'屏幕录制'}>
-                    <ProField text={agentAppInfo.ccAgentMediaProjection + ''} mode="read" />
-                </ProDescriptions.Item>
-            </ProDescriptions>
-            <Divider />
-            <View rowVCenter mt12>
-                <View mr12 hide={!agentAppInfo.ccAgentAppInstalled}>
-                    <Button
-                        onClick={async () => {
-                            setShowApps(true);
-                        }}
-                        size="small"
-                    >
-                        所有App
-                    </Button>
-                </View>
-                <View mr12 hide={agentAppInfo.ccAgentMediaProjection}>
-                    <Button
-                        onClick={async () => {
-                            onEvent('showLoading');
-                            await agent.startMediaProjection();
-                            onEvent('hideLoading');
-                        }}
-                        size="small"
-                    >
-                        开启录制
-                    </Button>
-                </View>
-                <View mr12 hide={agentAppInfo.ccAgentAccessibility}>
-                    <Button
-                        onClick={async () => {
-                            onEvent('showLoading');
-                            await agent.startAccessibility();
-                            onEvent('hideLoading');
-                        }}
-                        size="small"
-                    >
-                        开启无障碍
-                    </Button>
-                </View>
-            </View>
-            <Divider />
-            <ProDescriptions column={3}>
-                <ProDescriptions.Item label={'Rust'}>
-                    <ProField text={'' + rustOnline} mode="read" />
-                </ProDescriptions.Item>
-                <ProDescriptions.Item label={'App'}>
-                    <ProField text={'' + appOnline} mode="read" />
-                </ProDescriptions.Item>
-                <ProDescriptions.Item label={'Chat'}>
-                    <ProField text={'' + chatOnline} mode="read" />
-                </ProDescriptions.Item>
-            </ProDescriptions>
-            <Divider />
-            <ProDescriptions column={2}>
-                {keys
-                    .filter(key => !keysFilter.includes(key))
-                    .map((key: string) => {
-                        //@ts-ignore
-                        const text = deviceInfo[key];
-                        return (
-                            <ProDescriptions.Item key={key} label={key.replace('ccAgent', '')}>
-                                <ProField text={text + ''} mode="read" />
-                            </ProDescriptions.Item>
-                        );
-                    })}
-            </ProDescriptions>
+            <List header="Clash">
+                <List.Item
+                    extra={
+                        <Switch
+                            onChange={async _ => {
+                                onEvent('showLoading');
+                                if (!agentAppInfo.isClashRunning) {
+                                    await agent.jsonrpcApp('startClash');
+                                } else {
+                                    await agent.jsonrpcApp('stopClash');
+                                }
+                                onEvent('hideLoading');
+                            }}
+                            checked={agentAppInfo.isClashRunning}
+                        />
+                    }
+                >
+                    开启状态
+                </List.Item>
+                <List.Item
+                    clickable
+                    onClick={async () => {
+                        onEvent('showLoading');
+                        await agent.jsonrpcApp('updateClash');
+                        onEvent('hideLoading');
+                    }}
+                >
+                    更新配置
+                </List.Item>
+                <List.Item
+                    clickable
+                    onClick={async () => {
+                        const res = await agent.jsonrpcApp('getClashConfig');
+                        setClashConfig(res);
+                    }}
+                >
+                    修改配置
+                </List.Item>
+            </List>
+
+            <List header="Apps">
+                <List.Item
+                    clickable
+                    onClick={() => {
+                        setShowApps(true);
+                    }}
+                >
+                    App列表
+                </List.Item>
+            </List>
+
             <Drawer
                 width={'360px'}
                 title={'Apps'}
@@ -129,7 +110,32 @@ export const MobileInfoView = ({ agent }: { agent: CCAgentClient }) => {
                 }}
                 open={showApps}
             >
-                {showApps && <AppsView agent={agent} />}
+                {showApps && (
+                    <AppsView
+                        accessControlPackages={[]}
+                        setAccessControlPackages={() => {}}
+                        agent={agent}
+                    />
+                )}
+            </Drawer>
+            <Drawer
+                width={'360px'}
+                title={'Clash'}
+                closable={{ 'aria-label': 'Close Button' }}
+                onClose={() => {
+                    setClashConfig(null);
+                }}
+                open={!!clashConfig}
+            >
+                {clashConfig && (
+                    <ClashConfigView
+                        setClashConfig={(c: any) => {
+                            setClashConfig(c);
+                        }}
+                        agentAppInfo={agentAppInfo}
+                        clashConfig={clashConfig}
+                    />
+                )}
             </Drawer>
         </View>
     );

@@ -212,10 +212,10 @@ async fn daemon_loop(args: &Args) {
 
     // let pid = process::id().to_string();
 
-    let ws_server_cloned = ws_server.clone();
-    let ws_handle = tokio::spawn(async move {
-        ws_client::connect_cc_server_forever(&ws_server_cloned, &client_id).await;
-    });
+    // let ws_server_cloned = ws_server.clone();
+    // let ws_handle = tokio::spawn(async move {
+    //     ws_client::connect_cc_server_forever(&ws_server_cloned, &client_id).await;
+    // });
 
     loop {
         tokio::select! {
@@ -240,7 +240,7 @@ async fn daemon_loop(args: &Args) {
     info!("Shutting down daemon_loop");
 
     // Cancel WS task
-    ws_handle.abort();
+    // ws_handle.abort();
     jsonrpc_handle.abort();
 
 }

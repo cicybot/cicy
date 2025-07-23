@@ -12,21 +12,21 @@ import * as fs from 'fs';
 import path from 'path';
 import { loadBounds, saveBounds } from './boundsSaver';
 import { delay } from './utils';
-import WebContentsRequest from './webContentsRequest';
 import { handleMsg, initConnector, setServerUrl } from './wsMainWindowClient';
 import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
 import os from 'os';
-import { getLocalIPAddressList, killPort } from '@cicy/cicy-ws';
+import { getLocalIPAddressList } from '@cicy/cicy-ws';
 import util from 'util';
 import { exec } from 'child_process';
+import unzipper from 'unzipper';
 const execPromise = util.promisify(exec);
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
-export function initDir() {
-    const { appDataPath, meta } = getAppInfo();
+export async function initDir() {
+    let { appDataPath, publicDir, meta, isDev, version } = getAppInfo();
     if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
         fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
     }
@@ -39,6 +39,24 @@ export function initDir() {
     if (!fs.existsSync(path.join(appDataPath, 'meta'))) {
         fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
     }
+    const assetsDir = path.join(publicDir, 'static', 'assets');
+    if (isDev) {
+        version = '0.0.0';
+    }
+    const apkPath = path.join(publicDir, 'static', 'assets', `app-v${version}.apk`);
+    if (!fs.existsSync(apkPath)) {
+        try {
+            const directory = await unzipper.Open.file(
+                path.join(assetsDir, `app-v${version}.apk.zip`)
+            );
+            await directory.extract({
+                path: assetsDir
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     execPromise(`chmod +x "${meta.bin}"`).catch(console.error);
 }
 
@@ -87,7 +105,7 @@ export class MainWindow {
     static getInfo() {
         return {
             ...getAppInfo(),
-            ...MainWindow.getIpInfo(),
+            ...MainWindow.getIpInfo()
         };
     }
     static getOptions() {
@@ -170,18 +188,15 @@ export class MainWindow {
 
             win.on('close', (e: any) => {
                 let w = this.windows.get(winId);
-                new WebContentsRequest(winId).clearRequests();
 
                 this.windowsReady.delete(winId);
                 this.windows.delete(winId);
-                // this.handleProxyPorts(winId);
                 if (w) {
                     saveBounds(winId, w.getBounds());
                     w = undefined;
                 }
             });
             url && win.loadURL(url);
-            new WebContentsRequest(winId).clearRequests();
         } else {
             if (win.isMinimized()) {
                 win.restore();
@@ -202,33 +217,7 @@ export class MainWindow {
             return null;
         }
     }
-    static async handleProxyPorts(winId: string) {
-        const accountIndex = this.getAccountIndexByWinId(winId);
-        if (accountIndex !== null) {
-            const accounts = Array.from(this.windows)
-                .map(row => row[0])
-                .map(row => row.split('-'))
-                .filter(row => row.length === 2 && parseInt(row[0]) >= 0)
-                .map(row => parseInt(row[0]));
-            if (accounts.indexOf(accountIndex) === -1) {
-                const port = 10000 + accountIndex;
-                console.log('killPort', port);
 
-                try {
-                    await killPort(port);
-                } catch (e) {
-                    console.error(e);
-                }
-                const port1 = 20000 + accountIndex;
-                console.log('killPort', port1);
-                try {
-                    await killPort(port1);
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-        }
-    }
     static getIpInfo() {
         let ip = '127.0.0.1';
         const ipList = getLocalIPAddressList();
@@ -329,7 +318,7 @@ export class MainWindow {
                     return openCvData;
                 }
                 case 'getAppInfo': {
-                    return MainWindow.getInfo()
+                    return MainWindow.getInfo();
                 }
                 case 'initCCServer': {
                     await initCCServer(
@@ -341,7 +330,7 @@ export class MainWindow {
                     return true;
                 }
                 case 'initConnector': {
-                    await initConnector(payload.serverUrl,payload.ts);
+                    await initConnector(payload.serverUrl, payload.ts);
                     return true;
                 }
                 default: {

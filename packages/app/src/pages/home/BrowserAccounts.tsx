@@ -11,10 +11,10 @@ const BrowserAccounts = () => {
                 <Breadcrumb
                     items={[
                         {
-                            title: 'Home'
+                            title: '首页'
                         },
                         {
-                            title: 'BrowserAccounts'
+                            title: '浏览器帐户'
                         }
                     ]}
                 />

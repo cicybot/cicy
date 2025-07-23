@@ -22,8 +22,9 @@ const AndroidDetailWrap = () => {
 
     if (!agentAppInfo) {
         return (
-            <View h100vh w100vw center>
+            <View h100vh w100vw center column>
                 <Loading></Loading>
+                <View mt12>正在获取信息...</View>
             </View>
         );
     }

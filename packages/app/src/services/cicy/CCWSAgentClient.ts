@@ -3,14 +3,14 @@ import { MainWindowAppInfo } from '../../providers/MainWindowProvider';
 
 export interface DeviceInfo {
     abi: string;
-    agentRustVersion: string;
+    agentVersion: string;
     brand: string;
-    ccAgentAccessibility: boolean;
-    ccAgentAppInstalled: boolean;
-    ccAgentMediaProjection: boolean;
-    ccAgentAppRunning: boolean;
-    ccAgentRustPid: string;
-    ccAgentAppUploaded: boolean;
+    inputIsReady: boolean;
+    agentAppInstalled: boolean;
+    recordingIsReady: boolean;
+    agentAppRunning: boolean;
+    agentPid: string;
+    agentAppUploaded: boolean;
     clientId: string;
     dpi: string;
     ipAddress: string;
@@ -29,7 +29,7 @@ export default class CCWSAgentClient extends CCWSClient {
     isApp?: boolean;
 
     constructor(clientId: string) {
-        super(clientId);
+        super(clientId + '-APP');
         this.accessibility = false;
         this.mediaProjection = false;
     }
@@ -54,56 +54,24 @@ export default class CCWSAgentClient extends CCWSClient {
         this.deviceInfo = deviceInfo;
     }
 
-    isAccessibilityEnabled() {
-        return (
-            this.deviceInfo &&
-            this.deviceInfo.ccAgentAppRunning &&
-            this.deviceInfo.ccAgentAccessibility
-        );
+    inputIsReady() {
+        return this.agentAppInfo().inputIsReady;
     }
 
     isRoot() {
         return this.deviceInfo && this.deviceInfo.isRoot;
     }
 
-    isNotRootAndNoAccessibilityEnabled() {
-        return !this.isRoot() && !this.isAccessibilityEnabled();
-    }
-
-    isMediaProjectionEnabled() {
-        return (
-            this.deviceInfo &&
-            this.deviceInfo.ccAgentAppRunning &&
-            this.deviceInfo.ccAgentMediaProjection
-        );
-    }
-
     pressKey(key: string) {
-        if (this.isAccessibilityEnabled()) {
-            return this.getAppClient().jsonrpc('pressKey', [key]);
-        } else {
-            return this.shellInputPress(key);
-        }
+        return this.jsonrpcApp('pressKey', [key]);
     }
 
     inputText(text: string) {
-        if (this.isAccessibilityEnabled()) {
-            return this.getAppClient().jsonrpc('inputText', [text]);
-        } else {
-            return this.shellInputText(text);
-        }
+        return this.jsonrpcApp('inputText', [text]);
     }
 
     click(x: number, y: number) {
-        if (this.isAccessibilityEnabled()) {
-            return this.getAppClient().jsonrpc('click', [x, y]);
-        } else {
-            return this.shellInputTap(x, y);
-        }
-    }
-
-    getAppClient() {
-        return new CCWSAgentClient(`${this.clientId}-APP`);
+        return this.jsonrpcApp('click', [x, y]);
     }
 
     async _action(action: string, payload?: {}) {
@@ -115,90 +83,60 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async shell(cmd: string) {
-        return this.jsonrpc('shell', [cmd]);
-    }
-
-    async startMediaProjection() {
-        return this.jsonrpcApp('startMediaProjection');
-    }
-
-    async startAccessibility() {
-        return this.jsonrpcApp('startAccessibility');
+        return this.jsonrpcApp('shell', [cmd]);
     }
 
     async startAgentApp() {
-        return this.jsonrpc('shell', [
-            'am start -n com.cc.agent.adr/com.web3desk.adr.MainActivity'
+        return this.jsonrpcApp('shell', [
+            'am start -n com.cicy.agent.alpha/com.github.kr328.clash.MainActivity'
         ]);
     }
 
     async stopAgentApp() {
-        await this.shell('am force-stop com.cc.agent.adr');
-    }
-
-    async restartAgentApp() {
-        await this.stopAgentApp();
-        await this.startAgentApp();
+        await this.shell('am force-stop com.cicy.agent.alpha');
     }
 
     async shellInput(args: string) {
         const cmd = `input ${args}`;
-        return this.jsonrpc('shell', [cmd]);
+        return this.jsonrpcApp('shell', [cmd]);
     }
 
     async shellInputTap(x: number, y: number) {
         const cmd = `input tab ${x} ${y}`;
-        return this.jsonrpc('shell', [cmd]);
+        return this.jsonrpcApp('shell', [cmd]);
     }
 
     async shellInputText(text: string) {
         const cmd = `input text ${text}`;
-        return this.jsonrpc('shell', [cmd]);
+        return this.jsonrpcApp('shell', [cmd]);
     }
 
     async shellInputPress(key: string) {
         const cmd = `input press ${key}`;
-        return this.jsonrpc('shell', [cmd]);
+        return this.jsonrpcApp('shell', [cmd]);
     }
 
     async download(url: string, savePath: string) {
-        return this.jsonrpc('download', [url, savePath]);
+        return this.jsonrpcApp('download', [url, savePath]);
     }
 
     async readFile(path: string) {
-        return this.jsonrpc('readFile', [path]);
+        return this.jsonrpcApp('readFile', [path]);
     }
 
     async writeFile(path: string, content: string) {
-        return this.jsonrpc('writeFile', [path, content]);
+        return this.jsonrpcApp('writeFile', [path, content]);
     }
 
-    async jsonrpcApp(method: string, params?: any[]) {
-        return this.getAppClient()._action('jsonrpc', {
-            method,
-            params: typeof params === 'string' ? [params] : params || []
-        });
-    }
-
-    async jsonrpc(method: string, params?: any[]) {
+    async jsonrpcApp(method: string, params?: string | any[]) {
         return this._action('jsonrpc', {
             method,
             params: typeof params === 'string' ? [params] : params || []
         });
     }
 
-    async getScreenFromScreencap() {
-        await this.shell('screencap /data/local/tmp/screen.png');
-        const res = await this.shell('base64 -i /data/local/tmp/screen.png');
-        return `data:image/png;base64,${res}`;
-    }
-
-    isIpTheSaveSection(ip1: string, ip2: string) {
-        const sectionIp = (ip: string) => {
-            const t = ip.split('.');
-            return `${t[0]}.${t[1]}`;
-        };
-        return sectionIp(ip1) === sectionIp(ip2);
+    async jsonrpc(method: string, params?: any[]) {
+        return this.jsonrpcApp(method, params);
     }
 
     async getScreen() {
@@ -216,8 +154,8 @@ export default class CCWSAgentClient extends CCWSClient {
     }
 
     async getAgentAppInfo(): Promise<DeviceInfo> {
-        const agentAppInfo = await this.jsonrpcApp('appInfo');
-        this.agentAppInfo = agentAppInfo;
+        const agentAppInfo = await this.jsonrpcApp('agentAppInfo');
+        this._agentAppInfo = agentAppInfo;
         return agentAppInfo;
     }
 
@@ -229,30 +167,6 @@ export default class CCWSAgentClient extends CCWSClient {
     async isAppOnline() {
         const res = await super.isOnline(this.clientId + '-APP');
         return !!res;
-    }
-
-    async getVpnStatus() {
-        let { err, config, allowList, isVpnRunning } = await new CCWSAgentClient(
-            this.clientId
-        ).jsonrpcApp('vpnStatus');
-        let proxyNode = '';
-        if (!err) {
-            config = config.trim();
-            const nodeRegex = /Node\s*=\s*([^\n]+)/;
-            const nodeMatch = config.match(nodeRegex);
-
-            if (nodeMatch) {
-                proxyNode = nodeMatch[1].trim();
-            }
-        }
-        if (!allowList) {
-            allowList = '';
-        }
-        return {
-            allowList: allowList.split('|').filter((row: string) => !!row),
-            proxyNode,
-            isVpnRunning: !!isVpnRunning
-        };
     }
 
     async getCurrentPackage() {

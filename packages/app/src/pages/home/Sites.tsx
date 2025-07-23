@@ -9,10 +9,10 @@ const Sites = () => {
                 <Breadcrumb
                     items={[
                         {
-                            title: 'Home'
+                            title: '首页'
                         },
                         {
-                            title: 'Sites'
+                            title: '站点'
                         }
                     ]}
                 />

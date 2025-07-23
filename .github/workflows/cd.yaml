@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION_NODE: 20.11.1
-  VERSION: 1.0.84
+  VERSION: 1.0.95
   VERSION_ANDROID_NDK: 27.2.12479018
   GH_TOKEN: ${{ github.token }}
 
@@ -68,26 +68,22 @@ jobs:
           cmd: install
       - name: Build Pkg
         run: |
+          yarn add bufferutil utf-8-validate @aws-sdk/client-s3
+
           yarn build:pkg
           cd apps/desktop/public/static/assets
           gh release download ${{ github.ref_name }}
-          if (Test-Path "app-v$env:VERSION-x86_64.apk") {
-              Remove-Item "app-v$env:VERSION-x86_64.apk" -Force
-          }
-          if (Test-Path "app-v$env:VERSION-arm64.apk") {
-              Remove-Item "app-v$env:VERSION-arm64.apk" -Force
-          }
-          if (Test-Path "app-v$env:VERSION-armv7a.apk") {
-              Remove-Item "app-v$env:VERSION-armv7a.apk" -Force
-          }
-          Move-Item -Force "app-v0.0.0-arm64.apk" "app-v${env:VERSION}-arm64.apk"
-          Move-Item -Force "app-v0.0.0-x86_64.apk" "app-v${env:VERSION}-x86_64.apk"
-          Move-Item -Force "app-v0.0.0-armv7a.apk" "app-v${env:VERSION}-armv7a.apk"
           
-          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}-arm64.apk" --clobber
-          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}-x86_64.apk" --clobber
-          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}-armv7a.apk" --clobber
+          $APK_URL = "https://github.com/cicybot/ClashMetaForAndroid/releases/download/Alpha/cmfa-2.11.14-alpha-universal-release.apk"
+          Write-Host "Downloading APK from $APK_URL"
           
+          # Download the file
+          Invoke-WebRequest -Uri $APK_URL -Headers @{ "Authorization" = "Bearer ${{ secrets.GITHUB_TOKEN }}" } -OutFile "app-v$env:VERSION.apk"
+          Compress-Archive -Path "app-v$env:VERSION.apk" -DestinationPath "app-v$env:VERSION.apk.zip" -Force
+          if (Test-Path "app-v$env:VERSION.apk") {
+              Remove-Item "app-v$env:VERSION.apk" -Force
+          }
+          gh release upload $env:GITHUB_REF_NAME "app-v${env:VERSION}.apk.zip" --clobber
           ls
           cd ../../../../../
           node tools/fix-app.js
