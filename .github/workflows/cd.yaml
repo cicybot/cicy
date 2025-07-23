@@ -37,7 +37,7 @@ jobs:
 
   desktop-build:
     name: desktop-build
-#    needs: build_agent
+    needs: build_agent
     strategy:
       matrix:
         include:
