@@ -49,6 +49,7 @@ export const DeviceInfoView = ({
             <View w100p rowVCenter borderBox mb12 jEnd pr12 mt12>
                 <View>
                     <UploadAgentButton
+                        deviceInfo={deviceInfo}
                         serverIp={serverIp}
                         appInfo={appInfo}
                         connector={connector}
@@ -68,7 +69,7 @@ export const DeviceInfoView = ({
                             new BrowserService(url).openWindow({ noWebview: true });
                         }}
                     >
-                        打开
+                        调试节点
                     </Button>
                 </View>
                 <View ml12>
@@ -335,32 +336,6 @@ export const DeviceInfoView = ({
                             clientId={clientId}
                             wsOnlineAgentApp={!!wsOnlineAgentApp}
                         ></VpnView>
-                        <Divider></Divider>
-                        <ProDescriptions column={1}>
-                            <ProDescriptions.Item label="服务端地址">
-                                <ProField text={deviceInfo.serverUrl} mode={'read'} />
-                            </ProDescriptions.Item>
-                            <View hide={!serverUrl || serverUrl === deviceInfo.serverUrl}>
-                                <View rowVCenter>
-                                    <View mr12>
-                                        <Button
-                                            size={'small'}
-                                            onClick={async () => {
-                                                await connector.deviceAdbShell(
-                                                    `echo ${serverUrl} > /data/local/tmp/config_server.txt`
-                                                );
-                                                setTimeout(() => {
-                                                    fetchDeviceInfo();
-                                                }, 1000);
-                                            }}
-                                        >
-                                            使用此地址
-                                        </Button>
-                                    </View>
-                                    <View>{serverUrl}</View>
-                                </View>
-                            </View>
-                        </ProDescriptions>
                     </View>
                 </View>
             </View>

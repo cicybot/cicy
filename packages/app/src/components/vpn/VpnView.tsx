@@ -29,7 +29,7 @@ export const VpnView = ({
     useTimeoutLoop(async () => {
         await getAgentAppInfo();
     }, 1000);
-    if (!wsOnlineAgentApp || !agentAppInfo) {
+    if (!agentAppInfo) {
         return null;
     }
     console.log({ agentAppInfo });

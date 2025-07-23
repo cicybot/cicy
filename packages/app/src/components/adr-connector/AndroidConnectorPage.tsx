@@ -15,10 +15,10 @@ export const AndroidConnectorPage = ({
                 <Breadcrumb
                     items={[
                         {
-                            title: 'Home'
+                            title: '首页'
                         },
                         {
-                            title: title || 'Android Connector'
+                            title: title || '安卓连接器'
                         }
                     ]}
                 />

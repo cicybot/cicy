@@ -376,10 +376,10 @@ const Setting = () => {
                 <Breadcrumb
                     items={[
                         {
-                            title: 'Home'
+                            title: '首页'
                         },
                         {
-                            title: 'Setting'
+                            title: '设置'
                         }
                     ]}
                 />

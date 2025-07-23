@@ -48,6 +48,14 @@ const BrowserAccountsTable = () => {
             }
         },
         {
+            title: '地理位置',
+            dataIndex: 'location',
+            render: (_, { id, config }) => {
+                let { testLocation } = config;
+                return <>{testLocation || '-'}</>;
+            }
+        },
+        {
             title: '操作',
             width: 44,
             valueType: 'option',
