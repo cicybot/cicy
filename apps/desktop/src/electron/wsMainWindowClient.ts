@@ -14,7 +14,6 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import FileHelper from './FileHelper';
 import { killProcessByName, openTerminal } from './utils';
 import WebContentsService from './webContentsService';
-import unzipper from 'unzipper';
 
 declare const DEV_URL: string;
 const execPromise = util.promisify(exec);
@@ -240,15 +239,6 @@ export async function handelUtilsMsg(payload?: { method?: string; params?: any }
         case 'mkdir': {
             const result = await FileHelper.mkdir(params[0]);
             return { result };
-        }
-        case 'unzip': {
-            const zipPath = params[0];
-            const saveDir = params[1];
-            const directory = await unzipper.Open.file(zipPath);
-            await directory.extract({
-                path: saveDir
-            });
-            return { ok: true };
         }
 
         default: {

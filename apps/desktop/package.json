@@ -1,7 +1,7 @@
 {
     "name": "@cicy/desktop",
     "license": "Apache-2.0",
-    "version": "1.0.98",
+    "version": "1.0.99",
     "description": "CiCy desktop",
     "main": ".webpack/main",
     "repository": {
@@ -42,7 +42,6 @@
         "@types/node": "^20.10.3",
         "@types/react": "^18.0.26",
         "@types/react-dom": "^18.0.9",
-        "@types/unzipper": "^0",
         "@types/uuid": "^9.0.7",
         "@types/ws": "^8.5.12",
         "@typescript-eslint/eslint-plugin": "^5.0.0",
@@ -68,6 +67,7 @@
     "dependencies": {
         "@cicy/app": "1.0.0",
         "@cicy/cicy-ws": "1.0.0",
+        "@cicy/node-utils": "1.0.0",
         "axios": "^1.10.0",
         "better-sqlite3": "^11.10.0",
         "buffer": "^6.0.3",
@@ -91,7 +91,6 @@
         "react-router-dom": "^6.20.1",
         "stream-browserify": "^3.0.0",
         "styled-components": "^6.1.1",
-        "unzipper": "^0.12.3",
         "update-electron-app": "^3.0.0",
         "util": "^0.12.5",
         "uuid": "^9.0.1",

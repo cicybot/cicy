@@ -20,13 +20,14 @@ import os from 'os';
 import { getLocalIPAddressList } from '@cicy/cicy-ws';
 import util from 'util';
 import { exec } from 'child_process';
-import unzipper from 'unzipper';
 const execPromise = util.promisify(exec);
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
 export async function initDir() {
-    let { appDataPath, publicDir, meta, isDev, version } = getAppInfo();
+    const { appDataPath, publicDir, meta, isWin, isDev } = getAppInfo();
+    let { version } = getAppInfo();
+
     if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
         fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
     }
@@ -39,19 +40,33 @@ export async function initDir() {
     if (!fs.existsSync(path.join(appDataPath, 'meta'))) {
         fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
     }
-    const assetsDir = path.join(publicDir, 'static', 'assets');
     if (isDev) {
         version = '0.0.0';
     }
     const apkPath = path.join(publicDir, 'static', 'assets', `app-v${version}.apk`);
+
     if (!fs.existsSync(apkPath)) {
         try {
-            const directory = await unzipper.Open.file(
-                path.join(assetsDir, `app-v${version}.apk.zip`)
-            );
-            await directory.extract({
-                path: assetsDir
-            });
+            if (isWin) {
+                const exe7z = path.join(publicDir, 'static', 'assets', `7z.exe`);
+                await execPromise(
+                    `${exe7z} e ${path.join(
+                        publicDir,
+                        'static',
+                        'assets',
+                        `app-v${version}.apk.zip`
+                    )} -o${path.join(publicDir, 'static', 'assets')}`
+                );
+            } else {
+                await execPromise(
+                    `unzip -o ${path.join(
+                        publicDir,
+                        'static',
+                        'assets',
+                        `app-v${version}.apk.zip`
+                    )} -d  ${path.join(publicDir, 'static', 'assets')}`
+                );
+            }
         } catch (e) {
             console.error(e);
         }
@@ -295,7 +310,7 @@ export class MainWindow {
         }
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
-            if (!['utils', 'db'].includes(message.action)) {
+            if (!['utils', 'db', 'mainWindowInfo'].includes(message.action)) {
                 console.log('[+] [MSG]', message);
             }
 

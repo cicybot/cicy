@@ -1,4 +1,14 @@
-import { Alert, Breadcrumb, Button, Divider, Input, message, Tabs, type TabsProps } from 'antd';
+import {
+    Alert,
+    Checkbox,
+    Breadcrumb,
+    Button,
+    Divider,
+    Input,
+    message,
+    Tabs,
+    type TabsProps
+} from 'antd';
 import View from '../../components/View';
 import { useEffect, useState } from 'react';
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
@@ -12,6 +22,7 @@ import { AceEditorView } from '../../components/ace/AceEditorView';
 
 const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
     const [isOnLine, setIsOnLine] = useState(false);
+    const [showShellWindow, setShowShellWindow] = useState(false);
     useTimeoutLoop(async () => {
         const res = await new BackgroundApi().isPortOnline(ProxyService.getProxyPort());
         setIsOnLine(res.result);
@@ -26,13 +37,23 @@ const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
                         <ProField text={ProxyService.getProxyPort()} mode="read" />
 
                         <View ml12>
+                            <Checkbox
+                                checked={showShellWindow}
+                                onChange={() => {
+                                    setShowShellWindow(!showShellWindow);
+                                }}
+                            >
+                                新窗口打开
+                            </Checkbox>
+                        </View>
+                        <View ml12>
                             <Button
                                 size={'small'}
                                 onClick={async () => {
                                     await new BackgroundApi().killPort(ProxyService.getProxyPort());
                                     new BackgroundApi().openTerminal(
                                         ProxyService.getMetaCmd(appInfo),
-                                        true
+                                        showShellWindow
                                     );
                                 }}
                             >
@@ -110,6 +131,7 @@ const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
 
 const ProxyMitm = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
     const [isOnLine, setIsOnLine] = useState(false);
+    const [showShellWindow, setShowShellWindow] = useState(false);
     useTimeoutLoop(async () => {
         const res = await new BackgroundApi().isPortOnline(ProxyService.getProxyMitmPort());
         setIsOnLine(res.result);
@@ -121,7 +143,7 @@ const ProxyMitm = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
 
             await new BackgroundApi().openTerminal(
                 ProxyService.getMetaAccountCmd('mitmweb', appInfo),
-                true
+                showShellWindow
             );
         } catch (e) {
             //@ts-ignore
@@ -138,6 +160,16 @@ const ProxyMitm = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
                         <View mr12>端口</View>
                         <ProField text={ProxyService.getProxyMitmPort()} mode="read" />
 
+                        <View ml12>
+                            <Checkbox
+                                checked={showShellWindow}
+                                onChange={() => {
+                                    setShowShellWindow(!showShellWindow);
+                                }}
+                            >
+                                新窗口打开
+                            </Checkbox>
+                        </View>
                         <View ml12>
                             <Button
                                 size={'small'}
