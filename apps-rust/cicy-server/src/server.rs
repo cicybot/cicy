@@ -19,7 +19,7 @@ use tower_http::{
 };
 use tracing::error;
 use crate::shared_state::AppState;
-use crate::swagger::{openapi_spec, swagger_ui};
+use crate::swagger::{openapi_spec,openapi_path_spec,swagger_ui};
 
 static STATIC_DIR: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/public");
 
@@ -58,12 +58,24 @@ pub fn create_app(state: Arc<AppState>,assets_dir:&str,token:&str) -> Router {
         .route("/api/ws/sendMsg", post(crate::api::ws_send_msg))
         .route("/api/ws/broadcastMsg", get(crate::api::broadcast_msg))
 
-
         // Swagger UI 页面
         .route("/doc", get(swagger_ui))
         // OpenAPI 规范端点
         .route("/openapi.json", get(openapi_spec))
-        // WebSocket endpoint
+        .route("/openapi/*path", get({
+            let use_embedded = assets_dir.is_empty();
+            let assets_dir = assets_dir.to_string();
+            move |path| {
+                let assets_dir = assets_dir.clone();
+                async move {
+                    if use_embedded {
+                        serve_static_assets_file_embedded(path).await.into_response()
+                    } else {
+                        openapi_path_spec(path, assets_dir).await.into_response()
+                    }
+                }
+            }
+        }))
         .route("/ws", get(crate::websocket::websocket_handler))
 
         // Static file routes

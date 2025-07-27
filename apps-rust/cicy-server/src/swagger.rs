@@ -1,12 +1,16 @@
 use axum::{
     response::{Html, Json},
 };
+use axum::extract::Path;
 use axum::http::{header, HeaderMap};
-use axum::response::IntoResponse;
-use serde_yaml::Value; // Add serde_yaml to your Cargo.toml
+use axum::response::{IntoResponse};
+use serde_json::json;
+use serde_yaml::Value;
+use tracing::error;
+// Add serde_yaml to your Cargo.toml
 
 pub async fn openapi_spec() -> impl IntoResponse {
-    let yaml_str = include_str!("./openapi.yaml");
+    let yaml_str = include_str!("../public/static/openapi.yaml");
 
     let yaml_value: Value = serde_yaml::from_str(yaml_str)
         .unwrap_or_else(|_| {
@@ -41,13 +45,66 @@ pub async fn openapi_spec() -> impl IntoResponse {
         header::CONTENT_TYPE,
         header::HeaderValue::from_static("application/json"),
     );
-
     (headers, Json(json_value))
 }
 
+pub async fn openapi_path_spec(Path(path): Path<String>,assets_dir:String) -> impl IntoResponse {
+    let mut safe_path = std::path::PathBuf::new();
+    for part in std::path::Path::new(&path).components() {
+        if let std::path::Component::Normal(p) = part {
+            safe_path.push(p);
+        }
+    }
+
+    let full_path = std::path::PathBuf::from(&assets_dir).join(format!("openapi_{}.yaml", safe_path.display()));
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        header::CACHE_CONTROL,
+        header::HeaderValue::from_static("no-store, no-cache, must-revalidate"),
+    );
+    headers.insert(
+        header::PRAGMA,
+        header::HeaderValue::from_static("no-cache"),
+    );
+    headers.insert(
+        header::EXPIRES,
+        header::HeaderValue::from_static("0"),
+    );
+    headers.insert(
+        header::CONTENT_TYPE,
+        header::HeaderValue::from_static("application/json"),
+    );
+    match tokio::fs::read_to_string(&full_path).await {
+        Ok(content) => {
+            let yaml_value: Value = serde_yaml::from_str(&*content)
+                .unwrap_or_else(|_| {
+                    // Fallback minimal OpenAPI spec
+                    serde_yaml::from_str(r#"
+                openapi: 3.0.0
+                info:
+                  title: API Documentation
+                  version: 1.0.0
+                paths: {}
+                components: {}
+            "#).unwrap()
+                });
+
+            // Convert to JSON for response
+            let json_value = serde_json::to_value(yaml_value).unwrap();
+
+            (headers, Json(json_value))
+        }
+        Err(err) => {
+            error!("Filesystem asset not found: {}: {}", full_path.display(), err);
+            (headers, Json(json!({
+                "err": "404"
+            })))
+        }
+    }
+}
 pub async fn swagger_ui() -> Html<&'static str> {
-    Html(
-        r#"
+    let html = r#"
         <!DOCTYPE html>
         <html>
         <head>
@@ -65,10 +122,14 @@ pub async fn swagger_ui() -> Html<&'static str> {
                     return localStorage.getItem('swagger_token') || '';
                 };
 
-
                 window.onload = () => {
+                    const id = new URL(location.href).searchParams.get("id")
+                    let url = "/openapi.json"
+                    if(id){
+                        url = "/openapi/"+id
+                    }
                     window.ui = SwaggerUIBundle({
-                        url: "/openapi.json",
+                        url,
                         dom_id: '#swagger-ui',
                     });
                 };
@@ -101,6 +162,10 @@ pub async fn swagger_ui() -> Html<&'static str> {
             </script>
         </body>
         </html>
-        "#
+        "#;
+
+
+    Html(
+        html
     )
 }

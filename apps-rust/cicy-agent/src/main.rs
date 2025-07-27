@@ -50,7 +50,7 @@ struct Args {
     ws_server: String,
 
     /// Host for json rpc
-    #[arg(long, default_value = "0.0.0.0:4447", value_name = "JSON_RPC")]
+    #[arg(long, default_value = "0.0.0.0:9002", value_name = "JSON_RPC")]
     json_rpc: String,
 
     /// Config server file name, if not set ws_server , read this file

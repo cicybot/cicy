@@ -127,7 +127,9 @@ const BrowserAccountsTable = () => {
                 }}
                 open={!!detail}
             >
-                {detail && <BrowserAccountDetail row={detail}></BrowserAccountDetail>}
+                <View p12>
+                    {detail && <BrowserAccountDetail row={detail}></BrowserAccountDetail>}
+                </View>
             </Drawer>
         </View>
     );
