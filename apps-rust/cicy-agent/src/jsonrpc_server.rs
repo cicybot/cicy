@@ -387,7 +387,7 @@ pub fn handle_method_call(method: &str, params: &Option<serde_json::Value>) -> (
             if let Some(serde_json::Value::Array(arr)) = params {
                 if let Some(serde_json::Value::String(url)) = arr.get(0) {
                     if let Some(serde_json::Value::String(save_path)) = arr.get(0) {
-                        match shell::exec_cmd(&format!("{} --download-url {} --save-path {}",current_exe().unwrap().display(),url, save_path)) {
+                        match shell::exec_cmd(&format!("{} --curl {} --output {}",current_exe().unwrap().display(),url, save_path)) {
                             Ok(output) => (None, serde_json::json!(output)),
                             Err(e) => (
                                 Some(format!("{:?}", e).to_string()),

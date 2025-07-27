@@ -33,3 +33,4 @@
 
     cargo build --target=x86_64-linux-android --release
 
+    adb forward tcp:9100 tcp:9100

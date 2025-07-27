@@ -12,14 +12,11 @@ pub fn get_device_info() -> serde_json::Value {
         echo model:$(getprop ro.product.model)
         echo abi:$(getprop ro.product.cpu.abi)
         echo vpn:$(ifconfig | grep 'tun')
-        echo serverUrl:$(cat /data/local/tmp/config_server.txt 2>/dev/null)
         echo isRoot:$(ls //system/bin/su 2>/dev/null)
         echo agentAppInstalled:$(pm list packages | grep com.cicy.agent.alpha)
         echo agentAppRunning:$(pidof com.cicy.agent.alpha)
         echo agentAppUploaded:$(ls /data/local/tmp/app.apk 2>/dev/null)
         echo agentPid:$(cat /data/local/tmp/daemon.pid 2>/dev/null)
-        echo recordingIsReady:$(dumpsys media_projection | grep com.cicy.agent.alpha)
-        echo inputIsReady:$(settings get secure enabled_accessibility_services | grep com.cicy.agent.adr.InputService)
     "#;
 
     let output = if is_android_linux() {
@@ -51,7 +48,7 @@ pub fn get_device_info() -> serde_json::Value {
     }
 
         // Now convert specific keys to bool
-        for key in &["agentAppInstalled","vpn","isRoot","recordingIsReady", "agentAppRunning", "inputIsReady","agentAppUploaded"] {
+        for key in &["agentAppInstalled","vpn","isRoot", "agentAppRunning","agentAppUploaded"] {
         if let Some(value) = map.get(*key) {
             let is_true = match value {
                 serde_json::Value::String(s) => !s.is_empty(),
@@ -79,8 +76,6 @@ pub fn get_device_info_min() -> serde_json::Value {
         echo clientId:ADR-$(getprop ro.product.brand)-$(getprop ro.product.model)
         echo agentAppRunning:$(pidof com.cicy.agent.alpha)
         echo ipAddress:$(ifconfig | grep 'inet addr' | grep Bcast | awk '{print $2}')
-        echo recordingIsReady:$(dumpsys media_projection | grep com.cicy.agent.alpha)
-        echo inputIsReady:$(settings get secure enabled_accessibility_services | grep com.cicy.agent.adr.InputService)
     "#;
 
     let output = if is_android_linux() {
@@ -104,7 +99,6 @@ pub fn get_device_info_min() -> serde_json::Value {
         if let Some((key, value)) = line.trim().split_once(':') {
             let clean_value = match key.to_string().as_str() {
                 "ipAddress" => value.trim().strip_prefix("addr:").unwrap_or(value.trim()).to_string(),
-                "ccAgentAppHttpServer" => value.trim().strip_prefix("*:").unwrap_or(value.trim()).to_string(),
                 _ => value.trim().to_string(),
             };
             map.insert(key.to_string(), serde_json::Value::String(clean_value));
@@ -112,7 +106,7 @@ pub fn get_device_info_min() -> serde_json::Value {
     }
 
     // Now convert specific keys to bool
-    for key in &["agentAppRunning","recordingIsReady","inputIsReady"] {
+    for key in &["agentAppRunning"] {
         if let Some(value) = map.get(*key) {
             let is_true = match value {
                 serde_json::Value::String(s) => !s.is_empty(),

@@ -10,13 +10,9 @@ use tokio::signal::unix::{SignalKind};
 use tokio::time::{sleep, Duration};
 use std::env;
 use reqwest;
-use std::env::current_exe;
 
 use std::process;
-#[cfg(unix)]
-use libc;
 
-mod ws_client;
 mod jsonrpc_server;
 mod device;
 mod shell;
@@ -24,6 +20,7 @@ mod file;
 mod utils;
 
 mod downloader;
+mod daemon;
 
 const PID_FILE: &str = "daemon.pid";
 
@@ -33,6 +30,15 @@ struct Args {
     /// Run as daemon
     #[arg(short = 'd', long)]
     daemon: bool,
+
+    #[arg(long, default_value = "", value_name = "RUN_DAEMON")]
+    run_daemon: String,
+
+    #[arg(long, default_value = "", value_name = "RUN_DAEMON_NAME")]
+    run_daemon_name: String,
+
+    #[arg(long, default_value = "", value_name = "STOP_DAEMON")]
+    stop_daemon: String,
 
     /// Stop the daemon
     #[arg(long)]
@@ -45,25 +51,17 @@ struct Args {
     #[arg(long)]
     device_info: bool,
 
-    /// CC server host : ws://127.0.0.1:3101/ws
-    #[arg(long, default_value = "",)]
-    ws_server: String,
-
     /// Host for json rpc
-    #[arg(long, default_value = "0.0.0.0:9002", value_name = "JSON_RPC")]
+    #[arg(long, default_value = "0.0.0.0:9100", value_name = "JSON_RPC")]
     json_rpc: String,
 
-    /// Config server file name, if not set ws_server , read this file
-    #[arg(long, default_value = "config_server.txt", value_name = "CONFIG_SERVER")]
-    config_server: String,
-
-    /// Download Url
-    #[arg(long, default_value = "", value_name = "DOWNLOAD_URL")]
-    download_url: String,
+    /// Request Url
+    #[arg(long, default_value = "", value_name = "CURL")]
+    curl: String,
 
     /// Save Path
-    #[arg(long, default_value = "", value_name = "SAVE_PATH")]
-    save_path: String,
+    #[arg(long, default_value = "", value_name = "OUTPUT")]
+    output: String,
 
     #[arg(long = "loop", hide = true)]
     loop_mode: bool,
@@ -76,7 +74,7 @@ fn is_loop_mode() -> bool {
 fn run_daemon() {
     if fs::metadata(PID_FILE).is_ok() {
         info!("[*] Previous daemon detected. Stopping it first...");
-        stop_daemon();
+        daemon::stop_daemon(PID_FILE.parse().unwrap());
         // Give it a second to shut down
         thread::sleep(Duration::from_secs(1));
     }
@@ -96,37 +94,8 @@ fn run_daemon() {
         }
     };
 
-
     fs::write(PID_FILE, child.id().to_string()).expect("Failed to write pid file");
     info!("[+] Daemon started with PID {}", child.id());
-}
-
-fn stop_daemon() {
-    match fs::read_to_string(PID_FILE) {
-        Ok(pid_str) => {
-            if let Ok(pid) = pid_str.trim().parse::<i32>() {
-                info!("[+] Stopping daemon with PID {}...", pid);
-                #[cfg(unix)]
-                unsafe {
-                    libc::kill(pid, libc::SIGTERM);
-                }
-                #[cfg(windows)]
-                {
-                    Command::new("taskkill")
-                        .args(&["/PID", &pid.to_string(), "/F"])
-                        .status()
-                        .expect("Failed to stop process");
-                }
-                fs::remove_file(PID_FILE).ok();
-                info!("[+] Daemon stopped.");
-            } else {
-                error!("[-] Invalid PID file");
-            }
-        }
-        Err(_) => {
-            error!("[-] Daemon not running (no PID file)");
-        }
-    }
 }
 
 
@@ -167,39 +136,9 @@ async fn daemon_loop(args: &Args) {
     let device_info = device::get_device_info_min();
     info!("[+] [DeviceInfo]:{}",device_info);
 
-    let client_id = device_info.get("clientId").unwrap_or(&"".into()).to_string().replace("\"","");
-    if client_id.is_empty() {
-        println!("[-] No CLIENT ID provided.");
-        exit(1);
-    }
-    info!("Client Id: {}", client_id);
     info!("JSON Server: {}", args.json_rpc);
-    info!("WS Server: {}", args.ws_server);
-    info!("Client Server: {}", args.config_server);
 
     let jsonrpc_addr = args.json_rpc.clone();
-
-    let mut ws_server = args.ws_server.clone();
-
-    if ws_server.trim().is_empty() {
-        ws_server = match fs::read_to_string(&args.config_server) {
-            Ok(s) => {
-                let trimmed = s.trim();
-                if trimmed.is_empty() {
-                    error!("[-] Config file {} is empty", &args.config_server);
-                    exit(1);
-                } else {
-                    trimmed.to_string()
-                }
-            }
-            Err(e) => {
-                error!("[-] Failed to read ws_server from {}: {}", &args.config_server, e);
-                exit(1);
-            }
-        };
-    }
-
-    info!("[+] ws_server: {}", ws_server);
 
     // 启动 JSON-RPC 服务器任务
     let jsonrpc_handle = tokio::spawn(async move {
@@ -209,13 +148,6 @@ async fn daemon_loop(args: &Args) {
     // Setup signals
     let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate()).expect("Cannot listen SIGTERM");
     let mut sigint = tokio::signal::unix::signal(SignalKind::interrupt()).expect("Cannot listen SIGINT");
-
-    // let pid = process::id().to_string();
-
-    // let ws_server_cloned = ws_server.clone();
-    // let ws_handle = tokio::spawn(async move {
-    //     ws_client::connect_cc_server_forever(&ws_server_cloned, &client_id).await;
-    // });
 
     loop {
         tokio::select! {
@@ -238,9 +170,6 @@ async fn daemon_loop(args: &Args) {
     }
 
     info!("Shutting down daemon_loop");
-
-    // Cancel WS task
-    // ws_handle.abort();
     jsonrpc_handle.abort();
 
 }
@@ -287,6 +216,8 @@ async fn main() {
         .unwrap();
     debug!("is_android_linux: {}",utils::is_android_linux());
     debug!("This will be logged to run.log file");
+    // daemon::run_daemon("/sbin/ping 127.0.0.1 >> /tmp/ping.log","ping");
+
     if is_loop_mode() {
         info!("[+] Daemon loop running...");
         daemon_loop(&args).await;
@@ -294,12 +225,16 @@ async fn main() {
     }
 
     if args.stop {
-        stop_daemon();
+        daemon::stop_daemon(PID_FILE.parse().unwrap());
     } else if args.daemon {
         run_daemon();
-    } else if !args.download_url.is_empty() && !args.save_path.is_empty() {
-        info!("{}",&format!("current_exe: {}", current_exe().unwrap().display()));
-        let res = match reqwest::get(args.download_url).await{
+    } else if !args.stop_daemon.is_empty() {
+        daemon::stop_daemon_name(args.stop_daemon);
+    } else if !args.run_daemon.is_empty() && !args.run_daemon_name.is_empty() {
+        daemon::run_daemon(args.run_daemon.as_str(),args.run_daemon_name.as_str());
+    } else if !args.curl.is_empty() {
+
+        let res = match reqwest::get(args.curl).await{
             Ok(res) => res,
             Err(e)=>{
                 error!("[-] Failed to send request to daemon: {}", e);
@@ -307,7 +242,7 @@ async fn main() {
             }
         };
         info!("Response: {:?} {}", res.version(), res.status());
-        info!("Headers: {:#?}\n", res.headers());
+        info!("Headers: {:#?}", res.headers());
         let body = match res.bytes().await{
             Ok(body) => body,
             Err(e)=>{
@@ -315,12 +250,16 @@ async fn main() {
                 exit(1)
             }
         };
-        let err = fs::write(args.save_path, body);
-        if err.is_err() {
-            error!("[-] Failed to write to /tmp/test: {}", err.unwrap_err());
-            exit(1);
+        println!("{:?}", body);
+
+        if !args.output.is_empty(){
+            let err = fs::write(args.output, body);
+            if err.is_err() {
+                error!("[-] Failed to write : {}", err.unwrap_err());
+                exit(1);
+            }
+            info!("Saved!!");
         }
-        info!("Saved!!");
     } else if args.device_info {
         let device_info = device::get_device_info();
         print!("{}",device_info)
