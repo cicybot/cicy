@@ -10,6 +10,7 @@ pub fn handle_shell_call(
         "exec" => {
             if let Some(serde_json::Value::Array(arr)) = params {
                 if let Some(serde_json::Value::String(cmd)) = arr.get(0) {
+                    println!("exec: {}", cmd);
                     match shell::exec_cmd(cmd) {
                         Ok(output) => (None, serde_json::json!(output)),
                         Err(e) => (

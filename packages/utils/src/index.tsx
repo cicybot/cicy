@@ -15,7 +15,10 @@ export {
     waitForResult
 } from './common/utils';
 export { default as useLocalStorageState } from './hooks/useLocalStorageState';
-export { default as useSessionStorageState } from './hooks/useSessionStorageState';
+export {
+    default as useSessionStorageState,
+    getSessionStoredValue
+} from './hooks/useSessionStorageState';
 
 export { default as useInterval } from './hooks/useInterval';
 export { default as useTimeoutLoop } from './hooks/useTimeoutLoop';

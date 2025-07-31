@@ -57,7 +57,16 @@ export default class BrowserService {
         });
     }
 
-    async openWindow(options?: { url?: string; noWebview?: boolean }) {
+    async openWindow(options?: {
+        url?: string;
+        noWebview?: boolean;
+        windowOptions?: {
+            width?: number;
+            height?: number;
+            minWidth?: number;
+            minHeight?: number;
+        };
+    }) {
         if (options?.noWebview && !window.backgroundApi) {
             window.open(this.url);
             return;
@@ -71,7 +80,9 @@ export default class BrowserService {
         if (err) {
             throw new Error(err);
         }
-        await this.waitOnline();
+        if (!options?.noWebview) {
+            await this.waitOnline();
+        }
     }
 
     async waitOnline() {

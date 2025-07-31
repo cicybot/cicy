@@ -5,16 +5,14 @@ import { AndroidConnectorPage } from './AndroidConnectorPage';
 import { useLocalStorageState, useTimeoutLoop } from '@cicy/utils';
 import CCAndroidConnectorClient, { AdbDevice } from '../../services/cicy/CCAndroidConnectorClient';
 import { Select } from 'antd';
-import { AndroidConnectorDetail } from './AndroidConnectorDetail';
+import AdrDevicesTable from '../Tables/AdrDevicesTable';
 
 export const AndroidConnectorInner = ({
-    allClients,
     clients
 }: {
-    allClients: string[];
     clients: { value: string; label: any }[];
 }) => {
-    const [devices, setDevices] = useState<AdbDevice[]>([]);
+    const [devices, setDevices] = useState<Map<string, AdbDevice>>(new Map());
     const connector = new CCAndroidConnectorClient();
     const [clientId, setClientId] = useLocalStorageState('androidClientId', '');
     if (clientId) {
@@ -22,50 +20,23 @@ export const AndroidConnectorInner = ({
     }
     const onChangeClient = (value: string) => {
         setClientId(value);
-        setDevices([]);
+        setDevices(new Map());
     };
-    console.log('clients', clients, devices);
     useTimeoutLoop(async () => {
         try {
             const devices = await connector.getDeviceList();
-            const diffDevices = (aa: any, bb: any) => {
-                aa.sort(
-                    (b: AdbDevice, a: AdbDevice) =>
-                        parseInt(a.transport_id) - parseInt(b.transport_id)
-                );
-                bb.sort(
-                    (b: AdbDevice, a: AdbDevice) =>
-                        parseInt(a.transport_id) - parseInt(b.transport_id)
-                );
-
-                for (let i in aa) {
-                    const row_a = aa[i];
-                    const row_b = aa[i];
-                    for (let key in row_a) {
-                        if (row_b[key] !== row_a[key]) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
-            setDevices(r => {
-                if (r.length === 0 && devices.length === 0) {
-                    return [];
-                }
-                // console.log(diffDevices(devices, r));
-                if (diffDevices(devices, r) || r.length === 0) {
-                    return devices;
-                } else {
-                    return r;
-                }
-            });
+            const devicesMap: Map<string, AdbDevice> = new Map();
+            for (const devicesKey in devices) {
+                const device = devices[devicesKey];
+                devicesMap.set(device.id, device);
+            }
+            setDevices(devicesMap);
         } catch (error) {
             console.error(error);
         }
     }, 1000);
 
-    if (devices.length === 0) {
+    if (devices.size === 0) {
         return (
             <AndroidConnectorPage>
                 <View ml12 rowVCenter mt12>
@@ -76,7 +47,7 @@ export const AndroidConnectorInner = ({
                         size="small"
                         onChange={onChangeClient}
                         value={clientId}
-                        style={{ width: 260 }}
+                        style={{ width: 200 }}
                         options={clients}
                     />
                 </View>
@@ -93,15 +64,11 @@ export const AndroidConnectorInner = ({
             </AndroidConnectorPage>
         );
     }
-    console.log('[+] devices:', devices);
+    const deviceList = Array.from(devices).map(row => row[1]);
+    deviceList.sort((a, b) => a.transport_id - b.transport_id);
     return (
-        <AndroidConnectorDetail
-            allClients={allClients}
-            onChangeClient={onChangeClient}
-            clients={clients}
-            clientId={clientId}
-            connector={connector}
-            devices={devices}
-        ></AndroidConnectorDetail>
+        <AndroidConnectorPage>
+            <AdrDevicesTable connectClientId={clientId} devices={deviceList}></AdrDevicesTable>
+        </AndroidConnectorPage>
     );
 };

@@ -185,8 +185,7 @@ export class MainWindow {
             const { webPreferences, ...props } = this.getOptions();
             const { webPreferences: webPreferences1, ...props1 } = windowOptions;
             const savedBounds = loadBounds(winId);
-
-            win = new BrowserWindow({
+            const o = {
                 ...props,
                 webPreferences: {
                     ...webPreferences,
@@ -197,8 +196,10 @@ export class MainWindow {
                 width: savedBounds?.width || 1024,
                 height: savedBounds?.height || 820,
                 ...props1
-            });
+            };
 
+            console.log('BrowserWindow', o);
+            win = new BrowserWindow(o);
             this.windows.set(winId, win);
 
             win.on('close', (e: any) => {
@@ -213,12 +214,43 @@ export class MainWindow {
             });
             url && win.loadURL(url);
         } else {
+            if (windowOptions && windowOptions.width) {
+                win.setBounds({
+                    width: windowOptions.width
+                });
+            }
+            if (windowOptions && windowOptions.height) {
+                win.setBounds({
+                    height: windowOptions.height
+                });
+            }
+
+            if (windowOptions.minWidth && windowOptions.minHeight) {
+                win.setMinimumSize(windowOptions.minWidth, windowOptions.minHeight);
+            }
+
             if (win.isMinimized()) {
                 win.restore();
             }
             win.show();
             win.focus();
         }
+
+        win.webContents.on('dom-ready', () => {
+            win.webContents.executeJavaScript(`sessionStorage.setItem("__winId","${winId}")`);
+
+            if (windowOptions.width) {
+                win.webContents.executeJavaScript(
+                    `sessionStorage.setItem("__width","${windowOptions.width}")`
+                );
+            }
+            if (windowOptions.height) {
+                win.webContents.executeJavaScript(
+                    `sessionStorage.setItem("__height","${windowOptions.height}")`
+                );
+            }
+        });
+
         if (openDevTools) {
             win.webContents.openDevTools({ mode: 'detach' });
         }

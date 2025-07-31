@@ -3,6 +3,18 @@ import type { TabsProps } from 'antd';
 import { Button, Input, Tabs } from 'antd';
 import View from '../View';
 
+import styled from 'styled-components';
+
+const StyledTabs = styled(Tabs)`
+    .ant-tabs-content-holder {
+        position: absolute;
+        top: 54px;
+        overflow-y: auto;
+        left: 0;
+        right: 0;
+        bottom: 8px;
+    }
+`;
 export function SelectedNodeView(props: {
     inputText: any;
     selectedNode: any;
@@ -18,45 +30,15 @@ export function SelectedNodeView(props: {
         'class',
         'package',
         'content-desc',
-        'bounds',
         'selected'
     ];
-    const onChange = (key: string) => {
-        console.log('onChange tab', key);
-    };
+
     const items: TabsProps['items'] = [
         {
             key: '1',
             label: '信息',
             children: (
                 <ProDescriptions column={1}>
-                    <View>
-                        <Button
-                            size="small"
-                            onClick={() => {
-                                onClickNode(currentClickPoint);
-                            }}
-                        >
-                            点击: {currentClickPoint.x} / {currentClickPoint.y}
-                        </Button>
-                    </View>
-                    <View rowVCenter>
-                        <Button
-                            size="small"
-                            onClick={() => {
-                                //@ts-ignore
-                                inputText(document.querySelector('#text')?.value! as string);
-                            }}
-                        >
-                            输入
-                        </Button>
-                        <Input
-                            style={{ marginLeft: 12, width: 120 }}
-                            size="small"
-                            type="text"
-                            id="text"
-                        />
-                    </View>
                     {Object.keys(selectedNode)
                         .filter(key => keysFilter.includes(key))
                         .map(key => {
@@ -73,9 +55,36 @@ export function SelectedNodeView(props: {
             key: '2',
             label: '其他',
             children: (
-                <ProDescriptions column={1}>
+                <ProDescriptions column={2}>
                     {Object.keys(selectedNode)
-                        .filter(key => !keysFilter.includes(key))
+                        .filter(key => ![...keysFilter, 'bounds'].includes(key))
+                        .map(key => {
+                            return (
+                                <ProDescriptions.Item key={key} label={key}>
+                                    <ProField text={selectedNode[key]} mode="read" />
+                                </ProDescriptions.Item>
+                            );
+                        })}
+                </ProDescriptions>
+            )
+        },
+        {
+            key: '3',
+            label: '尺寸',
+            children: (
+                <ProDescriptions column={1}>
+                    <View>
+                        <Button
+                            size="small"
+                            onClick={() => {
+                                onClickNode(currentClickPoint);
+                            }}
+                        >
+                            点击: {currentClickPoint.x} / {currentClickPoint.y}
+                        </Button>
+                    </View>
+                    {Object.keys(selectedNode)
+                        .filter(key => ['bounds'].includes(key))
                         .map(key => {
                             return (
                                 <ProDescriptions.Item key={key} label={key}>
@@ -87,5 +96,5 @@ export function SelectedNodeView(props: {
             )
         }
     ];
-    return <Tabs defaultActiveKey="1" items={items} onChange={onChange} />;
+    return <StyledTabs defaultActiveKey="1" items={items} onChange={() => {}} />;
 }

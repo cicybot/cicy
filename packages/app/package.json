@@ -5,6 +5,11 @@
     "description": "cc/app",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "scripts": {
+        "start": "tsc -w",
+        "build": "tsc",
+        "build:pkg": "rm -fr dist && yarn build"
+    },
     "dependencies": {
         "@ant-design/pro-components": "^2.8.9",
         "@ant-design/x": "^1.4.0",
@@ -51,11 +56,6 @@
         "react-is": "^18.2.0",
         "ts-node": "^10.9.1",
         "typescript": "5.2.2"
-    },
-    "scripts": {
-        "start": "tsc -w",
-        "build": "tsc",
-        "build:pkg": "rm -fr dist && yarn build"
     },
     "browserslist": {
         "production": [

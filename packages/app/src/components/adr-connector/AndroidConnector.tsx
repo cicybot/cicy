@@ -12,9 +12,12 @@ export const AndroidConnector = ({ isLeiDian }: { isLeiDian?: boolean }) => {
     const clients = (clientsData || [])
         .filter((clientId: string) => clientId.startsWith('CONNECTOR-'))
         .map((clientId: string) => {
+            const t = clientId.split('-');
+            t.pop();
+            t.shift();
             return {
                 value: clientId,
-                label: <span>{clientId}</span>
+                label: <span>{t.join('-')}</span>
             };
         });
 
@@ -40,7 +43,5 @@ export const AndroidConnector = ({ isLeiDian }: { isLeiDian?: boolean }) => {
     if (isLeiDian) {
         return <AndroidLeiDian allClients={clientsData} clients={clients}></AndroidLeiDian>;
     }
-    return (
-        <AndroidConnectorInner allClients={clientsData} clients={clients}></AndroidConnectorInner>
-    );
+    return <AndroidConnectorInner clients={clients}></AndroidConnectorInner>;
 };

@@ -85,13 +85,16 @@ const HomePage = () => {
             </View>
         );
     }
-    const sideBarWidth = 220;
-
+    let sideBarWidth = 220;
+    let minSideBar = true;
+    if (minSideBar) {
+        sideBarWidth = 76;
+    }
     return (
         <MainWindowProvider>
             <View wh100p>
                 <View h100vh w={sideBarWidth} borderBox>
-                    <SizeBar></SizeBar>
+                    <SizeBar sideBarWidth={sideBarWidth} minSideBar={minSideBar}></SizeBar>
                 </View>
                 <View absFull left={sideBarWidth}>
                     <Outlet></Outlet>

@@ -564,12 +564,26 @@ export const handleMsg = async (action: string, payload: any) => {
                             win.setTitle(title);
                             break;
                         }
+
+                        case 'getBounds': {
+                            res = win.getBounds();
+                            break;
+                        }
                         case 'setBounds': {
                             const { rect, animate } = params || {};
                             win.setBounds({ ...rect }, !!animate);
                             break;
                         }
-
+                        case 'setResizable': {
+                            const { resizable } = params || {};
+                            win.setResizable(resizable);
+                            break;
+                        }
+                        case 'setMinimumSize': {
+                            const { width, height } = params || {};
+                            win.setMinimumSize(width, height);
+                            break;
+                        }
                         case 'close': {
                             win.close();
                             break;

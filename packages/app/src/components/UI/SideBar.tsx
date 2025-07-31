@@ -7,22 +7,22 @@ import { useLocation, useNavigate } from 'react-router';
 type MenuItem = Required<MenuProps>['items'][number];
 
 const items: MenuItem[] = [
-    { key: '/clients', icon: <LinkOutlined />, label: '客户端' },
     { key: '/android', icon: <AndroidOutlined />, label: '安卓连接器' },
     { key: '/leidian', icon: <SettingOutlined />, label: '安卓模拟器' },
+    { key: '/clients', icon: <LinkOutlined />, label: '客户端' },
     { key: '/sites', icon: <WindowsOutlined />, label: '站点' },
     { key: '/browserAccounts', icon: <SettingOutlined />, label: '浏览器帐户' },
     { key: '/setting', icon: <SettingOutlined />, label: '设置' }
 ];
 
-const SizeBar: React.FC = () => {
+const SizeBar = ({ sideBarWidth, minSideBar }: { sideBarWidth: number; minSideBar: boolean }) => {
     let navigate = useNavigate();
     let location = useLocation();
     return (
         <Menu
-            defaultSelectedKeys={[location.pathname === '/' ? '/clients' : location.pathname]}
+            defaultSelectedKeys={[location.pathname === '/' ? '/android' : location.pathname]}
             mode="inline"
-            style={{ width: '100%', height: '100%', paddingInline: 12, paddingTop: 24 }}
+            style={{ width: sideBarWidth, height: '100%', paddingInline: 12, paddingTop: 24 }}
             onSelect={({ key }: { key: string }) => {
                 switch (key) {
                     default:
@@ -31,7 +31,7 @@ const SizeBar: React.FC = () => {
                 }
             }}
             theme="dark"
-            inlineCollapsed={false}
+            inlineCollapsed={minSideBar}
             items={items}
         />
     );

@@ -254,7 +254,7 @@ mod tests {
     #[test]
     fn test_shell_exec() {
         let text =
-            r#"{"id":"1","action":"shell","payload":{"method":"exec","params":["lsw -alh"]}}"#;
+            r#"{"id":"1","action":"shell","payload":{"method":"exec","params":["adb shell sh /data/local/tmp/boot.sh"]}}"#;
         let msg: Result<IncomingMessage, _> = serde_json::from_str(text);
         match msg {
             Ok(incoming) => {

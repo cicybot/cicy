@@ -16,7 +16,7 @@ import { ModelHelper } from '../services/model/ModelHelper';
 
 const router = createHashRouter([
     {
-        path: '/android/detail/:clientId',
+        path: '/android/detail/:clientId/:sn/:deviceId/:id',
         Component: AndroidDetail
     },
     {
@@ -29,7 +29,7 @@ const router = createHashRouter([
         children: [
             {
                 index: true,
-                element: <Navigate to="/clients" replace />
+                element: <Navigate to="/android" replace />
             },
             {
                 path: 'clients',

@@ -50,7 +50,7 @@ export const UploadAgentButton = ({
                             const serverUrl = CCWSClient.formatServerUrl(cacheServerIp);
                             const isLocalServer = CCWSClient.isLocalServer();
 
-                            let abi = await connector.getDevcieCpuAbi();
+                            let abi = await connector.getDeviceCpuAbi();
                             if (abi.includes('arm64')) {
                                 abi = 'arm64';
                             } else if (abi.includes('armeabi')) {

@@ -56,7 +56,10 @@ export class CCWSClient {
 
     static _send(message: string) {
         if (__ws && __ws.readyState === WebSocket.OPEN) {
-            console.debug('[+] [SEND] ' + message);
+            if (message.indexOf('__clients') === -1 && message.indexOf('__info') === -1) {
+                console.debug('[+] [SEND] ' + message);
+            }
+
             __ws.send(message);
         } else {
             throw new Error('ws client state not open');

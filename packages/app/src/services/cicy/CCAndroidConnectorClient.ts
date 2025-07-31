@@ -1,67 +1,59 @@
 import CCBaseAgentClient from './CCBaseAgentClient';
 import { DeviceInfo } from './CCWSAgentClient';
+import { v4 as uuid } from 'uuid';
 
 export interface AdbDevice {
     id: string;
+    sn: string;
     type: string;
     model: string;
     usb: string;
     product: string;
     device: string;
-    transport_id: string;
+    transport_id: number;
 }
 
 export default class CCAndroidConnectorClient extends CCBaseAgentClient {
-    transportId?: string;
+    sn?: string;
+    private device: AdbDevice | undefined;
 
     constructor() {
         super();
     }
 
-    setTransportId(transportId: string) {
-        this.transportId = transportId;
+    setSn(sn: string) {
+        this.sn = sn;
     }
 
-    async adb(cmd: string) {
-        return this.shellExec(`adb ${cmd}`);
+    async adb(cmd: string, useDevice?: boolean) {
+        if (useDevice) {
+            if (!this.sn) {
+                throw new Error('no sn for adb device');
+            }
+            return await this.shellExec(`adb -s ${this.sn} ${cmd}`);
+        } else {
+            return await this.shellExec(`adb  ${cmd}`);
+        }
     }
 
     async shellExec(cmd: string) {
-        return this._apiShell('exec', `${cmd}`);
+        return await this._apiShell('exec', `${cmd}`);
     }
 
     async deviceAdb(cmd: string) {
-        if (!this.transportId) {
-            throw new Error('no transportId');
-        }
-        return this.adb(`-t ${this.transportId} ${cmd}`);
+        return await this.adb(`${cmd}`, true);
     }
 
     async deviceAdbShell(cmd: string) {
-        return this.deviceAdb(`shell ${cmd}`);
+        return await this.deviceAdb(`shell ${cmd}`);
     }
 
-    async getDevcieProps(props: string) {
+    async getDeviceProps(props: string) {
         return this.deviceAdbShell('getprop ' + props);
     }
 
     async deviceScreenShot(deviceInfo: DeviceInfo) {
-        // const { agentPid, agentAppRunning, ipAddress, recordingIsReady } = deviceInfo;
         try {
-            // if (agentAppRunning && recordingIsReady) {
-            //     const res = await fetch(`http://${ipAddress}:4448/screen`);
-            //     const { result } = await res.json();
-            //     const { imgData } = result;
-            //     return imgData;
-            // } else if (agentPid) {
-            //     const res = await fetch(`http://${ipAddress}:4447/screen`);
-            //     const arrayBuffer = await res.arrayBuffer();
-            //     return `data:image/png;base64,${await arrayBufferToBase64(arrayBuffer)}`;
-            // } else {
-            //     await this.deviceAdbShell('screencap /data/local/tmp/screen.png');
-            //     const res = await this.deviceAdbShell('base64 -i /data/local/tmp/screen.png');
-            //     return `data:image/png;base64,${res}`;
-            // }
             await this.deviceAdbShell('screencap /data/local/tmp/screen.png');
             const res = await this.deviceAdbShell('base64 -i /data/local/tmp/screen.png');
             return `data:image/png;base64,${res}`;
@@ -71,8 +63,8 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
         }
     }
 
-    async getDevcieCpuAbi() {
-        return this.getDevcieProps('ro.product.cpu.abi');
+    async getDeviceCpuAbi() {
+        return this.getDeviceProps('ro.product.cpu.abi');
     }
 
     async deviceAdbPush(local: string, remote: string) {
@@ -122,7 +114,7 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
                         if (index === 0) {
                             device = {
                                 ...device,
-                                ...{ id: row }
+                                ...{ id: row, sn: row }
                             };
                         } else if (index === 1) {
                             device = {
@@ -140,6 +132,97 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
 
                 return device;
             });
-        return devices;
+        return devices.map((row: AdbDevice) => {
+            return {
+                ...row,
+                transport_id: Number(row.transport_id)
+            };
+        });
+    }
+
+    async fileWrite(file: string, content: string) {
+        return await this._apiFile('write', [file, content]);
+    }
+
+    async fileRead(file: string) {
+        return await this._apiFile('read', [file]);
+    }
+
+    async deviceAdbForward(localPort: number, remotePort: number) {
+        return await this.deviceAdb(`forward tcp:${localPort} tcp:${remotePort}`);
+    }
+
+    async saveDeviceSh() {
+        await this.fileWrite(
+            'device.sh',
+            `
+if [ "$1" = "deviceInfo" ]
+then
+
+echo deviceId:$(touch /data/local/tmp/id && cat /data/local/tmp/id)
+echo userRotation:$(wm user-rotation)
+echo brand:$(getprop ro.product.brand)
+echo sn:$(getprop ro.serialno)
+echo model:$(getprop ro.product.model)
+echo abi:$(getprop ro.product.cpu.abi)
+echo abilist:$(getprop ro.product.cpu.abilist)
+echo releaseVersion:$(getprop ro.build.version.release)
+echo sdkVersion:$(getprop ro.build.version.sdk)
+echo $(wm size)
+echo $(wm density)
+echo tun:$(ifconfig | grep 'tun')
+echo isRoot:$(ls /system/bin/su 2>/dev/null)
+echo vpnAppInstalled:$(pm list packages | grep com.cicy.agent.alpha)
+echo vpnAppRunning:$(pidof com.cicy.agent.alpha)
+netstat -tnlp | grep LISTEN | grep app_process
+ifconfig | grep "Link "
+ifconfig | grep "inet "
+fi`
+        );
+    }
+    async handleDeviceInfo() {
+        await this.saveDeviceSh();
+        await this.deviceAdbPush('device.sh', '/data/local/tmp');
+        return this.getDeviceInfo();
+    }
+
+    async getDeviceInfo() {
+        const deviceInfo = await this.deviceAdbShell('sh /data/local/tmp/device.sh deviceInfo');
+        const ports = [];
+        const netIfNames = [];
+        const netIps = [];
+        const lines = deviceInfo.split('\n');
+        const info: any = {};
+        for (const linesKey in lines) {
+            const line = lines[linesKey].trim();
+            if (line.indexOf('LISTEN') > -1) {
+                ports.push(parseInt(line.split('[::]:')[1].split(' ')[0]));
+            } else if (line.indexOf('Link ') > -1) {
+                netIfNames.push(line.split(' ')[0]);
+            } else if (line.indexOf('inet ') > -1) {
+                netIps.push(line.split('inet addr:')[1].split(' ')[0]);
+            } else {
+                const t = line.split(':');
+                const key = t[0].replace('Physical ', '').trim();
+                info[key] = line.replace(t[0] + ':', '').trim();
+                if (key === 'size') {
+                    info['width'] = parseInt(info[key].split('x')[0]);
+                    info['height'] = parseInt(info[key].split('x')[1]);
+                }
+            }
+        }
+        info['sdkVersion'] = parseInt(info['sdkVersion']);
+        info['releaseVersion'] = parseInt(info['releaseVersion']);
+        info['density'] = parseInt(info['density']);
+
+        if (!info.deviceId) {
+            info.deviceId = uuid();
+            await this.deviceAdbShell(`echo ${info.deviceId} > /data/local/tmp/id`);
+        }
+        info['ports'] = ports;
+        info['netIps'] = netIps;
+        info['netIfNames'] = netIfNames;
+        info['ts'] = Date.now();
+        return info;
     }
 }

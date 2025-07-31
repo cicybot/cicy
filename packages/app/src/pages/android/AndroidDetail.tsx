@@ -1,65 +1,58 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import View from '../../components/View';
+import CCAndroidConnectorClient from '../../services/cicy/CCAndroidConnectorClient';
 import { connectCCServer } from '../../services/cicy/CCWSClient';
-
-import Loading from '../../components/UI/Loading';
-import CCAgentClient from '../../services/cicy/CCWSAgentClient';
-import { useTimeoutLoop } from '@cicy/utils';
-import AndroidDetailWrap from '../../components/adr-detail/AndroidDetailWrap';
+import { AdrDeviceInfo, AdrDeviceModel } from '../../services/model/AdrDeviceModel';
+import Screen from '../../components/adr-detail/screen/Screen';
+import SizeBarScreen from '../../components/UI/SideBarScreen';
+import { useSessionStorageState } from '@cicy/utils';
 
 const AndroidDetail = () => {
-    const { clientId } = useParams();
-    const [wsConnected, setWsConnected] = useState(false);
-    const [isOnline, setIsOnLine] = useState(false);
-    const agent = new CCAgentClient(clientId!);
+    const { clientId, sn, deviceId, id } = useParams();
+    const connector = new CCAndroidConnectorClient();
+    connector.setClientId(clientId as string);
+    connector.setSn(sn as string);
+    const [isSettingOpen, setIsSettingOpen] = useSessionStorageState('isSettingOpen', false);
+
+    const [deviceInfo, setDeviceInfo] = useState<null | AdrDeviceInfo>(null);
+
+    function getDeviceInfo() {
+        connector.getDeviceInfo().then(res => {
+            setDeviceInfo(res);
+        });
+    }
     useEffect(() => {
         //@ts-ignore
-        document.title = clientId;
-    }, [clientId]);
-    useEffect(() => {
-        if (!clientId) {
-            return;
-        }
-        connectCCServer(clientId + '-MANAGE', {
+        document.title = sn;
+        connectCCServer('ADR-' + sn, {
             onLogged: () => {
-                setWsConnected(true);
-                agent.isAppOnline().then(isOnline => {
-                    setIsOnLine(isOnline);
-                });
+                getDeviceInfo();
             },
             onMessage: message => {},
-            onClose: () => {
-                setWsConnected(false);
-            }
+            onClose: () => {}
         });
-    }, [clientId]);
-    console.log({ wsConnected, isOnline });
-    useTimeoutLoop(async () => {
-        if (wsConnected && !isOnline) {
-            const res = await agent.isOnline();
-            if (res) {
-                setIsOnLine(true);
-            }
-        }
-    }, 1000);
-    if (!wsConnected) {
-        return (
-            <View h100vh w100vw center column>
-                <Loading></Loading>
-                <View mt12>正在连接...</View>
-            </View>
-        );
+    }, [sn]);
+    if (!deviceInfo) {
+        return null;
     }
-    if (!isOnline) {
-        return (
-            <View h100vh w100vw center column>
-                <Loading></Loading>
-                <View mt12>{clientId}</View>
-                <View mt12>未启动</View>
+    return (
+        <View w100vw h100vh bgColor={'#393939'} overflowHidden userSelectNone>
+            <View abs left0 w={58} top0 bottom={0}>
+                <SizeBarScreen minSideBar sideBarWidth={58}></SizeBarScreen>
             </View>
-        );
-    }
-    return <AndroidDetailWrap></AndroidDetailWrap>;
+            <View abs left={58} top0 bottom={0} right={0}>
+                <Screen
+                    getDeviceInfo={getDeviceInfo}
+                    connector={connector}
+                    deviceInfo={deviceInfo}
+                    isSettingOpen={isSettingOpen}
+                    setIsSettingOpen={(v: boolean) => setIsSettingOpen(v)}
+                    useKeyEvent
+                    id={parseInt(id as string)}
+                ></Screen>
+            </View>
+        </View>
+    );
 };
 export default AndroidDetail;
