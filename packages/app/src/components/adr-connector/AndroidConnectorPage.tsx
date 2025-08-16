@@ -10,7 +10,7 @@ export const AndroidConnectorPage = ({
     children?: ReactNode;
 }) => {
     return (
-        <View w100p h100vh overflowYAuto relative>
+        <View w100p h100vh relative>
             <View pl12 mt12 mb12>
                 <Breadcrumb
                     items={[
@@ -23,7 +23,7 @@ export const AndroidConnectorPage = ({
                     ]}
                 />
             </View>
-            <View absFull top={44}>
+            <View absFull top={24}>
                 {children}
             </View>
         </View>

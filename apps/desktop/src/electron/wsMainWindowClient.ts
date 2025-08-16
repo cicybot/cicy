@@ -299,6 +299,10 @@ export async function handelCallWebContentsMsg(
                     await webview.session.setProxy({
                         proxyRules
                     });
+                } else {
+                    await webview.session.setProxy({
+                        mode: 'direct'
+                    });
                 }
                 console.log('proxyRules set', {
                     webContentsId,
@@ -517,7 +521,7 @@ export async function handelCallWebContentsMsg(
                 break;
             }
             default:
-                res = await callFunction(webview, action);
+                res = await callFunction(webview, method);
                 break;
         }
     }
@@ -589,7 +593,7 @@ export const handleMsg = async (action: string, payload: any) => {
                             break;
                         }
                         default:
-                            res = await callFunction(win, action);
+                            res = await callFunction(win, method);
                             break;
                     }
                 }
@@ -659,6 +663,10 @@ export function setServerUrl(serverUrl: string) {
     CCClientWebsocket.setServerUrl(serverUrl);
     initConnector(serverUrl, _ts).catch(console.error);
 }
+let __clientId = '';
+export function getConnectorClientId() {
+    return { clientId: __clientId };
+}
 
 export async function initConnector(serverUrl: string, ts: number) {
     const platform = process.platform;
@@ -684,8 +692,8 @@ export async function initConnector(serverUrl: string, ts: number) {
             await execPromise(`chmod +x "${pathCmd}"`);
         }
     }
-
-    const cmd = `"${pathCmd}" -d --ws-server "${serverUrl}" --client-id CONNECTOR-ELECTRON-${platform}-${ts}`;
+    __clientId = `CONNECTOR-ELECTRON-${platform}-${ts}`;
+    const cmd = `"${pathCmd}" -d --ws-server "${serverUrl}" --client-id ${__clientId}`;
 
     console.log('initConnector rust: ', {
         platform,

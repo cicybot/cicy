@@ -66,6 +66,68 @@ export class CCWSClient {
         }
     }
 
+    static getServerUrl(serverIp?: string) {
+        return __serverUrl;
+    }
+
+    static formatServerUrl(ip: string) {
+        const url = CCWSClient.getServerUrl();
+        const t = url.split('://');
+        const t2 = t[1].split(':');
+        return `${t[0]}://${ip}:${t2.slice(1).join(':')}`;
+    }
+
+    static isLocalServer() {
+        return __serverUrl.indexOf('127.0.0.1') > -1;
+    }
+
+    static getHttpUrl(serverIp: string) {
+        return __serverUrl
+            .replace('ws://', 'http://')
+            .replace('/ws', '')
+            .replace('127.0.0.1', serverIp);
+    }
+
+    static isLogged() {
+        return isLogged;
+    }
+
+    static async waitForIsLogged() {
+        if (isLogged) {
+            return true;
+        }
+        const res = await waitForResult(() => {
+            return {
+                isLogged
+            };
+        });
+        return res.isLogged;
+    }
+
+    static _setServerUrl(serverUrl: string) {
+        __serverUrl = serverUrl;
+    }
+
+    static setServerUrl(serverUrl: string) {
+        console.log('setServerUrl', {
+            serverUrl,
+            __serverUrl
+        });
+        window.backgroundApi &&
+            window.backgroundApi.message({
+                action: 'connectCCServer',
+                payload: { serverUrl }
+            });
+        if (__serverUrl !== serverUrl) {
+            __serverUrl = serverUrl;
+            localStorage.setItem('serverUrl', __serverUrl);
+
+            if (__ws && __ws.readyState === WebSocket.OPEN) {
+                __ws.close(WsCloseCode.WS_CLOSE_STOP_RECONNECT, 'WS_CLOSE_STOP_RECONNECT');
+            }
+        }
+    }
+
     async sendAction(action: string, payload?: any) {
         return await this.send({
             action,
@@ -144,68 +206,6 @@ export class CCWSClient {
                 to: this.clientId
             })
         );
-    }
-
-    static getServerUrl(serverIp?: string) {
-        return __serverUrl;
-    }
-
-    static formatServerUrl(ip: string) {
-        const url = CCWSClient.getServerUrl();
-        const t = url.split('://');
-        const t2 = t[1].split(':');
-        return `${t[0]}://${ip}:${t2.slice(1).join(':')}`;
-    }
-
-    static isLocalServer() {
-        return __serverUrl.indexOf('127.0.0.1') > -1;
-    }
-
-    static getHttpUrl(serverIp: string) {
-        return __serverUrl
-            .replace('ws://', 'http://')
-            .replace('/ws', '')
-            .replace('127.0.0.1', serverIp);
-    }
-
-    static isLogged() {
-        return isLogged;
-    }
-
-    static async waitForIsLogged() {
-        if (isLogged) {
-            return true;
-        }
-        const res = await waitForResult(() => {
-            return {
-                isLogged
-            };
-        });
-        return res.isLogged;
-    }
-
-    static _setServerUrl(serverUrl: string) {
-        __serverUrl = serverUrl;
-    }
-
-    static setServerUrl(serverUrl: string) {
-        console.log('setServerUrl', {
-            serverUrl,
-            __serverUrl
-        });
-        window.backgroundApi &&
-            window.backgroundApi.message({
-                action: 'connectCCServer',
-                payload: { serverUrl }
-            });
-        if (__serverUrl !== serverUrl) {
-            __serverUrl = serverUrl;
-            localStorage.setItem('serverUrl', __serverUrl);
-
-            if (__ws && __ws.readyState === WebSocket.OPEN) {
-                __ws.close(WsCloseCode.WS_CLOSE_STOP_RECONNECT, 'WS_CLOSE_STOP_RECONNECT');
-            }
-        }
     }
 }
 

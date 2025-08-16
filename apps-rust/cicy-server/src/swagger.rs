@@ -1,5 +1,5 @@
 use axum::{
-    response::{Html, Json},
+    response::{Json},
 };
 use axum::extract::Path;
 use axum::http::{header, HeaderMap};
@@ -7,48 +7,48 @@ use axum::response::{IntoResponse};
 use serde_json::json;
 use serde_yaml::Value;
 use tracing::error;
-// Add serde_yaml to your Cargo.toml
+//
+// pub async fn openapi_spec() -> impl IntoResponse {
+//     let yaml_str = include_str!("../public/static/openapi.yaml");
+//
+//     let yaml_value: Value = serde_yaml::from_str(yaml_str)
+//         .unwrap_or_else(|_| {
+//             // Fallback minimal OpenAPI spec
+//             serde_yaml::from_str(r#"
+//                 openapi: 3.0.0
+//                 info:
+//                   title: API Documentation
+//                   version: 1.0.0
+//                 paths: {}
+//                 components: {}
+//             "#).unwrap()
+//         });
+//
+//     // Convert to JSON for response
+//     let json_value = serde_json::to_value(yaml_value).unwrap();
+//
+//     let mut headers = HeaderMap::new();
+//     headers.insert(
+//         header::CACHE_CONTROL,
+//         header::HeaderValue::from_static("no-store, no-cache, must-revalidate"),
+//     );
+//     headers.insert(
+//         header::PRAGMA,
+//         header::HeaderValue::from_static("no-cache"),
+//     );
+//     headers.insert(
+//         header::EXPIRES,
+//         header::HeaderValue::from_static("0"),
+//     );
+//     headers.insert(
+//         header::CONTENT_TYPE,
+//         header::HeaderValue::from_static("application/json"),
+//     );
+//     (headers, Json(json_value))
+// }
 
-pub async fn openapi_spec() -> impl IntoResponse {
-    let yaml_str = include_str!("../public/static/openapi.yaml");
+pub async fn openapi_path_spec(Path(path): Path<String>,assets_dir:String,access_url: Option<String>,) -> impl IntoResponse {
 
-    let yaml_value: Value = serde_yaml::from_str(yaml_str)
-        .unwrap_or_else(|_| {
-            // Fallback minimal OpenAPI spec
-            serde_yaml::from_str(r#"
-                openapi: 3.0.0
-                info:
-                  title: API Documentation
-                  version: 1.0.0
-                paths: {}
-                components: {}
-            "#).unwrap()
-        });
-
-    // Convert to JSON for response
-    let json_value = serde_json::to_value(yaml_value).unwrap();
-
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CACHE_CONTROL,
-        header::HeaderValue::from_static("no-store, no-cache, must-revalidate"),
-    );
-    headers.insert(
-        header::PRAGMA,
-        header::HeaderValue::from_static("no-cache"),
-    );
-    headers.insert(
-        header::EXPIRES,
-        header::HeaderValue::from_static("0"),
-    );
-    headers.insert(
-        header::CONTENT_TYPE,
-        header::HeaderValue::from_static("application/json"),
-    );
-    (headers, Json(json_value))
-}
-
-pub async fn openapi_path_spec(Path(path): Path<String>,assets_dir:String) -> impl IntoResponse {
     let mut safe_path = std::path::PathBuf::new();
     for part in std::path::Path::new(&path).components() {
         if let std::path::Component::Normal(p) = part {
@@ -76,7 +76,13 @@ pub async fn openapi_path_spec(Path(path): Path<String>,assets_dir:String) -> im
         header::HeaderValue::from_static("application/json"),
     );
     match tokio::fs::read_to_string(&full_path).await {
-        Ok(content) => {
+        Ok(mut content) => {
+
+            if let Some(url) = access_url {
+                println!("Serving with access URL: {}", url);
+                content = content.replace("http://access_url", &url);
+            }
+
             let yaml_value: Value = serde_yaml::from_str(&*content)
                 .unwrap_or_else(|_| {
                     // Fallback minimal OpenAPI spec
@@ -103,69 +109,69 @@ pub async fn openapi_path_spec(Path(path): Path<String>,assets_dir:String) -> im
         }
     }
 }
-pub async fn swagger_ui() -> Html<&'static str> {
-    let html = r#"
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Swagger UI</title>
-            <meta charset="utf-8"/>
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <link rel="stylesheet" type="text/css" href="/static/swagger-ui/swagger-ui.css" />
-        </head>
-        <body>
-            <div id="swagger-ui"></div>
-            <script src="/static/swagger-ui/swagger-ui-bundle.js"></script>
-            <script>
-               // Load token from localStorage
-                const loadToken = () => {
-                    return localStorage.getItem('swagger_token') || '';
-                };
-
-                window.onload = () => {
-                    const id = new URL(location.href).searchParams.get("id")
-                    let url = "/openapi.json"
-                    if(id){
-                        url = "/openapi/"+id
-                    }
-                    window.ui = SwaggerUIBundle({
-                        url,
-                        dom_id: '#swagger-ui',
-                    });
-                };
-                const observer = new MutationObserver((mutations) => {
-                    const bearerInput = document.querySelector('input#auth-bearer-value');
-                    if (bearerInput) {
-                        // Found the auth input
-                        observer.disconnect();
-                        const token = loadToken()
-                        if (token) {
-                            bearerInput.value = token;
-
-                            // Trigger Swagger's auth system
-                            const event = new Event('input', { bubbles: true });
-                            bearerInput.dispatchEvent(event);
-                        }
-
-                        // Watch for token changes to save to localStorage
-                        bearerInput.addEventListener('input', (e) => {
-                            localStorage.setItem('swagger_token', e.target.value);
-                        });
-                    }
-                });
-
-                // Start observing the Swagger UI container
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
-            </script>
-        </body>
-        </html>
-        "#;
-
-
-    Html(
-        html
-    )
-}
+//
+// pub async fn swagger_ui() -> Html<&'static str> {
+//     let html = r#"
+//         <!DOCTYPE html>
+//         <html>
+//         <head>
+//             <title>Swagger UI</title>
+//             <meta charset="utf-8"/>
+//             <meta name="viewport" content="width=device-width, initial-scale=1">
+//             <link rel="stylesheet" type="text/css" href="/static/swagger-ui/swagger-ui.css" />
+//         </head>
+//         <body>
+//             <div id="swagger-ui"></div>
+//             <script src="/static/swagger-ui/swagger-ui-bundle.js"></script>
+//             <script>
+//                // Load token from localStorage
+//                 const loadToken = () => {
+//                     return localStorage.getItem('swagger_token') || '';
+//                 };
+//
+//                 window.onload = () => {
+//                     const id = new URL(location.href).searchParams.get("id")
+//                     let url = "/openapi.json"
+//                     if(id){
+//                         url = "/openapi/"+id
+//                     }
+//                     window.ui = SwaggerUIBundle({
+//                         url,
+//                         dom_id: '#swagger-ui',
+//                     });
+//                 };
+//                 const observer = new MutationObserver((mutations) => {
+//                     const bearerInput = document.querySelector('input#auth-bearer-value');
+//                     if (bearerInput) {
+//                         // Found the auth input
+//                         observer.disconnect();
+//                         const token = loadToken()
+//                         if (token) {
+//                             bearerInput.value = token;
+//
+//                             // Trigger Swagger's auth system
+//                             const event = new Event('input', { bubbles: true });
+//                             bearerInput.dispatchEvent(event);
+//                         }
+//
+//                         // Watch for token changes to save to localStorage
+//                         bearerInput.addEventListener('input', (e) => {
+//                             localStorage.setItem('swagger_token', e.target.value);
+//                         });
+//                     }
+//                 });
+//
+//                 // Start observing the Swagger UI container
+//                 observer.observe(document.body, {
+//                     childList: true,
+//                     subtree: true
+//                 });
+//             </script>
+//         </body>
+//         </html>
+//         "#;
+//
+//     Html(
+//         html
+//     )
+// }

@@ -22,6 +22,97 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/app
 
         /**
+         * A `boolean` property that's `true` if Chrome's accessibility support is enabled,
+         * `false` otherwise. This property will be `true` if the use of assistive
+         * technologies, such as screen readers, has been detected. Setting this property
+         * to `true` manually enables Chrome's accessibility support, allowing developers
+         * to expose accessibility switch to users in application settings.
+         *
+         * See Chromium's accessibility docs for more details. Disabled by default.
+         *
+         * This API must be called after the `ready` event is emitted.
+         *
+         * **Note:** Rendering accessibility tree can significantly affect the performance
+         * of your app. It should not be enabled by default.
+         *
+         * @platform darwin,win32
+         */
+        accessibilitySupportEnabled: boolean;
+        /**
+         * A `Menu | null` property that returns `Menu` if one has been set and `null`
+         * otherwise. Users can pass a Menu to set this property.
+         */
+        applicationMenu: Menu | null;
+        /**
+         * An `Integer` property that returns the badge count for current app. Setting the
+         * count to `0` will hide the badge.
+         *
+         * On macOS, setting this with any nonzero integer shows on the dock icon. On
+         * Linux, this property only works for Unity launcher.
+         *
+         * **Note:** Unity launcher requires a `.desktop` file to work. For more
+         * information, please read the Unity integration documentation.
+         *
+         * **Note:** On macOS, you need to ensure that your application has the permission
+         * to display notifications for this property to take effect.
+         *
+         * @platform linux,darwin
+         */
+        badgeCount: number;
+        /**
+         * A `CommandLine` object that allows you to read and manipulate the command line
+         * arguments that Chromium uses.
+         *
+         */
+        readonly commandLine: CommandLine;
+        /**
+         * A `Dock` `| undefined` object that allows you to perform actions on your app
+         * icon in the user's dock on macOS.
+         *
+         * @platform darwin
+         */
+        readonly dock: Dock;
+        /**
+         * A `boolean` property that returns  `true` if the app is packaged, `false`
+         * otherwise. For many apps, this property can be used to distinguish development
+         * and production environments.
+         *
+         */
+        readonly isPackaged: boolean;
+        /**
+         * A `string` property that indicates the current application's name, which is the
+         * name in the application's `package.json` file.
+         *
+         * Usually the `name` field of `package.json` is a short lowercase name, according
+         * to the npm modules spec. You should usually also specify a `productName` field,
+         * which is your application's full capitalized name, and which will be preferred
+         * over `name` by Electron.
+         */
+        name: string;
+        /**
+         * A `boolean` which when `true` indicates that the app is currently running under
+         * an ARM64 translator (like the macOS Rosetta Translator Environment or Windows
+         * WOW).
+         *
+         * You can use this property to prompt users to download the arm64 version of your
+         * application when they are mistakenly running the x64 version under Rosetta or
+         * WOW.
+         *
+         * @platform darwin,win32
+         */
+        readonly runningUnderARM64Translation: boolean;
+        /**
+         * A `string` which is the user agent string Electron will use as a global
+         * fallback.
+         *
+         * This is the user agent that will be used when no user agent is set at the
+         * `webContents` or `session` level.  It is useful for ensuring that your entire
+         * app has the same user agent.  Set to a custom value as early as possible in your
+         * app's initialization to ensure that your overridden value is used.
+         */
+        userAgentFallback: string;
+
+        /**
          * Emitted when Chrome's accessibility support changes. This event fires when
          * assistive technologies, such as screen readers, are enabled or disabled. See
          * https://www.chromium.org/developers/design-documents/accessibility for more
@@ -2300,97 +2391,6 @@ declare namespace Electron {
          * not ready yet.
          */
         whenReady(): Promise<void>;
-
-        /**
-         * A `boolean` property that's `true` if Chrome's accessibility support is enabled,
-         * `false` otherwise. This property will be `true` if the use of assistive
-         * technologies, such as screen readers, has been detected. Setting this property
-         * to `true` manually enables Chrome's accessibility support, allowing developers
-         * to expose accessibility switch to users in application settings.
-         *
-         * See Chromium's accessibility docs for more details. Disabled by default.
-         *
-         * This API must be called after the `ready` event is emitted.
-         *
-         * **Note:** Rendering accessibility tree can significantly affect the performance
-         * of your app. It should not be enabled by default.
-         *
-         * @platform darwin,win32
-         */
-        accessibilitySupportEnabled: boolean;
-        /**
-         * A `Menu | null` property that returns `Menu` if one has been set and `null`
-         * otherwise. Users can pass a Menu to set this property.
-         */
-        applicationMenu: Menu | null;
-        /**
-         * An `Integer` property that returns the badge count for current app. Setting the
-         * count to `0` will hide the badge.
-         *
-         * On macOS, setting this with any nonzero integer shows on the dock icon. On
-         * Linux, this property only works for Unity launcher.
-         *
-         * **Note:** Unity launcher requires a `.desktop` file to work. For more
-         * information, please read the Unity integration documentation.
-         *
-         * **Note:** On macOS, you need to ensure that your application has the permission
-         * to display notifications for this property to take effect.
-         *
-         * @platform linux,darwin
-         */
-        badgeCount: number;
-        /**
-         * A `CommandLine` object that allows you to read and manipulate the command line
-         * arguments that Chromium uses.
-         *
-         */
-        readonly commandLine: CommandLine;
-        /**
-         * A `Dock` `| undefined` object that allows you to perform actions on your app
-         * icon in the user's dock on macOS.
-         *
-         * @platform darwin
-         */
-        readonly dock: Dock;
-        /**
-         * A `boolean` property that returns  `true` if the app is packaged, `false`
-         * otherwise. For many apps, this property can be used to distinguish development
-         * and production environments.
-         *
-         */
-        readonly isPackaged: boolean;
-        /**
-         * A `string` property that indicates the current application's name, which is the
-         * name in the application's `package.json` file.
-         *
-         * Usually the `name` field of `package.json` is a short lowercase name, according
-         * to the npm modules spec. You should usually also specify a `productName` field,
-         * which is your application's full capitalized name, and which will be preferred
-         * over `name` by Electron.
-         */
-        name: string;
-        /**
-         * A `boolean` which when `true` indicates that the app is currently running under
-         * an ARM64 translator (like the macOS Rosetta Translator Environment or Windows
-         * WOW).
-         *
-         * You can use this property to prompt users to download the arm64 version of your
-         * application when they are mistakenly running the x64 version under Rosetta or
-         * WOW.
-         *
-         * @platform darwin,win32
-         */
-        readonly runningUnderARM64Translation: boolean;
-        /**
-         * A `string` which is the user agent string Electron will use as a global
-         * fallback.
-         *
-         * This is the user agent that will be used when no user agent is set at the
-         * `webContents` or `session` level.  It is useful for ensuring that your entire
-         * app has the same user agent.  Set to a custom value as early as possible in your
-         * app's initialization to ensure that your overridden value is used.
-         */
-        userAgentFallback: string;
     }
 
     interface AutoUpdater extends NodeJS.EventEmitter {
@@ -2566,6 +2566,175 @@ declare namespace Electron {
 
     class BaseWindow extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/base-window
+
+        /**
+         * A `string` property that defines an alternative title provided only to
+         * accessibility tools such as screen readers. This string is not directly visible
+         * to users.
+         */
+        accessibleTitle: string;
+        /**
+         * A `boolean` property that determines whether the window menu bar should hide
+         * itself automatically. Once set, the menu bar will only show when users press the
+         * single `Alt` key.
+         *
+         * If the menu bar is already visible, setting this property to `true` won't hide
+         * it immediately.
+         */
+        autoHideMenuBar: boolean;
+        /**
+         * A `boolean` property that determines whether the window can be manually closed
+         * by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        closable: boolean;
+        /**
+         * A `View` property for the content view of the window.
+         */
+        contentView: View;
+        /**
+         * A `boolean` property that specifies whether the window’s document has been
+         * edited.
+         *
+         * The icon in title bar will become gray when set to `true`.
+         *
+         * @platform darwin
+         */
+        documentEdited: boolean;
+        /**
+         * A `boolean` property that determines whether the window is excluded from the
+         * application’s Windows menu. `false` by default.
+         *
+         * @platform darwin
+         */
+        excludedFromShownWindowsMenu: boolean;
+        /**
+         * A `boolean` property that determines whether the window is focusable.
+         *
+         * @platform win32,darwin
+         */
+        focusable: boolean;
+        /**
+         * A `boolean` property that determines whether the window is in fullscreen mode.
+         */
+        fullScreen: boolean;
+        /**
+         * A `boolean` property that determines whether the maximize/zoom window button
+         * toggles fullscreen mode or maximizes the window.
+         */
+        fullScreenable: boolean;
+        /**
+         * A `Integer` property representing the unique ID of the window. Each ID is unique
+         * among all `BaseWindow` instances of the entire Electron application.
+         *
+         */
+        readonly id: number;
+        /**
+         * A `boolean` property that determines whether the window is in kiosk mode.
+         */
+        kiosk: boolean;
+        /**
+         * A `boolean` property that determines whether the window can be manually
+         * maximized by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        maximizable: boolean;
+        /**
+         * A `boolean` property that determines whether the menu bar should be visible.
+         *
+         * **Note:** If the menu bar is auto-hide, users can still bring up the menu bar by
+         * pressing the single `Alt` key.
+         *
+         * @platform win32,linux
+         */
+        menuBarVisible: boolean;
+        /**
+         * A `boolean` property that determines whether the window can be manually
+         * minimized by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        minimizable: boolean;
+        /**
+         * A `boolean` property that determines Whether the window can be moved by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        movable: boolean;
+        /**
+         * A `string` property that determines the pathname of the file the window
+         * represents, and the icon of the file will show in window's title bar.
+         *
+         * @platform darwin
+         */
+        representedFilename: string;
+        /**
+         * A `boolean` property that determines whether the window can be manually resized
+         * by user.
+         */
+        resizable: boolean;
+        /**
+         * A `boolean` property that determines whether the window has a shadow.
+         */
+        shadow: boolean;
+        /**
+         * A `boolean` property that determines whether the window is in simple (pre-Lion)
+         * fullscreen mode.
+         */
+        simpleFullScreen: boolean;
+        /**
+         * A `string` (optional) property that is equal to the `tabbingIdentifier` passed
+         * to the `BrowserWindow` constructor or `undefined` if none was set.
+         *
+         * @platform darwin
+         */
+        readonly tabbingIdentifier?: string;
+        /**
+         * A `string` property that determines the title of the native window.
+         *
+         * **Note:** The title of the web page can be different from the title of the
+         * native window.
+         */
+        title: string;
+        /**
+         * A `boolean` property that determines whether the window is visible on all
+         * workspaces.
+         *
+         * **Note:** Always returns false on Windows.
+         *
+         * @platform darwin,linux
+         */
+        visibleOnAllWorkspaces: boolean;
+
+        /**
+         * BaseWindow
+         */
+        constructor(options?: BaseWindowConstructorOptions);
+
+        /**
+         * The window with the given `id`.
+         */
+        static fromId(id: number): BaseWindow | null;
+
+        /**
+         * An array of all opened browser windows.
+         */
+        static getAllWindows(): BaseWindow[];
+
+        /**
+         * The window that is focused in this application, otherwise returns `null`.
+         */
+        static getFocusedWindow(): BaseWindow | null;
 
         /**
          * Emitted when the window is set or unset to show always on top of other windows.
@@ -3315,26 +3484,6 @@ declare namespace Electron {
                 details: WillResizeDetails
             ) => void
         ): this;
-
-        /**
-         * BaseWindow
-         */
-        constructor(options?: BaseWindowConstructorOptions);
-
-        /**
-         * The window with the given `id`.
-         */
-        static fromId(id: number): BaseWindow | null;
-
-        /**
-         * An array of all opened browser windows.
-         */
-        static getAllWindows(): BaseWindow[];
-
-        /**
-         * The window that is focused in this application, otherwise returns `null`.
-         */
-        static getFocusedWindow(): BaseWindow | null;
 
         /**
          * Adds a window as a tab on this window, after the tab for the window instance.
@@ -4340,155 +4489,6 @@ declare namespace Electron {
          * Unmaximizes the window.
          */
         unmaximize(): void;
-
-        /**
-         * A `string` property that defines an alternative title provided only to
-         * accessibility tools such as screen readers. This string is not directly visible
-         * to users.
-         */
-        accessibleTitle: string;
-        /**
-         * A `boolean` property that determines whether the window menu bar should hide
-         * itself automatically. Once set, the menu bar will only show when users press the
-         * single `Alt` key.
-         *
-         * If the menu bar is already visible, setting this property to `true` won't hide
-         * it immediately.
-         */
-        autoHideMenuBar: boolean;
-        /**
-         * A `boolean` property that determines whether the window can be manually closed
-         * by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        closable: boolean;
-        /**
-         * A `View` property for the content view of the window.
-         */
-        contentView: View;
-        /**
-         * A `boolean` property that specifies whether the window’s document has been
-         * edited.
-         *
-         * The icon in title bar will become gray when set to `true`.
-         *
-         * @platform darwin
-         */
-        documentEdited: boolean;
-        /**
-         * A `boolean` property that determines whether the window is excluded from the
-         * application’s Windows menu. `false` by default.
-         *
-         * @platform darwin
-         */
-        excludedFromShownWindowsMenu: boolean;
-        /**
-         * A `boolean` property that determines whether the window is focusable.
-         *
-         * @platform win32,darwin
-         */
-        focusable: boolean;
-        /**
-         * A `boolean` property that determines whether the window is in fullscreen mode.
-         */
-        fullScreen: boolean;
-        /**
-         * A `boolean` property that determines whether the maximize/zoom window button
-         * toggles fullscreen mode or maximizes the window.
-         */
-        fullScreenable: boolean;
-        /**
-         * A `Integer` property representing the unique ID of the window. Each ID is unique
-         * among all `BaseWindow` instances of the entire Electron application.
-         *
-         */
-        readonly id: number;
-        /**
-         * A `boolean` property that determines whether the window is in kiosk mode.
-         */
-        kiosk: boolean;
-        /**
-         * A `boolean` property that determines whether the window can be manually
-         * maximized by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        maximizable: boolean;
-        /**
-         * A `boolean` property that determines whether the menu bar should be visible.
-         *
-         * **Note:** If the menu bar is auto-hide, users can still bring up the menu bar by
-         * pressing the single `Alt` key.
-         *
-         * @platform win32,linux
-         */
-        menuBarVisible: boolean;
-        /**
-         * A `boolean` property that determines whether the window can be manually
-         * minimized by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        minimizable: boolean;
-        /**
-         * A `boolean` property that determines Whether the window can be moved by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        movable: boolean;
-        /**
-         * A `string` property that determines the pathname of the file the window
-         * represents, and the icon of the file will show in window's title bar.
-         *
-         * @platform darwin
-         */
-        representedFilename: string;
-        /**
-         * A `boolean` property that determines whether the window can be manually resized
-         * by user.
-         */
-        resizable: boolean;
-        /**
-         * A `boolean` property that determines whether the window has a shadow.
-         */
-        shadow: boolean;
-        /**
-         * A `boolean` property that determines whether the window is in simple (pre-Lion)
-         * fullscreen mode.
-         */
-        simpleFullScreen: boolean;
-        /**
-         * A `string` (optional) property that is equal to the `tabbingIdentifier` passed
-         * to the `BrowserWindow` constructor or `undefined` if none was set.
-         *
-         * @platform darwin
-         */
-        readonly tabbingIdentifier?: string;
-        /**
-         * A `string` property that determines the title of the native window.
-         *
-         * **Note:** The title of the web page can be different from the title of the
-         * native window.
-         */
-        title: string;
-        /**
-         * A `boolean` property that determines whether the window is visible on all
-         * workspaces.
-         *
-         * **Note:** Always returns false on Windows.
-         *
-         * @platform darwin,linux
-         */
-        visibleOnAllWorkspaces: boolean;
     }
 
     interface BaseWindowConstructorOptions {
@@ -4792,6 +4792,14 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/browser-view
 
         /**
+         * A `WebContents` object owned by this view.
+         *
+         * @experimental
+         * @deprecated
+         */
+        webContents: WebContents;
+
+        /**
          * BrowserView
          */
         constructor(options?: BrowserViewConstructorOptions);
@@ -4850,18 +4858,200 @@ declare namespace Electron {
          * @deprecated
          */
         setBounds(bounds: Rectangle): void;
-
-        /**
-         * A `WebContents` object owned by this view.
-         *
-         * @experimental
-         * @deprecated
-         */
-        webContents: WebContents;
     }
 
     class BrowserWindow extends BaseWindow {
         // Docs: https://electronjs.org/docs/api/browser-window
+
+        /**
+         * A `string` property that defines an alternative title provided only to
+         * accessibility tools such as screen readers. This string is not directly visible
+         * to users.
+         */
+        accessibleTitle: string;
+        /**
+         * A `boolean` property that determines whether the window menu bar should hide
+         * itself automatically. Once set, the menu bar will only show when users press the
+         * single `Alt` key.
+         *
+         * If the menu bar is already visible, setting this property to `true` won't hide
+         * it immediately.
+         */
+        autoHideMenuBar: boolean;
+        /**
+         * A `boolean` property that determines whether the window can be manually closed
+         * by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        closable: boolean;
+        /**
+         * A `boolean` property that specifies whether the window’s document has been
+         * edited.
+         *
+         * The icon in title bar will become gray when set to `true`.
+         *
+         * @platform darwin
+         */
+        documentEdited: boolean;
+        /**
+         * A `boolean` property that determines whether the window is excluded from the
+         * application’s Windows menu. `false` by default.
+         *
+         * @platform darwin
+         */
+        excludedFromShownWindowsMenu: boolean;
+        /**
+         * A `boolean` property that determines whether the window is focusable.
+         *
+         * @platform win32,darwin
+         */
+        focusable: boolean;
+        /**
+         * A `boolean` property that determines whether the window is in fullscreen mode.
+         */
+        fullScreen: boolean;
+        /**
+         * A `boolean` property that determines whether the maximize/zoom window button
+         * toggles fullscreen mode or maximizes the window.
+         */
+        fullScreenable: boolean;
+        /**
+         * A `Integer` property representing the unique ID of the window. Each ID is unique
+         * among all `BrowserWindow` instances of the entire Electron application.
+         *
+         */
+        readonly id: number;
+        /**
+         * A `boolean` property that determines whether the window is in kiosk mode.
+         */
+        kiosk: boolean;
+        /**
+         * A `boolean` property that determines whether the window can be manually
+         * maximized by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        maximizable: boolean;
+        /**
+         * A `boolean` property that determines whether the menu bar should be visible.
+         *
+         * **Note:** If the menu bar is auto-hide, users can still bring up the menu bar by
+         * pressing the single `Alt` key.
+         *
+         * @platform win32,linux
+         */
+        menuBarVisible: boolean;
+        /**
+         * A `boolean` property that determines whether the window can be manually
+         * minimized by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        minimizable: boolean;
+        /**
+         * A `boolean` property that determines Whether the window can be moved by user.
+         *
+         * On Linux the setter is a no-op, although the getter returns `true`.
+         *
+         * @platform darwin,win32
+         */
+        movable: boolean;
+        /**
+         * A `string` property that determines the pathname of the file the window
+         * represents, and the icon of the file will show in window's title bar.
+         *
+         * @platform darwin
+         */
+        representedFilename: string;
+        /**
+         * A `boolean` property that determines whether the window can be manually resized
+         * by user.
+         */
+        resizable: boolean;
+        /**
+         * A `boolean` property that determines whether the window has a shadow.
+         */
+        shadow: boolean;
+        /**
+         * A `boolean` property that determines whether the window is in simple (pre-Lion)
+         * fullscreen mode.
+         */
+        simpleFullScreen: boolean;
+        /**
+         * A `string` (optional) property that is equal to the `tabbingIdentifier` passed
+         * to the `BrowserWindow` constructor or `undefined` if none was set.
+         *
+         * @platform darwin
+         */
+        readonly tabbingIdentifier?: string;
+        /**
+         * A `string` property that determines the title of the native window.
+         *
+         * **Note:** The title of the web page can be different from the title of the
+         * native window.
+         */
+        title: string;
+        /**
+         * A `boolean` property that determines whether the window is visible on all
+         * workspaces.
+         *
+         * **Note:** Always returns false on Windows.
+         *
+         * @platform darwin,linux
+         */
+        visibleOnAllWorkspaces: boolean;
+        /**
+         * A `WebContents` object this window owns. All web page related events and
+         * operations will be done via it.
+         *
+         * See the `webContents` documentation for its methods and events.
+         *
+         */
+        readonly webContents: WebContents;
+
+        /**
+         * BrowserWindow
+         */
+        constructor(options?: BrowserWindowConstructorOptions);
+
+        /**
+         * > **Note** The `BrowserView` class is deprecated, and replaced by the new
+         * `WebContentsView` class.
+         *
+         * The window that owns the given `browserView`. If the given view is not attached
+         * to any window, returns `null`.
+         *
+         * @deprecated
+         */
+        static fromBrowserView(browserView: BrowserView): BrowserWindow | null;
+
+        /**
+         * The window with the given `id`.
+         */
+        static fromId(id: number): BrowserWindow | null;
+
+        /**
+         * The window that owns the given `webContents` or `null` if the contents are not
+         * owned by a window.
+         */
+        static fromWebContents(webContents: WebContents): BrowserWindow | null;
+
+        /**
+         * An array of all opened browser windows.
+         */
+        static getAllWindows(): BrowserWindow[];
+
+        /**
+         * The window that is focused in this application, otherwise returns `null`.
+         */
+        static getFocusedWindow(): BrowserWindow | null;
 
         /**
          * Emitted when the window is set or unset to show always on top of other windows.
@@ -6462,43 +6652,6 @@ declare namespace Electron {
         ): this;
 
         /**
-         * BrowserWindow
-         */
-        constructor(options?: BrowserWindowConstructorOptions);
-
-        /**
-         * > **Note** The `BrowserView` class is deprecated, and replaced by the new
-         * `WebContentsView` class.
-         *
-         * The window that owns the given `browserView`. If the given view is not attached
-         * to any window, returns `null`.
-         *
-         * @deprecated
-         */
-        static fromBrowserView(browserView: BrowserView): BrowserWindow | null;
-
-        /**
-         * The window with the given `id`.
-         */
-        static fromId(id: number): BrowserWindow | null;
-
-        /**
-         * The window that owns the given `webContents` or `null` if the contents are not
-         * owned by a window.
-         */
-        static fromWebContents(webContents: WebContents): BrowserWindow | null;
-
-        /**
-         * An array of all opened browser windows.
-         */
-        static getAllWindows(): BrowserWindow[];
-
-        /**
-         * The window that is focused in this application, otherwise returns `null`.
-         */
-        static getFocusedWindow(): BrowserWindow | null;
-
-        /**
          * Replacement API for setBrowserView supporting work with multi browser views.
          *
          * > **Note** The `BrowserView` class is deprecated, and replaced by the new
@@ -7612,159 +7765,6 @@ declare namespace Electron {
          * Unmaximizes the window.
          */
         unmaximize(): void;
-
-        /**
-         * A `string` property that defines an alternative title provided only to
-         * accessibility tools such as screen readers. This string is not directly visible
-         * to users.
-         */
-        accessibleTitle: string;
-        /**
-         * A `boolean` property that determines whether the window menu bar should hide
-         * itself automatically. Once set, the menu bar will only show when users press the
-         * single `Alt` key.
-         *
-         * If the menu bar is already visible, setting this property to `true` won't hide
-         * it immediately.
-         */
-        autoHideMenuBar: boolean;
-        /**
-         * A `boolean` property that determines whether the window can be manually closed
-         * by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        closable: boolean;
-        /**
-         * A `boolean` property that specifies whether the window’s document has been
-         * edited.
-         *
-         * The icon in title bar will become gray when set to `true`.
-         *
-         * @platform darwin
-         */
-        documentEdited: boolean;
-        /**
-         * A `boolean` property that determines whether the window is excluded from the
-         * application’s Windows menu. `false` by default.
-         *
-         * @platform darwin
-         */
-        excludedFromShownWindowsMenu: boolean;
-        /**
-         * A `boolean` property that determines whether the window is focusable.
-         *
-         * @platform win32,darwin
-         */
-        focusable: boolean;
-        /**
-         * A `boolean` property that determines whether the window is in fullscreen mode.
-         */
-        fullScreen: boolean;
-        /**
-         * A `boolean` property that determines whether the maximize/zoom window button
-         * toggles fullscreen mode or maximizes the window.
-         */
-        fullScreenable: boolean;
-        /**
-         * A `Integer` property representing the unique ID of the window. Each ID is unique
-         * among all `BrowserWindow` instances of the entire Electron application.
-         *
-         */
-        readonly id: number;
-        /**
-         * A `boolean` property that determines whether the window is in kiosk mode.
-         */
-        kiosk: boolean;
-        /**
-         * A `boolean` property that determines whether the window can be manually
-         * maximized by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        maximizable: boolean;
-        /**
-         * A `boolean` property that determines whether the menu bar should be visible.
-         *
-         * **Note:** If the menu bar is auto-hide, users can still bring up the menu bar by
-         * pressing the single `Alt` key.
-         *
-         * @platform win32,linux
-         */
-        menuBarVisible: boolean;
-        /**
-         * A `boolean` property that determines whether the window can be manually
-         * minimized by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        minimizable: boolean;
-        /**
-         * A `boolean` property that determines Whether the window can be moved by user.
-         *
-         * On Linux the setter is a no-op, although the getter returns `true`.
-         *
-         * @platform darwin,win32
-         */
-        movable: boolean;
-        /**
-         * A `string` property that determines the pathname of the file the window
-         * represents, and the icon of the file will show in window's title bar.
-         *
-         * @platform darwin
-         */
-        representedFilename: string;
-        /**
-         * A `boolean` property that determines whether the window can be manually resized
-         * by user.
-         */
-        resizable: boolean;
-        /**
-         * A `boolean` property that determines whether the window has a shadow.
-         */
-        shadow: boolean;
-        /**
-         * A `boolean` property that determines whether the window is in simple (pre-Lion)
-         * fullscreen mode.
-         */
-        simpleFullScreen: boolean;
-        /**
-         * A `string` (optional) property that is equal to the `tabbingIdentifier` passed
-         * to the `BrowserWindow` constructor or `undefined` if none was set.
-         *
-         * @platform darwin
-         */
-        readonly tabbingIdentifier?: string;
-        /**
-         * A `string` property that determines the title of the native window.
-         *
-         * **Note:** The title of the web page can be different from the title of the
-         * native window.
-         */
-        title: string;
-        /**
-         * A `boolean` property that determines whether the window is visible on all
-         * workspaces.
-         *
-         * **Note:** Always returns false on Windows.
-         *
-         * @platform darwin,linux
-         */
-        visibleOnAllWorkspaces: boolean;
-        /**
-         * A `WebContents` object this window owns. All web page related events and
-         * operations will be done via it.
-         *
-         * See the `webContents` documentation for its methods and events.
-         *
-         */
-        readonly webContents: WebContents;
     }
 
     interface BrowserWindowConstructorOptions extends BaseWindowConstructorOptions {
@@ -7868,6 +7868,24 @@ declare namespace Electron {
 
     class ClientRequest extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/client-request
+
+        /**
+         * A `boolean` specifying whether the request will use HTTP chunked transfer
+         * encoding or not. Defaults to false. The property is readable and writable,
+         * however it can be set only before the first write operation as the HTTP headers
+         * are not yet put on the wire. Trying to set the `chunkedEncoding` property after
+         * the first write will throw an error.
+         *
+         * Using chunked encoding is strongly recommended if you need to send a large
+         * request body as data will be streamed in small chunks instead of being
+         * internally buffered inside Electron process memory.
+         */
+        chunkedEncoding: boolean;
+
+        /**
+         * ClientRequest
+         */
+        constructor(options: ClientRequestConstructorOptions | string);
 
         /**
          * Emitted when the `request` is aborted. The `abort` event will not be fired if
@@ -8125,11 +8143,6 @@ declare namespace Electron {
         ): this;
 
         /**
-         * ClientRequest
-         */
-        constructor(options: ClientRequestConstructorOptions | string);
-
-        /**
          * Cancels an ongoing HTTP transaction. If the request has already emitted the
          * `close` event, the abort operation will have no effect. Otherwise an ongoing
          * event will emit `abort` and `close` events. Additionally, if there is an ongoing
@@ -8208,19 +8221,6 @@ declare namespace Electron {
          * it is not allowed to add or remove a custom header.
          */
         write(chunk: string | Buffer, encoding?: string, callback?: () => void): void;
-
-        /**
-         * A `boolean` specifying whether the request will use HTTP chunked transfer
-         * encoding or not. Defaults to false. The property is readable and writable,
-         * however it can be set only before the first write operation as the HTTP headers
-         * are not yet put on the wire. Trying to set the `chunkedEncoding` property after
-         * the first write will throw an error.
-         *
-         * Using chunked encoding is strongly recommended if you need to send a large
-         * request body as data will be streamed in small chunks instead of being
-         * internally buffered inside Electron process memory.
-         */
-        chunkedEncoding: boolean;
     }
 
     interface Clipboard {
@@ -9488,6 +9488,15 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/download-item
 
         /**
+         * A `string` property that determines the save file path of the download item.
+         *
+         * The property is only available in session's `will-download` callback function.
+         * If user doesn't set the save path via the property, Electron will use the
+         * original routine to determine the save path; this usually prompts a save dialog.
+         */
+        savePath: string;
+
+        /**
          * Emitted when the download is in a terminal state. This includes a completed
          * download, a cancelled download (via `downloadItem.cancel()`), and interrupted
          * download that can't be resumed.
@@ -9743,15 +9752,6 @@ declare namespace Electron {
          * routine to determine the save path; this usually prompts a save dialog.
          */
         setSavePath(path: string): void;
-
-        /**
-         * A `string` property that determines the save file path of the download item.
-         *
-         * The property is only available in session's `will-download` callback function.
-         * If user doesn't set the save path via the property, Electron will use the
-         * original routine to determine the save path; this usually prompts a save dialog.
-         */
-        savePath: string;
     }
 
     interface Extension {
@@ -10031,6 +10031,52 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/incoming-message
 
         /**
+         * A `Record<string, string | string[]>` representing the HTTP response headers.
+         * The `headers` object is formatted as follows:
+         *
+         * * All header names are lowercased.
+         * * Duplicates of `age`, `authorization`, `content-length`, `content-type`,
+         * `etag`, `expires`, `from`, `host`, `if-modified-since`, `if-unmodified-since`,
+         * `last-modified`, `location`, `max-forwards`, `proxy-authorization`, `referer`,
+         * `retry-after`, `server`, or `user-agent` are discarded.
+         * * `set-cookie` is always an array. Duplicates are added to the array.
+         * * For duplicate `cookie` headers, the values are joined together with '; '.
+         * * For all other headers, the values are joined together with ', '.
+         */
+        headers: Record<string, string | string[]>;
+        /**
+         * A `string` indicating the HTTP protocol version number. Typical values are '1.0'
+         * or '1.1'. Additionally `httpVersionMajor` and `httpVersionMinor` are two
+         * Integer-valued readable properties that return respectively the HTTP major and
+         * minor version numbers.
+         */
+        httpVersion: string;
+        /**
+         * An `Integer` indicating the HTTP protocol major version number.
+         */
+        httpVersionMajor: number;
+        /**
+         * An `Integer` indicating the HTTP protocol minor version number.
+         */
+        httpVersionMinor: number;
+        /**
+         * A `string[]` containing the raw HTTP response headers exactly as they were
+         * received. The keys and values are in the same list. It is not a list of tuples.
+         * So, the even-numbered offsets are key values, and the odd-numbered offsets are
+         * the associated values. Header names are not lowercased, and duplicates are not
+         * merged.
+         */
+        rawHeaders: string[];
+        /**
+         * An `Integer` indicating the HTTP response status code.
+         */
+        statusCode: number;
+        /**
+         * A `string` representing the HTTP status message.
+         */
+        statusMessage: string;
+
+        /**
          * Emitted when a request has been canceled during an ongoing HTTP transaction.
          */
         on(event: 'aborted', listener: Function): this;
@@ -10129,52 +10175,6 @@ declare namespace Electron {
         addListener(event: 'error', listener: Function): this;
 
         removeListener(event: 'error', listener: Function): this;
-
-        /**
-         * A `Record<string, string | string[]>` representing the HTTP response headers.
-         * The `headers` object is formatted as follows:
-         *
-         * * All header names are lowercased.
-         * * Duplicates of `age`, `authorization`, `content-length`, `content-type`,
-         * `etag`, `expires`, `from`, `host`, `if-modified-since`, `if-unmodified-since`,
-         * `last-modified`, `location`, `max-forwards`, `proxy-authorization`, `referer`,
-         * `retry-after`, `server`, or `user-agent` are discarded.
-         * * `set-cookie` is always an array. Duplicates are added to the array.
-         * * For duplicate `cookie` headers, the values are joined together with '; '.
-         * * For all other headers, the values are joined together with ', '.
-         */
-        headers: Record<string, string | string[]>;
-        /**
-         * A `string` indicating the HTTP protocol version number. Typical values are '1.0'
-         * or '1.1'. Additionally `httpVersionMajor` and `httpVersionMinor` are two
-         * Integer-valued readable properties that return respectively the HTTP major and
-         * minor version numbers.
-         */
-        httpVersion: string;
-        /**
-         * An `Integer` indicating the HTTP protocol major version number.
-         */
-        httpVersionMajor: number;
-        /**
-         * An `Integer` indicating the HTTP protocol minor version number.
-         */
-        httpVersionMinor: number;
-        /**
-         * A `string[]` containing the raw HTTP response headers exactly as they were
-         * received. The keys and values are in the same list. It is not a list of tuples.
-         * So, the even-numbered offsets are key values, and the odd-numbered offsets are
-         * the associated values. Header names are not lowercased, and duplicates are not
-         * merged.
-         */
-        rawHeaders: string[];
-        /**
-         * An `Integer` indicating the HTTP response status code.
-         */
-        statusCode: number;
-        /**
-         * A `string` representing the HTTP status message.
-         */
-        statusMessage: string;
     }
 
     interface InputEvent {
@@ -10694,30 +10694,12 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/menu
 
         /**
-         * Emitted when a popup is closed either manually or with `menu.closePopup()`.
+         * A `MenuItem[]` array containing the menu's items.
+         *
+         * Each `Menu` consists of multiple `MenuItem`s and each `MenuItem` can have a
+         * submenu.
          */
-        on(event: 'menu-will-close', listener: (event: Event) => void): this;
-
-        off(event: 'menu-will-close', listener: (event: Event) => void): this;
-
-        once(event: 'menu-will-close', listener: (event: Event) => void): this;
-
-        addListener(event: 'menu-will-close', listener: (event: Event) => void): this;
-
-        removeListener(event: 'menu-will-close', listener: (event: Event) => void): this;
-
-        /**
-         * Emitted when `menu.popup()` is called.
-         */
-        on(event: 'menu-will-show', listener: (event: Event) => void): this;
-
-        off(event: 'menu-will-show', listener: (event: Event) => void): this;
-
-        once(event: 'menu-will-show', listener: (event: Event) => void): this;
-
-        addListener(event: 'menu-will-show', listener: (event: Event) => void): this;
-
-        removeListener(event: 'menu-will-show', listener: (event: Event) => void): this;
+        items: MenuItem[];
 
         /**
          * Menu
@@ -10776,6 +10758,32 @@ declare namespace Electron {
         static setApplicationMenu(menu: Menu | null): void;
 
         /**
+         * Emitted when a popup is closed either manually or with `menu.closePopup()`.
+         */
+        on(event: 'menu-will-close', listener: (event: Event) => void): this;
+
+        off(event: 'menu-will-close', listener: (event: Event) => void): this;
+
+        once(event: 'menu-will-close', listener: (event: Event) => void): this;
+
+        addListener(event: 'menu-will-close', listener: (event: Event) => void): this;
+
+        removeListener(event: 'menu-will-close', listener: (event: Event) => void): this;
+
+        /**
+         * Emitted when `menu.popup()` is called.
+         */
+        on(event: 'menu-will-show', listener: (event: Event) => void): this;
+
+        off(event: 'menu-will-show', listener: (event: Event) => void): this;
+
+        once(event: 'menu-will-show', listener: (event: Event) => void): this;
+
+        addListener(event: 'menu-will-show', listener: (event: Event) => void): this;
+
+        removeListener(event: 'menu-will-show', listener: (event: Event) => void): this;
+
+        /**
          * Appends the `menuItem` to the menu.
          */
         append(menuItem: MenuItem): void;
@@ -10799,23 +10807,10 @@ declare namespace Electron {
          * Pops up this menu as a context menu in the `BrowserWindow`.
          */
         popup(options?: PopupOptions): void;
-
-        /**
-         * A `MenuItem[]` array containing the menu's items.
-         *
-         * Each `Menu` consists of multiple `MenuItem`s and each `MenuItem` can have a
-         * submenu.
-         */
-        items: MenuItem[];
     }
 
     class MenuItem {
         // Docs: https://electronjs.org/docs/api/menu-item
-
-        /**
-         * MenuItem
-         */
-        constructor(options: MenuItemConstructorOptions);
 
         /**
          * An `Accelerator` (optional) indicating the item's accelerator, if set.
@@ -10976,6 +10971,11 @@ declare namespace Electron {
          * dynamically changed.
          */
         visible: boolean;
+
+        /**
+         * MenuItem
+         */
+        constructor(options: MenuItemConstructorOptions);
     }
 
     class MessageChannelMain extends NodeEventEmitter {
@@ -11102,6 +11102,16 @@ declare namespace Electron {
 
     class NativeImage {
         // Docs: https://electronjs.org/docs/api/native-image
+
+        /**
+         * A `boolean` property that determines whether the image is considered a template
+         * image.
+         *
+         * Please note that this property only has an effect on macOS.
+         *
+         * @platform darwin
+         */
+        isMacTemplateImage: boolean;
 
         /**
          * Creates an empty `NativeImage` instance.
@@ -11269,36 +11279,10 @@ declare namespace Electron {
          * A Buffer that contains the image's `PNG` encoded data.
          */
         toPNG(options?: ToPNGOptions): Buffer;
-
-        /**
-         * A `boolean` property that determines whether the image is considered a template
-         * image.
-         *
-         * Please note that this property only has an effect on macOS.
-         *
-         * @platform darwin
-         */
-        isMacTemplateImage: boolean;
     }
 
     interface NativeTheme extends NodeJS.EventEmitter {
         // Docs: https://electronjs.org/docs/api/native-theme
-
-        /**
-         * Emitted when something in the underlying NativeTheme has changed. This normally
-         * means that either the value of `shouldUseDarkColors`,
-         * `shouldUseHighContrastColors` or `shouldUseInvertedColorScheme` has changed. You
-         * will have to check them to determine which one has changed.
-         */
-        on(event: 'updated', listener: Function): this;
-
-        off(event: 'updated', listener: Function): this;
-
-        once(event: 'updated', listener: Function): this;
-
-        addListener(event: 'updated', listener: Function): this;
-
-        removeListener(event: 'updated', listener: Function): this;
 
         /**
          * A `boolean` indicating whether Chromium is in forced colors mode, controlled by
@@ -11367,6 +11351,22 @@ declare namespace Electron {
          * CSS to apply.
          */
         themeSource: 'system' | 'light' | 'dark';
+
+        /**
+         * Emitted when something in the underlying NativeTheme has changed. This normally
+         * means that either the value of `shouldUseDarkColors`,
+         * `shouldUseHighContrastColors` or `shouldUseInvertedColorScheme` has changed. You
+         * will have to check them to determine which one has changed.
+         */
+        on(event: 'updated', listener: Function): this;
+
+        off(event: 'updated', listener: Function): this;
+
+        once(event: 'updated', listener: Function): this;
+
+        addListener(event: 'updated', listener: Function): this;
+
+        removeListener(event: 'updated', listener: Function): this;
     }
 
     class NavigationHistory extends NodeEventEmitter {
@@ -11394,6 +11394,17 @@ declare namespace Electron {
 
     interface Net {
         // Docs: https://electronjs.org/docs/api/net
+
+        /**
+         * A `boolean` property. Whether there is currently internet connection.
+         *
+         * A return value of `false` is a pretty strong indicator that the user won't be
+         * able to connect to remote sites. However, a return value of `true` is
+         * inconclusive; even if some link is up, it is uncertain whether a particular
+         * connection attempt to a particular remote site will be successful.
+         *
+         */
+        readonly online: boolean;
 
         /**
          * see Response.
@@ -11456,21 +11467,17 @@ declare namespace Electron {
          * another session, use ses.resolveHost().
          */
         resolveHost(host: string, options?: ResolveHostOptions): Promise<Electron.ResolvedHost>;
-
-        /**
-         * A `boolean` property. Whether there is currently internet connection.
-         *
-         * A return value of `false` is a pretty strong indicator that the user won't be
-         * able to connect to remote sites. However, a return value of `true` is
-         * inconclusive; even if some link is up, it is uncertain whether a particular
-         * connection attempt to a particular remote site will be successful.
-         *
-         */
-        readonly online: boolean;
     }
 
     interface NetLog {
         // Docs: https://electronjs.org/docs/api/net-log
+
+        /**
+         * A `boolean` property that indicates whether network logs are currently being
+         * recorded.
+         *
+         */
+        readonly currentlyLogging: boolean;
 
         /**
          * resolves when the net log has begun recording.
@@ -11486,17 +11493,82 @@ declare namespace Electron {
          * end when app quits.
          */
         stopLogging(): Promise<void>;
-
-        /**
-         * A `boolean` property that indicates whether network logs are currently being
-         * recorded.
-         *
-         */
-        readonly currentlyLogging: boolean;
     }
 
     class Notification extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/notification
+
+        /**
+         * A `NotificationAction[]` property representing the actions of the notification.
+         */
+        actions: NotificationAction[];
+        /**
+         * A `string` property representing the body of the notification.
+         */
+        body: string;
+        /**
+         * A `string` property representing the close button text of the notification.
+         */
+        closeButtonText: string;
+        /**
+         * A `boolean` property representing whether the notification has a reply action.
+         */
+        hasReply: boolean;
+        /**
+         * A `string` property representing the reply placeholder of the notification.
+         */
+        replyPlaceholder: string;
+        /**
+         * A `boolean` property representing whether the notification is silent.
+         */
+        silent: boolean;
+        /**
+         * A `string` property representing the sound of the notification.
+         */
+        sound: string;
+        /**
+         * A `string` property representing the subtitle of the notification.
+         */
+        subtitle: string;
+        /**
+         * A `string` property representing the type of timeout duration for the
+         * notification. Can be 'default' or 'never'.
+         *
+         * If `timeoutType` is set to 'never', the notification never expires. It stays
+         * open until closed by the calling API or the user.
+         *
+         * @platform linux,win32
+         */
+        timeoutType: 'default' | 'never';
+        /**
+         * A `string` property representing the title of the notification.
+         */
+        title: string;
+        /**
+         * A `string` property representing the custom Toast XML of the notification.
+         *
+         * @platform win32
+         */
+        toastXml: string;
+        /**
+         * A `string` property representing the urgency level of the notification. Can be
+         * 'normal', 'critical', or 'low'.
+         *
+         * Default is 'low' - see NotifyUrgency for more information.
+         *
+         * @platform linux
+         */
+        urgency: 'normal' | 'critical' | 'low';
+
+        /**
+         * Notification
+         */
+        constructor(options?: NotificationConstructorOptions);
+
+        /**
+         * Whether or not desktop notifications are supported on the current system
+         */
+        static isSupported(): boolean;
 
         /**
          * @platform darwin
@@ -11766,16 +11838,6 @@ declare namespace Electron {
         removeListener(event: 'show', listener: (event: Event) => void): this;
 
         /**
-         * Notification
-         */
-        constructor(options?: NotificationConstructorOptions);
-
-        /**
-         * Whether or not desktop notifications are supported on the current system
-         */
-        static isSupported(): boolean;
-
-        /**
          * Dismisses the notification.
          *
          * On Windows, calling `notification.close()` while the notification is visible on
@@ -11795,68 +11857,6 @@ declare namespace Electron {
          * previously shown notification and create a new one with identical properties.
          */
         show(): void;
-
-        /**
-         * A `NotificationAction[]` property representing the actions of the notification.
-         */
-        actions: NotificationAction[];
-        /**
-         * A `string` property representing the body of the notification.
-         */
-        body: string;
-        /**
-         * A `string` property representing the close button text of the notification.
-         */
-        closeButtonText: string;
-        /**
-         * A `boolean` property representing whether the notification has a reply action.
-         */
-        hasReply: boolean;
-        /**
-         * A `string` property representing the reply placeholder of the notification.
-         */
-        replyPlaceholder: string;
-        /**
-         * A `boolean` property representing whether the notification is silent.
-         */
-        silent: boolean;
-        /**
-         * A `string` property representing the sound of the notification.
-         */
-        sound: string;
-        /**
-         * A `string` property representing the subtitle of the notification.
-         */
-        subtitle: string;
-        /**
-         * A `string` property representing the type of timeout duration for the
-         * notification. Can be 'default' or 'never'.
-         *
-         * If `timeoutType` is set to 'never', the notification never expires. It stays
-         * open until closed by the calling API or the user.
-         *
-         * @platform linux,win32
-         */
-        timeoutType: 'default' | 'never';
-        /**
-         * A `string` property representing the title of the notification.
-         */
-        title: string;
-        /**
-         * A `string` property representing the custom Toast XML of the notification.
-         *
-         * @platform win32
-         */
-        toastXml: string;
-        /**
-         * A `string` property representing the urgency level of the notification. Can be
-         * 'normal', 'critical', or 'low'.
-         *
-         * Default is 'low' - see NotifyUrgency for more information.
-         *
-         * @platform linux
-         */
-        urgency: 'normal' | 'critical' | 'low';
     }
 
     interface NotificationAction {
@@ -11998,6 +11998,13 @@ declare namespace Electron {
 
     interface PowerMonitor extends NodeJS.EventEmitter {
         // Docs: https://electronjs.org/docs/api/power-monitor
+
+        /**
+         * A `boolean` property. True if the system is on battery power.
+         *
+         * See `powerMonitor.isOnBatteryPower()`.
+         */
+        onBatteryPower: boolean;
 
         /**
          * Emitted when the system is about to lock the screen.
@@ -12317,13 +12324,6 @@ declare namespace Electron {
          * events.
          */
         isOnBatteryPower(): boolean;
-
-        /**
-         * A `boolean` property. True if the system is on battery power.
-         *
-         * See `powerMonitor.isOnBatteryPower()`.
-         */
-        onBatteryPower: boolean;
     }
 
     interface PowerSaveBlocker {
@@ -13550,6 +13550,53 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/session
 
         /**
+         * A `Session` object, the default session object of the app.
+         */
+        static defaultSession: Session;
+        /**
+         * A `string[]` array which consists of all the known available spell checker
+         * languages.  Providing a language code to the `setSpellCheckerLanguages` API that
+         * isn't in this array will result in an error.
+         *
+         */
+        readonly availableSpellCheckerLanguages: string[];
+        /**
+         * A `Cookies` object for this session.
+         *
+         */
+        readonly cookies: Cookies;
+        /**
+         * A `NetLog` object for this session.
+         *
+         */
+        readonly netLog: NetLog;
+        /**
+         * A `Protocol` object for this session.
+         *
+         */
+        readonly protocol: Protocol;
+        /**
+         * A `ServiceWorkers` object for this session.
+         *
+         */
+        readonly serviceWorkers: ServiceWorkers;
+        /**
+         * A `boolean` indicating whether builtin spell checker is enabled.
+         */
+        spellCheckerEnabled: boolean;
+        /**
+         * A `string | null` indicating the absolute file system path where data for this
+         * session is persisted on disk.  For in memory sessions this returns `null`.
+         *
+         */
+        readonly storagePath: string | null;
+        /**
+         * A `WebRequest` object for this session.
+         *
+         */
+        readonly webRequest: WebRequest;
+
+        /**
          * A session instance from `partition` string. When there is an existing `Session`
          * with the same `partition`, it will be returned; otherwise a new `Session`
          * instance will be created with `options`.
@@ -13577,11 +13624,6 @@ declare namespace Electron {
          * existing `Session` object.
          */
         static fromPath(path: string, options?: FromPathOptions): Session;
-
-        /**
-         * A `Session` object, the default session object of the app.
-         */
-        static defaultSession: Session;
 
         /**
          * Emitted after an extension is loaded. This occurs whenever an extension is added
@@ -15006,49 +15048,6 @@ declare namespace Electron {
          * `webContents.setUserAgent` to override the session-wide user agent.
          */
         setUserAgent(userAgent: string, acceptLanguages?: string): void;
-
-        /**
-         * A `string[]` array which consists of all the known available spell checker
-         * languages.  Providing a language code to the `setSpellCheckerLanguages` API that
-         * isn't in this array will result in an error.
-         *
-         */
-        readonly availableSpellCheckerLanguages: string[];
-        /**
-         * A `Cookies` object for this session.
-         *
-         */
-        readonly cookies: Cookies;
-        /**
-         * A `NetLog` object for this session.
-         *
-         */
-        readonly netLog: NetLog;
-        /**
-         * A `Protocol` object for this session.
-         *
-         */
-        readonly protocol: Protocol;
-        /**
-         * A `ServiceWorkers` object for this session.
-         *
-         */
-        readonly serviceWorkers: ServiceWorkers;
-        /**
-         * A `boolean` indicating whether builtin spell checker is enabled.
-         */
-        spellCheckerEnabled: boolean;
-        /**
-         * A `string | null` indicating the absolute file system path where data for this
-         * session is persisted on disk.  For in memory sessions this returns `null`.
-         *
-         */
-        readonly storagePath: string | null;
-        /**
-         * A `WebRequest` object for this session.
-         *
-         */
-        readonly webRequest: WebRequest;
     }
 
     interface SharedWorkerInfo {
@@ -15217,6 +15216,16 @@ declare namespace Electron {
 
     interface SystemPreferences extends NodeJS.EventEmitter {
         // Docs: https://electronjs.org/docs/api/system-preferences
+
+        /**
+         * A `string` property that can be `dark`, `light` or `unknown`.
+         *
+         * Returns the macOS appearance setting that is currently applied to your
+         * application, maps to NSApplication.effectiveAppearance
+         *
+         * @platform darwin
+         */
+        readonly effectiveAppearance: 'dark' | 'light' | 'unknown';
 
         /**
          * @platform win32
@@ -15707,16 +15716,6 @@ declare namespace Electron {
          * @platform darwin
          */
         accessibilityDisplayShouldReduceTransparency(): boolean;
-
-        /**
-         * A `string` property that can be `dark`, `light` or `unknown`.
-         *
-         * Returns the macOS appearance setting that is currently applied to your
-         * application, maps to NSApplication.effectiveAppearance
-         *
-         * @platform darwin
-         */
-        readonly effectiveAppearance: 'dark' | 'light' | 'unknown';
     }
 
     interface Task {
@@ -15780,27 +15779,6 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/touch-bar
 
         /**
-         * TouchBar
-         */
-        constructor(options: TouchBarConstructorOptions);
-
-        /**
-         * A `TouchBarItem` that will replace the "esc" button on the touch bar when set.
-         * Setting to `null` restores the default "esc" button. Changing this value
-         * immediately updates the escape item in the touch bar.
-         */
-        escapeItem:
-            | TouchBarButton
-            | TouchBarColorPicker
-            | TouchBarGroup
-            | TouchBarLabel
-            | TouchBarPopover
-            | TouchBarScrubber
-            | TouchBarSegmentedControl
-            | TouchBarSlider
-            | TouchBarSpacer
-            | null;
-        /**
          * A `typeof TouchBarButton` reference to the `TouchBarButton` class.
          */
         static TouchBarButton: typeof TouchBarButton;
@@ -15842,15 +15820,31 @@ declare namespace Electron {
          * A `typeof TouchBarSpacer` reference to the `TouchBarSpacer` class.
          */
         static TouchBarSpacer: typeof TouchBarSpacer;
+        /**
+         * A `TouchBarItem` that will replace the "esc" button on the touch bar when set.
+         * Setting to `null` restores the default "esc" button. Changing this value
+         * immediately updates the escape item in the touch bar.
+         */
+        escapeItem:
+            | TouchBarButton
+            | TouchBarColorPicker
+            | TouchBarGroup
+            | TouchBarLabel
+            | TouchBarPopover
+            | TouchBarScrubber
+            | TouchBarSegmentedControl
+            | TouchBarSlider
+            | TouchBarSpacer
+            | null;
+
+        /**
+         * TouchBar
+         */
+        constructor(options: TouchBarConstructorOptions);
     }
 
     class TouchBarButton {
         // Docs: https://electronjs.org/docs/api/touch-bar-button
-
-        /**
-         * TouchBarButton
-         */
-        constructor(options: TouchBarButtonConstructorOptions);
 
         /**
          * A `string` representing the description of the button to be read by a screen
@@ -15880,15 +15874,15 @@ declare namespace Electron {
          * immediately updates the button in the touch bar.
          */
         label: string;
+
+        /**
+         * TouchBarButton
+         */
+        constructor(options: TouchBarButtonConstructorOptions);
     }
 
     class TouchBarColorPicker extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/touch-bar-color-picker
-
-        /**
-         * TouchBarColorPicker
-         */
-        constructor(options: TouchBarColorPickerConstructorOptions);
 
         /**
          * A `string[]` array representing the color picker's available colors to select.
@@ -15900,6 +15894,11 @@ declare namespace Electron {
          * Changing this value immediately updates the color picker in the touch bar.
          */
         selectedColor: string;
+
+        /**
+         * TouchBarColorPicker
+         */
+        constructor(options: TouchBarColorPickerConstructorOptions);
     }
 
     class TouchBarGroup extends NodeEventEmitter {
@@ -15913,11 +15912,6 @@ declare namespace Electron {
 
     class TouchBarLabel extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/touch-bar-label
-
-        /**
-         * TouchBarLabel
-         */
-        constructor(options: TouchBarLabelConstructorOptions);
 
         /**
          * A `string` representing the description of the label to be read by a screen
@@ -15934,6 +15928,11 @@ declare namespace Electron {
          * value immediately updates the label in the touch bar.
          */
         textColor: string;
+
+        /**
+         * TouchBarLabel
+         */
+        constructor(options: TouchBarLabelConstructorOptions);
     }
 
     class TouchBarOtherItemsProxy extends NodeEventEmitter {
@@ -15949,11 +15948,6 @@ declare namespace Electron {
         // Docs: https://electronjs.org/docs/api/touch-bar-popover
 
         /**
-         * TouchBarPopover
-         */
-        constructor(options: TouchBarPopoverConstructorOptions);
-
-        /**
          * A `NativeImage` representing the popover's current button icon. Changing this
          * value immediately updates the popover in the touch bar.
          */
@@ -15963,15 +15957,15 @@ declare namespace Electron {
          * immediately updates the popover in the touch bar.
          */
         label: string;
+
+        /**
+         * TouchBarPopover
+         */
+        constructor(options: TouchBarPopoverConstructorOptions);
     }
 
     class TouchBarScrubber extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/touch-bar-scrubber
-
-        /**
-         * TouchBarScrubber
-         */
-        constructor(options: TouchBarScrubberConstructorOptions);
 
         /**
          * A `boolean` representing whether this scrubber is continuous or not. Updating
@@ -16019,15 +16013,15 @@ declare namespace Electron {
          * bar.
          */
         showArrowButtons: boolean;
+
+        /**
+         * TouchBarScrubber
+         */
+        constructor(options: TouchBarScrubberConstructorOptions);
     }
 
     class TouchBarSegmentedControl extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/touch-bar-segmented-control
-
-        /**
-         * TouchBarSegmentedControl
-         */
-        constructor(options: TouchBarSegmentedControlConstructorOptions);
 
         /**
          * A `string` representing the current selection mode of the control.  Can be
@@ -16051,15 +16045,15 @@ declare namespace Electron {
          * touch bar will update this value automatically.
          */
         selectedIndex: number;
+
+        /**
+         * TouchBarSegmentedControl
+         */
+        constructor(options: TouchBarSegmentedControlConstructorOptions);
     }
 
     class TouchBarSlider extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/touch-bar-slider
-
-        /**
-         * TouchBarSlider
-         */
-        constructor(options: TouchBarSliderConstructorOptions);
 
         /**
          * A `string` representing the slider's current text. Changing this value
@@ -16081,21 +16075,26 @@ declare namespace Electron {
          * immediately updates the slider in the touch bar.
          */
         value: number;
+
+        /**
+         * TouchBarSlider
+         */
+        constructor(options: TouchBarSliderConstructorOptions);
     }
 
     class TouchBarSpacer extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/touch-bar-spacer
 
         /**
-         * TouchBarSpacer
-         */
-        constructor(options: TouchBarSpacerConstructorOptions);
-
-        /**
          * A `string` representing the size of the spacer.  Can be `small`, `large` or
          * `flexible`.
          */
         size: 'small' | 'large' | 'flexible';
+
+        /**
+         * TouchBarSpacer
+         */
+        constructor(options: TouchBarSpacerConstructorOptions);
     }
 
     interface TraceCategoriesAndOptions {
@@ -16212,6 +16211,11 @@ declare namespace Electron {
 
     class Tray extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/tray
+
+        /**
+         * Tray
+         */
+        constructor(image: NativeImage | string, guid?: string);
 
         /**
          * Emitted when the tray balloon is clicked.
@@ -17208,11 +17212,6 @@ declare namespace Electron {
         ): this;
 
         /**
-         * Tray
-         */
-        constructor(image: NativeImage | string, guid?: string);
-
-        /**
          * Closes an open context menu, as set by `tray.setContextMenu()`.
          *
          * @platform darwin,win32
@@ -17462,6 +17461,28 @@ declare namespace Electron {
     class UtilityProcess extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/utility-process
 
+        /**
+         * A `Integer | undefined` representing the process identifier (PID) of the child
+         * process. If the child process fails to spawn due to errors, then the value is
+         * `undefined`. When the child process exits, then the value is `undefined` after
+         * the `exit` event is emitted.
+         */
+        pid: number | undefined;
+        /**
+         * A `NodeJS.ReadableStream | null` that represents the child process's stderr. If
+         * the child was spawned with options.stdio[2] set to anything other than 'pipe',
+         * then this will be `null`. When the child process exits, then the value is `null`
+         * after the `exit` event is emitted.
+         */
+        stderr: NodeJS.ReadableStream | null;
+        /**
+         * A `NodeJS.ReadableStream | null` that represents the child process's stdout. If
+         * the child was spawned with options.stdio[1] set to anything other than 'pipe',
+         * then this will be `null`. When the child process exits, then the value is `null`
+         * after the `exit` event is emitted.
+         */
+        stdout: NodeJS.ReadableStream | null;
+
         static fork(modulePath: string, args?: string[], options?: ForkOptions): UtilityProcess;
 
         /**
@@ -17563,32 +17584,21 @@ declare namespace Electron {
          * For example:
          */
         postMessage(message: any, transfer?: MessagePortMain[]): void;
-
-        /**
-         * A `Integer | undefined` representing the process identifier (PID) of the child
-         * process. If the child process fails to spawn due to errors, then the value is
-         * `undefined`. When the child process exits, then the value is `undefined` after
-         * the `exit` event is emitted.
-         */
-        pid: number | undefined;
-        /**
-         * A `NodeJS.ReadableStream | null` that represents the child process's stderr. If
-         * the child was spawned with options.stdio[2] set to anything other than 'pipe',
-         * then this will be `null`. When the child process exits, then the value is `null`
-         * after the `exit` event is emitted.
-         */
-        stderr: NodeJS.ReadableStream | null;
-        /**
-         * A `NodeJS.ReadableStream | null` that represents the child process's stdout. If
-         * the child was spawned with options.stdio[1] set to anything other than 'pipe',
-         * then this will be `null`. When the child process exits, then the value is `null`
-         * after the `exit` event is emitted.
-         */
-        stdout: NodeJS.ReadableStream | null;
     }
 
     class View extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/view
+
+        /**
+         * A `View[]` property representing the child views of this view.
+         *
+         */
+        readonly children: View[];
+
+        /**
+         * View
+         */
+        constructor();
 
         /**
          * Emitted when the view's bounds have changed in response to being laid out. The
@@ -17603,11 +17613,6 @@ declare namespace Electron {
         addListener(event: 'bounds-changed', listener: Function): this;
 
         removeListener(event: 'bounds-changed', listener: Function): this;
-
-        /**
-         * View
-         */
-        constructor();
 
         /**
          * If the same View is added to a parent which already contains it, it will be
@@ -17655,16 +17660,123 @@ declare namespace Electron {
         setBounds(bounds: Rectangle): void;
 
         setVisible(visible: boolean): void;
-
-        /**
-         * A `View[]` property representing the child views of this view.
-         *
-         */
-        readonly children: View[];
     }
 
     class WebContents extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/web-contents
+
+        /**
+         * A `boolean` property that determines whether this page is muted.
+         */
+        audioMuted: boolean;
+        /**
+         * A `boolean` property that determines whether or not this WebContents will
+         * throttle animations and timers when the page becomes backgrounded. This also
+         * affects the Page Visibility API.
+         */
+        backgroundThrottling: boolean;
+        /**
+         * A `Debugger` instance for this webContents.
+         *
+         */
+        readonly debugger: Debugger;
+        /**
+         * A `WebContents | null` property that represents the of DevTools `WebContents`
+         * associated with a given `WebContents`.
+         *
+         * **Note:** Users should never store this object because it may become `null` when
+         * the DevTools has been closed.
+         *
+         */
+        readonly devToolsWebContents: WebContents | null;
+        /**
+         * An `Integer` property that sets the frame rate of the web contents to the
+         * specified number. Only values between 1 and 240 are accepted.
+         *
+         * Only applicable if _offscreen rendering_ is enabled.
+         */
+        frameRate: number;
+        /**
+         * A `WebContents` instance that might own this `WebContents`.
+         *
+         */
+        readonly hostWebContents: WebContents;
+        /**
+         * A `Integer` representing the unique ID of this WebContents. Each ID is unique
+         * among all `WebContents` instances of the entire Electron application.
+         *
+         */
+        readonly id: number;
+        /**
+         * An `IpcMain` scoped to just IPC messages sent from this WebContents.
+         *
+         * IPC messages sent with `ipcRenderer.send`, `ipcRenderer.sendSync` or
+         * `ipcRenderer.postMessage` will be delivered in the following order:
+         *
+         * * `contents.on('ipc-message')`
+         * * `contents.mainFrame.on(channel)`
+         * * `contents.ipc.on(channel)`
+         * * `ipcMain.on(channel)`
+         *
+         * Handlers registered with `invoke` will be checked in the following order. The
+         * first one that is defined will be called, the rest will be ignored.
+         *
+         * * `contents.mainFrame.handle(channel)`
+         * * `contents.handle(channel)`
+         * * `ipcMain.handle(channel)`
+         *
+         * A handler or event listener registered on the WebContents will receive IPC
+         * messages sent from any frame, including child frames. In most cases, only the
+         * main frame can send IPC messages. However, if the `nodeIntegrationInSubFrames`
+         * option is enabled, it is possible for child frames to send IPC messages also. In
+         * that case, handlers should check the `senderFrame` property of the IPC event to
+         * ensure that the message is coming from the expected frame. Alternatively,
+         * register handlers on the appropriate frame directly using the `WebFrameMain.ipc`
+         * interface.
+         *
+         */
+        readonly ipc: IpcMain;
+        /**
+         * A `WebFrameMain` property that represents the top frame of the page's frame
+         * hierarchy.
+         *
+         */
+        readonly mainFrame: WebFrameMain;
+        /**
+         * A `NavigationHistory` used by this webContents.
+         *
+         */
+        readonly navigationHistory: NavigationHistory;
+        /**
+         * A `WebFrameMain` property that represents the frame that opened this
+         * WebContents, either with open(), or by navigating a link with a target
+         * attribute.
+         *
+         */
+        readonly opener: WebFrameMain;
+        /**
+         * A `Session` used by this webContents.
+         *
+         */
+        readonly session: Session;
+        /**
+         * A `string` property that determines the user agent for this web page.
+         */
+        userAgent: string;
+        /**
+         * A `number` property that determines the zoom factor for this web contents.
+         *
+         * The zoom factor is the zoom percent divided by 100, so 300% = 3.0.
+         */
+        zoomFactor: number;
+        /**
+         * A `number` property that determines the zoom level for this web contents.
+         *
+         * The original size is 0 and each increment above or below represents zooming 20%
+         * larger or smaller to default limits of 300% and 50% of original size,
+         * respectively. The formula for this is `scale := 1.2 ^ level`.
+         */
+        zoomLevel: number;
 
         /**
          * A WebContents instance with the given TargetID, or `undefined` if there is no
@@ -20581,6 +20693,7 @@ declare namespace Electron {
             onlyDirty: boolean,
             callback: (image: NativeImage, dirtyRect: Rectangle) => void
         ): void;
+
         /**
          * Begin subscribing for presentation events and captured frames, the `callback`
          * will be called with `callback(image, dirtyRect)` when there is a presentation
@@ -21331,123 +21444,22 @@ declare namespace Electron {
          * Executes the editing command `unselect` in web page.
          */
         unselect(): void;
-
-        /**
-         * A `boolean` property that determines whether this page is muted.
-         */
-        audioMuted: boolean;
-        /**
-         * A `boolean` property that determines whether or not this WebContents will
-         * throttle animations and timers when the page becomes backgrounded. This also
-         * affects the Page Visibility API.
-         */
-        backgroundThrottling: boolean;
-        /**
-         * A `Debugger` instance for this webContents.
-         *
-         */
-        readonly debugger: Debugger;
-        /**
-         * A `WebContents | null` property that represents the of DevTools `WebContents`
-         * associated with a given `WebContents`.
-         *
-         * **Note:** Users should never store this object because it may become `null` when
-         * the DevTools has been closed.
-         *
-         */
-        readonly devToolsWebContents: WebContents | null;
-        /**
-         * An `Integer` property that sets the frame rate of the web contents to the
-         * specified number. Only values between 1 and 240 are accepted.
-         *
-         * Only applicable if _offscreen rendering_ is enabled.
-         */
-        frameRate: number;
-        /**
-         * A `WebContents` instance that might own this `WebContents`.
-         *
-         */
-        readonly hostWebContents: WebContents;
-        /**
-         * A `Integer` representing the unique ID of this WebContents. Each ID is unique
-         * among all `WebContents` instances of the entire Electron application.
-         *
-         */
-        readonly id: number;
-        /**
-         * An `IpcMain` scoped to just IPC messages sent from this WebContents.
-         *
-         * IPC messages sent with `ipcRenderer.send`, `ipcRenderer.sendSync` or
-         * `ipcRenderer.postMessage` will be delivered in the following order:
-         *
-         * * `contents.on('ipc-message')`
-         * * `contents.mainFrame.on(channel)`
-         * * `contents.ipc.on(channel)`
-         * * `ipcMain.on(channel)`
-         *
-         * Handlers registered with `invoke` will be checked in the following order. The
-         * first one that is defined will be called, the rest will be ignored.
-         *
-         * * `contents.mainFrame.handle(channel)`
-         * * `contents.handle(channel)`
-         * * `ipcMain.handle(channel)`
-         *
-         * A handler or event listener registered on the WebContents will receive IPC
-         * messages sent from any frame, including child frames. In most cases, only the
-         * main frame can send IPC messages. However, if the `nodeIntegrationInSubFrames`
-         * option is enabled, it is possible for child frames to send IPC messages also. In
-         * that case, handlers should check the `senderFrame` property of the IPC event to
-         * ensure that the message is coming from the expected frame. Alternatively,
-         * register handlers on the appropriate frame directly using the `WebFrameMain.ipc`
-         * interface.
-         *
-         */
-        readonly ipc: IpcMain;
-        /**
-         * A `WebFrameMain` property that represents the top frame of the page's frame
-         * hierarchy.
-         *
-         */
-        readonly mainFrame: WebFrameMain;
-        /**
-         * A `NavigationHistory` used by this webContents.
-         *
-         */
-        readonly navigationHistory: NavigationHistory;
-        /**
-         * A `WebFrameMain` property that represents the frame that opened this
-         * WebContents, either with open(), or by navigating a link with a target
-         * attribute.
-         *
-         */
-        readonly opener: WebFrameMain;
-        /**
-         * A `Session` used by this webContents.
-         *
-         */
-        readonly session: Session;
-        /**
-         * A `string` property that determines the user agent for this web page.
-         */
-        userAgent: string;
-        /**
-         * A `number` property that determines the zoom factor for this web contents.
-         *
-         * The zoom factor is the zoom percent divided by 100, so 300% = 3.0.
-         */
-        zoomFactor: number;
-        /**
-         * A `number` property that determines the zoom level for this web contents.
-         *
-         * The original size is 0 and each increment above or below represents zooming 20%
-         * larger or smaller to default limits of 300% and 50% of original size,
-         * respectively. The formula for this is `scale := 1.2 ^ level`.
-         */
-        zoomLevel: number;
     }
 
     class WebContentsView extends View {
         // Docs: https://electronjs.org/docs/api/web-contents-view
+
+        /**
+         * A `WebContents` property containing a reference to the displayed `WebContents`.
+         * Use this to interact with the `WebContents`, for instance to load a URL.
+         *
+         */
+        readonly webContents: WebContents;
+
+        /**
+         * WebContentsView
+         */
+        constructor(options?: WebContentsViewConstructorOptions);
 
         /**
          * Emitted when the view's bounds have changed in response to being laid out. The
@@ -21462,22 +21474,52 @@ declare namespace Electron {
         addListener(event: 'bounds-changed', listener: Function): this;
 
         removeListener(event: 'bounds-changed', listener: Function): this;
-
-        /**
-         * WebContentsView
-         */
-        constructor(options?: WebContentsViewConstructorOptions);
-
-        /**
-         * A `WebContents` property containing a reference to the displayed `WebContents`.
-         * Use this to interact with the `WebContents`, for instance to load a URL.
-         *
-         */
-        readonly webContents: WebContents;
     }
 
     interface WebFrame {
         // Docs: https://electronjs.org/docs/api/web-frame
+
+        /**
+         * A `WebFrame | null` representing the first child frame of `webFrame`, the
+         * property would be `null` if `webFrame` has no children or if first child is not
+         * in the current renderer process.
+         *
+         */
+        readonly firstChild: WebFrame | null;
+        /**
+         * A `WebFrame | null` representing next sibling frame, the property would be
+         * `null` if `webFrame` is the last frame in its parent or if the next sibling is
+         * not in the current renderer process.
+         *
+         */
+        readonly nextSibling: WebFrame | null;
+        /**
+         * A `WebFrame | null` representing the frame which opened `webFrame`, the property
+         * would be `null` if there's no opener or opener is not in the current renderer
+         * process.
+         *
+         */
+        readonly opener: WebFrame | null;
+        /**
+         * A `WebFrame | null` representing parent frame of `webFrame`, the property would
+         * be `null` if `webFrame` is top or parent is not in the current renderer process.
+         *
+         */
+        readonly parent: WebFrame | null;
+        /**
+         * An `Integer` representing the unique frame id in the current renderer process.
+         * Distinct WebFrame instances that refer to the same underlying frame will have
+         * the same `routingId`.
+         *
+         */
+        readonly routingId: number;
+        /**
+         * A `WebFrame | null` representing top frame in frame hierarchy to which
+         * `webFrame` belongs, the property would be `null` if top frame is not in the
+         * current renderer process.
+         *
+         */
+        readonly top: WebFrame | null;
 
         /**
          * Attempts to free memory that is no longer being used (like images from a
@@ -21653,112 +21695,10 @@ declare namespace Electron {
          * per-window.
          */
         setZoomLevel(level: number): void;
-
-        /**
-         * A `WebFrame | null` representing the first child frame of `webFrame`, the
-         * property would be `null` if `webFrame` has no children or if first child is not
-         * in the current renderer process.
-         *
-         */
-        readonly firstChild: WebFrame | null;
-        /**
-         * A `WebFrame | null` representing next sibling frame, the property would be
-         * `null` if `webFrame` is the last frame in its parent or if the next sibling is
-         * not in the current renderer process.
-         *
-         */
-        readonly nextSibling: WebFrame | null;
-        /**
-         * A `WebFrame | null` representing the frame which opened `webFrame`, the property
-         * would be `null` if there's no opener or opener is not in the current renderer
-         * process.
-         *
-         */
-        readonly opener: WebFrame | null;
-        /**
-         * A `WebFrame | null` representing parent frame of `webFrame`, the property would
-         * be `null` if `webFrame` is top or parent is not in the current renderer process.
-         *
-         */
-        readonly parent: WebFrame | null;
-        /**
-         * An `Integer` representing the unique frame id in the current renderer process.
-         * Distinct WebFrame instances that refer to the same underlying frame will have
-         * the same `routingId`.
-         *
-         */
-        readonly routingId: number;
-        /**
-         * A `WebFrame | null` representing top frame in frame hierarchy to which
-         * `webFrame` belongs, the property would be `null` if top frame is not in the
-         * current renderer process.
-         *
-         */
-        readonly top: WebFrame | null;
     }
 
     class WebFrameMain extends NodeEventEmitter {
         // Docs: https://electronjs.org/docs/api/web-frame-main
-
-        /**
-         * A frame with the given process and routing IDs, or `undefined` if there is no
-         * WebFrameMain associated with the given IDs.
-         */
-        static fromId(processId: number, routingId: number): WebFrameMain | undefined;
-
-        /**
-         * Emitted when the document is loaded.
-         */
-        on(event: 'dom-ready', listener: Function): this;
-
-        off(event: 'dom-ready', listener: Function): this;
-
-        once(event: 'dom-ready', listener: Function): this;
-
-        addListener(event: 'dom-ready', listener: Function): this;
-
-        removeListener(event: 'dom-ready', listener: Function): this;
-
-        /**
-         * A promise that resolves with the result of the executed code or is rejected if
-         * execution throws or results in a rejected promise.
-         *
-         * Evaluates `code` in page.
-         *
-         * In the browser window some HTML APIs like `requestFullScreen` can only be
-         * invoked by a gesture from the user. Setting `userGesture` to `true` will remove
-         * this limitation.
-         */
-        executeJavaScript(code: string, userGesture?: boolean): Promise<unknown>;
-
-        /**
-         * Send a message to the renderer process, optionally transferring ownership of
-         * zero or more `MessagePortMain` objects.
-         *
-         * The transferred `MessagePortMain` objects will be available in the renderer
-         * process by accessing the `ports` property of the emitted event. When they arrive
-         * in the renderer, they will be native DOM `MessagePort` objects.
-         *
-         * For example:
-         */
-        postMessage(channel: string, message: any, transfer?: MessagePortMain[]): void;
-
-        /**
-         * Whether the reload was initiated successfully. Only results in `false` when the
-         * frame has no history.
-         */
-        reload(): boolean;
-
-        /**
-         * Send an asynchronous message to the renderer process via `channel`, along with
-         * arguments. Arguments will be serialized with the Structured Clone Algorithm,
-         * just like `postMessage`, so prototype chains will not be included. Sending
-         * Functions, Promises, Symbols, WeakMaps, or WeakSets will throw an exception.
-         *
-         * The renderer process can handle the message by listening to `channel` with the
-         * `ipcRenderer` module.
-         */
-        send(channel: string, ...args: any[]): void;
 
         /**
          * A `WebFrameMain[]` collection containing the direct descendents of `frame`.
@@ -21864,6 +21804,66 @@ declare namespace Electron {
          *
          */
         readonly visibilityState: string;
+
+        /**
+         * A frame with the given process and routing IDs, or `undefined` if there is no
+         * WebFrameMain associated with the given IDs.
+         */
+        static fromId(processId: number, routingId: number): WebFrameMain | undefined;
+
+        /**
+         * Emitted when the document is loaded.
+         */
+        on(event: 'dom-ready', listener: Function): this;
+
+        off(event: 'dom-ready', listener: Function): this;
+
+        once(event: 'dom-ready', listener: Function): this;
+
+        addListener(event: 'dom-ready', listener: Function): this;
+
+        removeListener(event: 'dom-ready', listener: Function): this;
+
+        /**
+         * A promise that resolves with the result of the executed code or is rejected if
+         * execution throws or results in a rejected promise.
+         *
+         * Evaluates `code` in page.
+         *
+         * In the browser window some HTML APIs like `requestFullScreen` can only be
+         * invoked by a gesture from the user. Setting `userGesture` to `true` will remove
+         * this limitation.
+         */
+        executeJavaScript(code: string, userGesture?: boolean): Promise<unknown>;
+
+        /**
+         * Send a message to the renderer process, optionally transferring ownership of
+         * zero or more `MessagePortMain` objects.
+         *
+         * The transferred `MessagePortMain` objects will be available in the renderer
+         * process by accessing the `ports` property of the emitted event. When they arrive
+         * in the renderer, they will be native DOM `MessagePort` objects.
+         *
+         * For example:
+         */
+        postMessage(channel: string, message: any, transfer?: MessagePortMain[]): void;
+
+        /**
+         * Whether the reload was initiated successfully. Only results in `false` when the
+         * frame has no history.
+         */
+        reload(): boolean;
+
+        /**
+         * Send an asynchronous message to the renderer process via `channel`, along with
+         * arguments. Arguments will be serialized with the Structured Clone Algorithm,
+         * just like `postMessage`, so prototype chains will not be included. Sending
+         * Functions, Promises, Symbols, WeakMaps, or WeakSets will throw an exception.
+         *
+         * The renderer process can handle the message by listening to `channel` with the
+         * `ipcRenderer` module.
+         */
+        send(channel: string, ...args: any[]): void;
     }
 
     interface WebPreferences {
@@ -22347,6 +22347,106 @@ declare namespace Electron {
 
     interface WebviewTag extends HTMLElement {
         // Docs: https://electronjs.org/docs/api/webview-tag
+
+        /**
+         * A `boolean`. When this attribute is present the guest page will be allowed to
+         * open new windows. Popups are disabled by default.
+         */
+        allowpopups: boolean;
+        /**
+         * A `string` which is a list of strings which specifies the blink features to be
+         * disabled separated by `,`. The full list of supported feature strings can be
+         * found in the RuntimeEnabledFeatures.json5 file.
+         */
+        disableblinkfeatures: string;
+        /**
+         * A `boolean`. When this attribute is present the guest page will have web
+         * security disabled. Web security is enabled by default.
+         *
+         * This value can only be modified before the first navigation.
+         */
+        disablewebsecurity: boolean;
+        /**
+         * A `string` which is a list of strings which specifies the blink features to be
+         * enabled separated by `,`. The full list of supported feature strings can be
+         * found in the RuntimeEnabledFeatures.json5 file.
+         */
+        enableblinkfeatures: string;
+        /**
+         * A `string` that sets the referrer URL for the guest page.
+         */
+        httpreferrer: string;
+        /**
+         * A `boolean`. When this attribute is present the guest page in `webview` will
+         * have node integration and can use node APIs like `require` and `process` to
+         * access low level system resources. Node integration is disabled by default in
+         * the guest page.
+         */
+        nodeintegration: boolean;
+        /**
+         * A `boolean` for the experimental option for enabling NodeJS support in
+         * sub-frames such as iframes inside the `webview`. All your preloads will load for
+         * every iframe, you can use `process.isMainFrame` to determine if you are in the
+         * main frame or not. This option is disabled by default in the guest page.
+         */
+        nodeintegrationinsubframes: boolean;
+        /**
+         * A `string` that sets the session used by the page. If `partition` starts with
+         * `persist:`, the page will use a persistent session available to all pages in the
+         * app with the same `partition`. if there is no `persist:` prefix, the page will
+         * use an in-memory session. By assigning the same `partition`, multiple pages can
+         * share the same session. If the `partition` is unset then default session of the
+         * app will be used.
+         *
+         * This value can only be modified before the first navigation, since the session
+         * of an active renderer process cannot change. Subsequent attempts to modify the
+         * value will fail with a DOM exception.
+         */
+        partition: string;
+        /**
+         * A `boolean`. When this attribute is present the guest page in `webview` will be
+         * able to use browser plugins. Plugins are disabled by default.
+         */
+        plugins: boolean;
+        /**
+         * A `string` that specifies a script that will be loaded before other scripts run
+         * in the guest page. The protocol of script's URL must be `file:` (even when using
+         * `asar:` archives) because it will be loaded by Node's `require` under the hood,
+         * which treats `asar:` archives as virtual directories.
+         *
+         * When the guest page doesn't have node integration this script will still have
+         * access to all Node APIs, but global objects injected by Node will be deleted
+         * after this script has finished executing.
+         */
+        preload: string;
+        /**
+         * A `string` representing the visible URL. Writing to this attribute initiates
+         * top-level navigation.
+         *
+         * Assigning `src` its own value will reload the current page.
+         *
+         * The `src` attribute can also accept data URLs, such as `data:text/plain,Hello,
+         * world!`.
+         */
+        src: string;
+        /**
+         * A `string` that sets the user agent for the guest page before the page is
+         * navigated to. Once the page is loaded, use the `setUserAgent` method to change
+         * the user agent.
+         */
+        useragent: string;
+        /**
+         * A `string` which is a comma separated list of strings which specifies the web
+         * preferences to be set on the webview. The full list of supported preference
+         * strings can be found in BrowserWindow.
+         *
+         * The string follows the same format as the features string in `window.open`. A
+         * name by itself is given a `true` boolean value. A preference can be set to
+         * another value by including an `=`, followed by the value. Special values `yes`
+         * and `1` are interpreted as `true`, while `no` and `0` are interpreted as
+         * `false`.
+         */
+        webpreferences: string;
 
         /**
          * Fired when a load has committed. This includes navigation within the current
@@ -23263,106 +23363,6 @@ declare namespace Electron {
          * Executes editing command `unselect` in page.
          */
         unselect(): void;
-
-        /**
-         * A `boolean`. When this attribute is present the guest page will be allowed to
-         * open new windows. Popups are disabled by default.
-         */
-        allowpopups: boolean;
-        /**
-         * A `string` which is a list of strings which specifies the blink features to be
-         * disabled separated by `,`. The full list of supported feature strings can be
-         * found in the RuntimeEnabledFeatures.json5 file.
-         */
-        disableblinkfeatures: string;
-        /**
-         * A `boolean`. When this attribute is present the guest page will have web
-         * security disabled. Web security is enabled by default.
-         *
-         * This value can only be modified before the first navigation.
-         */
-        disablewebsecurity: boolean;
-        /**
-         * A `string` which is a list of strings which specifies the blink features to be
-         * enabled separated by `,`. The full list of supported feature strings can be
-         * found in the RuntimeEnabledFeatures.json5 file.
-         */
-        enableblinkfeatures: string;
-        /**
-         * A `string` that sets the referrer URL for the guest page.
-         */
-        httpreferrer: string;
-        /**
-         * A `boolean`. When this attribute is present the guest page in `webview` will
-         * have node integration and can use node APIs like `require` and `process` to
-         * access low level system resources. Node integration is disabled by default in
-         * the guest page.
-         */
-        nodeintegration: boolean;
-        /**
-         * A `boolean` for the experimental option for enabling NodeJS support in
-         * sub-frames such as iframes inside the `webview`. All your preloads will load for
-         * every iframe, you can use `process.isMainFrame` to determine if you are in the
-         * main frame or not. This option is disabled by default in the guest page.
-         */
-        nodeintegrationinsubframes: boolean;
-        /**
-         * A `string` that sets the session used by the page. If `partition` starts with
-         * `persist:`, the page will use a persistent session available to all pages in the
-         * app with the same `partition`. if there is no `persist:` prefix, the page will
-         * use an in-memory session. By assigning the same `partition`, multiple pages can
-         * share the same session. If the `partition` is unset then default session of the
-         * app will be used.
-         *
-         * This value can only be modified before the first navigation, since the session
-         * of an active renderer process cannot change. Subsequent attempts to modify the
-         * value will fail with a DOM exception.
-         */
-        partition: string;
-        /**
-         * A `boolean`. When this attribute is present the guest page in `webview` will be
-         * able to use browser plugins. Plugins are disabled by default.
-         */
-        plugins: boolean;
-        /**
-         * A `string` that specifies a script that will be loaded before other scripts run
-         * in the guest page. The protocol of script's URL must be `file:` (even when using
-         * `asar:` archives) because it will be loaded by Node's `require` under the hood,
-         * which treats `asar:` archives as virtual directories.
-         *
-         * When the guest page doesn't have node integration this script will still have
-         * access to all Node APIs, but global objects injected by Node will be deleted
-         * after this script has finished executing.
-         */
-        preload: string;
-        /**
-         * A `string` representing the visible URL. Writing to this attribute initiates
-         * top-level navigation.
-         *
-         * Assigning `src` its own value will reload the current page.
-         *
-         * The `src` attribute can also accept data URLs, such as `data:text/plain,Hello,
-         * world!`.
-         */
-        src: string;
-        /**
-         * A `string` that sets the user agent for the guest page before the page is
-         * navigated to. Once the page is loaded, use the `setUserAgent` method to change
-         * the user agent.
-         */
-        useragent: string;
-        /**
-         * A `string` which is a comma separated list of strings which specifies the web
-         * preferences to be set on the webview. The full list of supported preference
-         * strings can be found in BrowserWindow.
-         *
-         * The string follows the same format as the features string in `window.open`. A
-         * name by itself is given a `true` boolean value. A preference can be set to
-         * another value by including an `=`, followed by the value. Special values `yes`
-         * and `1` are interpreted as `true`, while `no` and `0` are interpreted as
-         * `false`.
-         */
-        webpreferences: string;
     }
 
     interface WindowOpenHandlerResponse {
@@ -29260,6 +29260,116 @@ declare namespace NodeJS {
         // Docs: https://electronjs.org/docs/api/process
 
         /**
+         * A `string` representing Chrome's version string.
+         *
+         */
+        readonly chrome: string;
+        /**
+         * A `string` (optional) representing a globally unique ID of the current
+         * JavaScript context. Each frame has its own JavaScript context. When
+         * contextIsolation is enabled, the isolated world also has a separate JavaScript
+         * context. This property is only available in the renderer process.
+         *
+         */
+        readonly contextId?: string;
+        /**
+         * A `boolean` that indicates whether the current renderer context has
+         * `contextIsolation` enabled. It is `undefined` in the main process.
+         *
+         */
+        readonly contextIsolated: boolean;
+        /**
+         * A `boolean`. When the app is started by being passed as parameter to the default
+         * Electron executable, this property is `true` in the main process, otherwise it
+         * is `undefined`. For example when running the app with `electron .`, it is
+         * `true`, even if the app is packaged (`isPackaged`) is `true`. This can be useful
+         * to determine how many arguments will need to be sliced off from `process.argv`.
+         *
+         */
+        readonly defaultApp: boolean;
+        /**
+         * A `string` representing Electron's version string.
+         *
+         */
+        readonly electron: string;
+        /**
+         * A `boolean`, `true` when the current renderer context is the "main" renderer
+         * frame. If you want the ID of the current frame you should use
+         * `webFrame.routingId`.
+         *
+         */
+        readonly isMainFrame: boolean;
+        /**
+         * A `boolean`. For Mac App Store build, this property is `true`, for other builds
+         * it is `undefined`.
+         *
+         */
+        readonly mas: boolean;
+        /**
+         * A `boolean` that controls ASAR support inside your application. Setting this to
+         * `true` will disable the support for `asar` archives in Node's built-in modules.
+         */
+        noAsar: boolean;
+        /**
+         * A `boolean` that controls whether or not deprecation warnings are printed to
+         * `stderr`. Setting this to `true` will silence deprecation warnings. This
+         * property is used instead of the `--no-deprecation` command line flag.
+         */
+        noDeprecation: boolean;
+        /**
+         * A `Electron.ParentPort` property if this is a `UtilityProcess` (or `null`
+         * otherwise) allowing communication with the parent process.
+         */
+        parentPort: Electron.ParentPort;
+        /**
+         * A `string` representing the path to the resources directory.
+         *
+         */
+        readonly resourcesPath: string;
+        /**
+         * A `boolean`. When the renderer process is sandboxed, this property is `true`,
+         * otherwise it is `undefined`.
+         *
+         */
+        readonly sandboxed: boolean;
+        /**
+         * A `boolean` that controls whether or not deprecation warnings will be thrown as
+         * exceptions. Setting this to `true` will throw errors for deprecations. This
+         * property is used instead of the `--throw-deprecation` command line flag.
+         */
+        throwDeprecation: boolean;
+        /**
+         * A `boolean` that controls whether or not deprecations printed to `stderr`
+         * include their stack trace. Setting this to `true` will print stack traces for
+         * deprecations. This property is instead of the `--trace-deprecation` command line
+         * flag.
+         */
+        traceDeprecation: boolean;
+        /**
+         * A `boolean` that controls whether or not process warnings printed to `stderr`
+         * include their stack trace. Setting this to `true` will print stack traces for
+         * process warnings (including deprecations). This property is instead of the
+         * `--trace-warnings` command line flag.
+         */
+        traceProcessWarnings: boolean;
+        /**
+         * A `string` representing the current process's type, can be:
+         *
+         * * `browser` - The main process
+         * * `renderer` - A renderer process
+         * * `worker` - In a web worker
+         * * `utility` - In a node process launched as a service
+         *
+         */
+        readonly type: 'browser' | 'renderer' | 'worker' | 'utility';
+        /**
+         * A `boolean`. If the app is running as a Windows Store app (appx), this property
+         * is `true`, for otherwise it is `undefined`.
+         *
+         */
+        readonly windowsStore: boolean;
+
+        /**
          * Emitted when Electron has loaded its internal initialization script and is
          * beginning to load the web page or the main script.
          */
@@ -29375,116 +29485,6 @@ declare namespace NodeJS {
          * Takes a V8 heap snapshot and saves it to `filePath`.
          */
         takeHeapSnapshot(filePath: string): boolean;
-
-        /**
-         * A `string` representing Chrome's version string.
-         *
-         */
-        readonly chrome: string;
-        /**
-         * A `string` (optional) representing a globally unique ID of the current
-         * JavaScript context. Each frame has its own JavaScript context. When
-         * contextIsolation is enabled, the isolated world also has a separate JavaScript
-         * context. This property is only available in the renderer process.
-         *
-         */
-        readonly contextId?: string;
-        /**
-         * A `boolean` that indicates whether the current renderer context has
-         * `contextIsolation` enabled. It is `undefined` in the main process.
-         *
-         */
-        readonly contextIsolated: boolean;
-        /**
-         * A `boolean`. When the app is started by being passed as parameter to the default
-         * Electron executable, this property is `true` in the main process, otherwise it
-         * is `undefined`. For example when running the app with `electron .`, it is
-         * `true`, even if the app is packaged (`isPackaged`) is `true`. This can be useful
-         * to determine how many arguments will need to be sliced off from `process.argv`.
-         *
-         */
-        readonly defaultApp: boolean;
-        /**
-         * A `string` representing Electron's version string.
-         *
-         */
-        readonly electron: string;
-        /**
-         * A `boolean`, `true` when the current renderer context is the "main" renderer
-         * frame. If you want the ID of the current frame you should use
-         * `webFrame.routingId`.
-         *
-         */
-        readonly isMainFrame: boolean;
-        /**
-         * A `boolean`. For Mac App Store build, this property is `true`, for other builds
-         * it is `undefined`.
-         *
-         */
-        readonly mas: boolean;
-        /**
-         * A `boolean` that controls ASAR support inside your application. Setting this to
-         * `true` will disable the support for `asar` archives in Node's built-in modules.
-         */
-        noAsar: boolean;
-        /**
-         * A `boolean` that controls whether or not deprecation warnings are printed to
-         * `stderr`. Setting this to `true` will silence deprecation warnings. This
-         * property is used instead of the `--no-deprecation` command line flag.
-         */
-        noDeprecation: boolean;
-        /**
-         * A `Electron.ParentPort` property if this is a `UtilityProcess` (or `null`
-         * otherwise) allowing communication with the parent process.
-         */
-        parentPort: Electron.ParentPort;
-        /**
-         * A `string` representing the path to the resources directory.
-         *
-         */
-        readonly resourcesPath: string;
-        /**
-         * A `boolean`. When the renderer process is sandboxed, this property is `true`,
-         * otherwise it is `undefined`.
-         *
-         */
-        readonly sandboxed: boolean;
-        /**
-         * A `boolean` that controls whether or not deprecation warnings will be thrown as
-         * exceptions. Setting this to `true` will throw errors for deprecations. This
-         * property is used instead of the `--throw-deprecation` command line flag.
-         */
-        throwDeprecation: boolean;
-        /**
-         * A `boolean` that controls whether or not deprecations printed to `stderr`
-         * include their stack trace. Setting this to `true` will print stack traces for
-         * deprecations. This property is instead of the `--trace-deprecation` command line
-         * flag.
-         */
-        traceDeprecation: boolean;
-        /**
-         * A `boolean` that controls whether or not process warnings printed to `stderr`
-         * include their stack trace. Setting this to `true` will print stack traces for
-         * process warnings (including deprecations). This property is instead of the
-         * `--trace-warnings` command line flag.
-         */
-        traceProcessWarnings: boolean;
-        /**
-         * A `string` representing the current process's type, can be:
-         *
-         * * `browser` - The main process
-         * * `renderer` - A renderer process
-         * * `worker` - In a web worker
-         * * `utility` - In a node process launched as a service
-         *
-         */
-        readonly type: 'browser' | 'renderer' | 'worker' | 'utility';
-        /**
-         * A `boolean`. If the app is running as a Windows Store app (appx), this property
-         * is `true`, for otherwise it is `undefined`.
-         *
-         */
-        readonly windowsStore: boolean;
     }
 
     interface ProcessVersions {

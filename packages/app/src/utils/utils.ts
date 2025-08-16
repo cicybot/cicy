@@ -25,6 +25,14 @@ export function checkIsUrl(url: string): boolean {
     }
 }
 
+export function showLoading() {
+    onEvent('showLoading');
+}
+
+export function hideLoading() {
+    onEvent('hideLoading');
+}
+
 export function onEvent(
     action: string | 'showLoading' | 'hideLoading',
     payload?: any,

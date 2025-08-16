@@ -8,11 +8,11 @@ import { useGlobalContext } from '../../providers/GlobalProvider';
 import { connectCCServer } from '../../services/cicy/CCWSClient';
 import { SiteService } from '../../services/model/SiteService';
 import { BLANK_URL, WebveiwEventType } from '../../utils/webview';
-import MenuBtn from './MenuBtn';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
 import ProxyService from '../../services/common/ProxyService';
 import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
 import { waitForResult } from '@cicy/utils';
+import ContextMenuView, { ContextMenuParams } from '../../components/UI/ContextMenuView';
 
 export let currentWebContentsId = 0;
 
@@ -43,6 +43,7 @@ const WebviewBrowserInner = ({
     const [error, setError] = useState<BrowserError | null>(null);
     const [loading, setLoading] = useState(true);
     const [favicon, setFavicon] = useState('');
+    const [contextMenuParams, setContextMenuParams] = useState<null | ContextMenuParams>(null);
 
     const [proxyRules, setProxyRules] = useState('');
 
@@ -57,6 +58,12 @@ const WebviewBrowserInner = ({
         const onEvent = async (eventType: WebveiwEventType, evt?: any) => {
             const webview = evt.target as WebviewTag;
             switch (eventType) {
+                case 'context-menu': {
+                    const { params } = evt;
+                    console.log(params);
+                    setContextMenuParams(params);
+                    break;
+                }
                 case 'did-fail-load': {
                     const { isMainFrame, validatedURL, errorDescription } = evt;
                     if (isMainFrame && errorDescription) {
@@ -122,8 +129,8 @@ const WebviewBrowserInner = ({
 
                         if (proxyType !== 'direct') {
                             proxyRules = `${proxyType}://${proxyHost}:${proxyPort}`;
-                            proxyUsername = `Account_${10000 + browserAccountInfo.id}`;
-                            proxyPassword = 'pwd';
+                            proxyUsername = `user_${10000 + browserAccountInfo.id}`;
+                            proxyPassword = ProxyService.getUserPwd();
                         }
                         setProxyRules(proxyRules || '');
 
@@ -286,9 +293,19 @@ const WebviewBrowserInner = ({
 
     return (
         <View style={{ height: '100vh' }}>
-            <View style={{ height: 'calc(100vh - 32px)' }}>
+            <View style={{ height: 'calc(100vh - 32px)' }} relative>
                 {error && (
-                    <View wh100p aCenter jCenter column>
+                    <View
+                        wh100p
+                        aCenter
+                        jCenter
+                        column
+                        onContextMenu={e => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            return false;
+                        }}
+                    >
                         <View mb12>{error.errorDescription}</View>
                         <Button
                             size={'small'}
@@ -316,6 +333,13 @@ const WebviewBrowserInner = ({
                         src={BLANK_URL}
                     />
                 )}
+                <ContextMenuView
+                    proxyRules={proxyRules}
+                    siteService={siteService}
+                    webview={webviewRef.current! as WebviewTag}
+                    hideContextMenu={() => setContextMenuParams(null)}
+                    params={contextMenuParams}
+                />
             </View>
             <View
                 rowVCenter
@@ -364,13 +388,7 @@ const WebviewBrowserInner = ({
                         </Popconfirm>
                     </View>
                 </View>
-                <View rowVCenter>
-                    <MenuBtn
-                        proxyRules={proxyRules}
-                        siteService={siteService}
-                        webview={webviewRef.current! as WebviewTag}
-                    />
-                </View>
+                <View rowVCenter></View>
             </View>
         </View>
     );
@@ -416,7 +434,7 @@ const WebviewBrowser = () => {
             setAppInfo(res.result);
         });
     }, []);
-    console.log({ userAgent, browserAccountInfo, appInfo });
+    // console.log({ userAgent, browserAccountInfo, appInfo });
     if (userAgent === null || browserAccountInfo == null || !appInfo) {
         return null;
     }

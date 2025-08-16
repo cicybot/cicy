@@ -12,7 +12,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { loadBounds, saveBounds } from './boundsSaver';
 import { delay } from './utils';
-import { handleMsg, initConnector, setServerUrl } from './wsMainWindowClient';
+import { getConnectorClientId, handleMsg, initConnector, setServerUrl } from './wsMainWindowClient';
 import { initCCServer } from './wsCCServer';
 import { connectSqlite3 } from './db';
 import { getAppInfo, setAppInfo } from './info';
@@ -348,6 +348,19 @@ export class MainWindow {
 
             const { action, payload } = message || {};
             switch (action) {
+                case 'openUrl': {
+                    const { url } = payload || {};
+                    if (url) {
+                        try {
+                            await shell.openExternal(url); // Opens URL in default browser
+                        } catch (error) {
+                            console.error('[!] Failed to open URL:', error);
+                        }
+                    } else {
+                        console.warn('[!] No URL provided');
+                    }
+                    break;
+                }
                 case 'openPath': {
                     const { path } = payload || {};
                     if (fs.existsSync(path)) {
@@ -360,6 +373,9 @@ export class MainWindow {
                 case 'connectCCServer': {
                     setServerUrl(payload.serverUrl);
                     break;
+                }
+                case 'currentConnectorClientId': {
+                    return getConnectorClientId();
                 }
                 case 'getOpenCv': {
                     return openCvData;

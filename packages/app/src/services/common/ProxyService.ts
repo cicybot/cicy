@@ -3,8 +3,13 @@ import { BrowserAccount, BrowserAccountInfo } from '../model/BrowserAccount';
 import { MainWindowAppInfo } from '../../providers/MainWindowProvider';
 
 export const DEFAULT_SCRIPT = `
+import base64
 def request(flow):
     print("[+] [REQ]",flow.request.url)
+    if flow.client_conn.auth is not None:
+        auth = base64.b64decode(flow.client_conn.auth).decode('utf-8')
+        username, password = auth.split(':', 1)  # Split on first colon only
+        print(f"Username: {username}, Password: {password}")
 `;
 export const DEFAULT_META_CONFIG_YAML = `# 4445 4455 不可修改，其他参考 
 # https://clash.wiki/configuration/configuration-reference.html
@@ -16,7 +21,7 @@ log-level: info
 
 
 authentication:
-  - "any_username:pwd"
+  - "any_username:password"
   
 external-controller: '127.0.0.1:4455'
 external-controller-cors:
@@ -30,7 +35,7 @@ mode: rule
 #    -
     
 rules:
-  #- 'IN-USER,Account_10000,PROXY_NODE'
+  #- 'IN-USER,user_10000,PROXY_NODE'
   - 'MATCH,DIRECT'
 `;
 
@@ -77,6 +82,10 @@ export default class ProxyService {
 
     static getProxyMitmWebPort() {
         return 4456;
+    }
+
+    static getUserPwd() {
+        return 'pwd';
     }
 
     static getProxyPort() {
@@ -171,6 +180,6 @@ export default class ProxyService {
         }
         return `${cmd} -s ${ProxyService.getMitmForwardPath(
             appInfo
-        )} --web-port ${ProxyService.getProxyMitmWebPort()} --listen-host 0.0.0.0 --listen-port ${port} --mode upstream:http://127.0.0.1:${ProxyService.getProxyPort()} --upstream-auth any_username:pwd`;
+        )} --web-port ${ProxyService.getProxyMitmWebPort()} --listen-host 0.0.0.0 --listen-port ${port} --mode upstream:http://127.0.0.1:${ProxyService.getProxyPort()} --upstream-auth any_username:${ProxyService.getUserPwd()}`;
     }
 }

@@ -94,7 +94,8 @@ const SitesTable = () => {
                 dataSource={dataSource as SiteInfo[]}
                 rowKey="site_id"
                 pagination={{
-                    showQuickJumper: true
+                    showQuickJumper: true,
+                    pageSize: 8
                 }}
                 columns={columns}
                 search={false}

@@ -1,0 +1,388 @@
+openapi: 3.0.0
+info:
+  title: CiCy Agent API
+  version: 1.0.0
+  description: |
+    ``````
+
+servers:
+  - url: http://access_url
+    description: API server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /clash/clashConfig.yaml:
+    get:
+      summary: Clash Config
+      tags:
+        - clash
+      responses:
+        '200':
+          description: Clash Config response
+  /clash/api:
+    get:
+      summary: api
+      tags:
+        - clash
+      parameters:
+        - name: method
+          in: query
+          description: The method to call
+          required: true
+          schema:
+            type: string
+            enum:
+              - getClashConfig
+              - isClashRunning
+              - startClash
+              - stopClash
+              - updateClash
+            default: getClashConfig
+      responses:
+        '200':
+          description: getClashConfig response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonRpcRequest'
+  /clash/jsonrpc:
+    post:
+      summary: json rpc
+      description: |
+        ### editClashProxyConfig:
+        
+        - accessControlPackages: 'AcceptAll' | 'AcceptSelected' | 'DenySelected'
+        
+        ```json
+        {
+          "method": "editClashProxyConfig",
+          "params":["192.168.124.244","9001","user_10000","password","AcceptAll",[]]
+        }
+        ```
+        ### setClashAutoRestart:
+
+        ```json
+        {
+          "method": "setClashAutoRestart",
+          "params":[false]
+        }
+        ```
+
+        ### setAccessControlMode:
+
+        ```json
+        {
+          "method": "setAccessControlMode",
+          "params":["AcceptAll"]
+        }
+        ```
+
+        ### setAccessControlPackages:
+
+        ```json
+        {
+          "method": "setAccessControlPackages",
+          "params":[["org.telegram.messenger.web"]]
+        }
+        ```
+      tags:
+        - clash
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonRpcRequest'
+      responses:
+        '200':
+          description: BaseResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+        '500':
+          description: Internal server error
+
+  /deviceInfo:
+    get:
+      summary: deviceInfo
+      tags:
+        - scrcpy
+      responses:
+        '200':
+          description: deviceInfo response
+
+  /shell/backend:
+    post:
+      summary: shell backend
+      tags:
+        - scrcpy
+      description: |
+        ### mihomo :
+
+        ```
+        /data/local/tmp/mihomo -f /data/local/tmp/config.yaml -d /data/local/tmp
+        ```
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: |
+                ping -c 10 www.baidu.com
+      responses:
+        '200':
+          description: response
+  /shell/exec:
+    post:
+      summary: shell exec
+      tags:
+        - scrcpy
+      description: |
+        
+        ### mkdir :
+        ```
+        mkdir -p /sdcard/Download/cicy && ls -alh /sdcard/Download/cicy
+        ```
+        ### netstat :
+        ```
+        netstat -tnlp | grep mihomo
+        ```
+        
+        ### cat :
+        
+        ```
+        cat /data/local/tmp/config.yaml
+        ```
+        
+        ### ls :
+        ```
+        ls -alh /sdcard/Download
+        ls -alh /data/local/tmp/
+        ```
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: |
+                netstat -tnlp
+      responses:
+        '200':
+          description: response
+
+  /apps/list:
+    get:
+      summary: apps list
+      tags:
+        - scrcpy
+      responses:
+        '200':
+          description: apps list response
+
+  /agent/api:
+    post:
+      summary: api
+      tags:
+        - agent
+      parameters:
+        - name: method
+          in: query
+          description: The method to call
+          required: true
+          schema:
+            type: string
+            enum:
+              - agentAppInfo
+              - onStartRecording
+              - onStopRecording
+              - onStartInput
+              - onStopInput
+              - screenWithXml
+              - dumpWindowHierarchy
+              - loadHomeURL
+              - getInstalledApps
+            default: agentAppInfo
+      responses:
+        '200':
+          description: agentAppInfo response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  /controller:
+    post:
+      summary: controller action
+      description: |
+
+        ### TYPE_START_APP:
+
+        ```
+        16|com.cicy.agent
+        ```
+        
+        forceStop and start
+        ```
+        16|+com.cicy.agent
+        ```
+        searchByName
+        ```
+        16|?CiCyAgent
+
+        ```
+      tags:
+        - scrcpy
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: |
+                16|com.cicy.agent
+      responses:
+        '200':
+          description: BaseResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+        '500':
+          description: Internal server error
+
+  /jsonrpc/0:
+    post:
+      summary: json rpc
+      description: |
+
+        ### dumpWindowHierarchy:
+
+        ```json
+        {
+          "jsonrpc": "2.0", 
+          "id": 1,
+          "method": "dumpWindowHierarchy",
+          "params":[false,100]
+        }
+        ```
+
+        ### pressKey:
+        
+        > home, back, left, right, up, down, center, menu, search, enter,
+        delete(or del), recent(recent apps), volume_up, volume_down,
+        volume_mute, camera, power.
+    
+        ```json
+        
+        {
+          "jsonrpc": "2.0", 
+          "id": 1,
+          "method": "pressKey",
+          "params":["home"]
+        }
+        ```
+      tags:
+        - u2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonRpcRequest'
+      responses:
+        '200':
+          description: BaseResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+        '500':
+          description: Internal server error
+
+  /agent/jsonrpc:
+    post:
+      summary: json rpc
+      description: |
+        
+        ### loadURL:
+
+        ```json
+        {
+          "method": "loadURL",
+          "params":["https://www.ip138.com"]
+        }
+        ```
+        
+        ### execJs:
+
+        ```json
+        {
+          "method": "execJs",
+          "params":["location.href"]
+        }
+        ```
+      tags:
+        - agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonRpcRequest'
+      responses:
+        '200':
+          description: BaseResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          description: Client not found
+        '500':
+          description: Internal server error
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # Optional, can remove if not using JWT
+      description: "Simple token authentication (just 'Bearer your-token')"
+  schemas:
+    BaseResponse:
+      type: object
+      properties:
+        err:
+          type: string
+        result:
+          type: object
+    actionRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+
+    JsonRpcRequest:
+      type: object
+      required:
+        - method
+        - params
+      properties:
+        method:
+          type: string
+        params:
+          type: array
+          items:
+            type: string

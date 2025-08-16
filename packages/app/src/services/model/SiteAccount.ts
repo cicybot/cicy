@@ -10,44 +10,6 @@ export class SiteAccount {
         this.siteId = siteId;
     }
 
-    async get(): Promise<SiteAccountInfo> {
-        const res = await new DatabaseService().get(
-            `select *
-             from site_account
-             where account_index = ?
-               and site_id = ?`,
-            [this.accountIndex, this.siteId]
-        );
-        return {
-            ...res,
-            auth: JSON.parse(res?.auth || '{}'),
-            config: JSON.parse(res?.config || '{}')
-        };
-    }
-
-    async save(site: SiteAccountInfo) {
-        const row = await this.get();
-        if (row) {
-            return await new DatabaseService().run(
-                `UPDATE site_account
-                 set auth = ?,
-                     config = ?,
-                     is_deleted = ?
-                 WHERE account_index = ?
-                   and site_id = ?`,
-                [
-                    JSON.stringify(site.auth),
-                    JSON.stringify(site.config),
-                    site.is_deleted,
-                    site.account_index,
-                    site.site_id
-                ]
-            );
-        } else {
-            throw new Error('no site account');
-        }
-    }
-
     static async add(siteId: string, num?: number, config?: object, auth?: object) {
         if (!num) {
             num = 1;
@@ -138,6 +100,44 @@ export class SiteAccount {
                     );
             `);
             localStorage.setItem('site_account_inited', 'true');
+        }
+    }
+
+    async get(): Promise<SiteAccountInfo> {
+        const res = await new DatabaseService().get(
+            `select *
+             from site_account
+             where account_index = ?
+               and site_id = ?`,
+            [this.accountIndex, this.siteId]
+        );
+        return {
+            ...res,
+            auth: JSON.parse(res?.auth || '{}'),
+            config: JSON.parse(res?.config || '{}')
+        };
+    }
+
+    async save(site: SiteAccountInfo) {
+        const row = await this.get();
+        if (row) {
+            return await new DatabaseService().run(
+                `UPDATE site_account
+                 set auth = ?,
+                     config = ?,
+                     is_deleted = ?
+                 WHERE account_index = ?
+                   and site_id = ?`,
+                [
+                    JSON.stringify(site.auth),
+                    JSON.stringify(site.config),
+                    site.is_deleted,
+                    site.account_index,
+                    site.site_id
+                ]
+            );
+        } else {
+            throw new Error('no site account');
         }
     }
 }

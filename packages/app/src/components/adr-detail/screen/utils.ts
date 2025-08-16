@@ -74,7 +74,7 @@ export async function convertXmlToTreeData(xmlString: string): Promise<TreeConve
     });
 
     const parsed = parser.parse(xmlString);
-    const hierarchy = parsed[1].hierarchy[0];
+    const hierarchy = parsed[1].hierarchy;
     return processXml(hierarchy);
 }
 
@@ -157,8 +157,11 @@ export async function processXml(hierarchy: any): Promise<TreeConversionResult> 
             return treeNode;
         }
 
-        const rootNode = hierarchy;
-        const treeData = [processNode(rootNode)];
+        const treeData = [];
+        for (let i = 0; i < hierarchy.length; i++) {
+            const rootNode = hierarchy[i];
+            treeData.push(processNode(rootNode));
+        }
         return { treeData, nodesMap, nodeBoundsMap };
     } catch (err) {
         console.error('XML parsing error:', err);

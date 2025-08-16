@@ -96,7 +96,7 @@ const HomePage = () => {
                 <View h100vh w={sideBarWidth} borderBox>
                     <SizeBar sideBarWidth={sideBarWidth} minSideBar={minSideBar}></SizeBar>
                 </View>
-                <View absFull left={sideBarWidth}>
+                <View absFull left={sideBarWidth} overflowHidden>
                     <Outlet></Outlet>
                 </View>
             </View>

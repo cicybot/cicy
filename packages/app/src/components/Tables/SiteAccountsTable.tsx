@@ -5,6 +5,7 @@ import { Button, Checkbox, Drawer, message, Tabs, type TabsProps, Tooltip } from
 import { useState } from 'react';
 import BrowserService from '../../services/cicy/BrowserService';
 import { SiteAccountInfo, SiteInfo } from '../../services/model/SiteService';
+import View from '../View';
 
 export const AccountDetail = ({
     changeAccounts,
@@ -45,7 +46,11 @@ export const AccountDetail = ({
             )
         }
     ];
-    return <Tabs defaultActiveKey="1" items={items} onChange={() => {}} />;
+    return (
+        <View p12 mx12>
+            <Tabs defaultActiveKey="1" items={items} onChange={() => {}} />
+        </View>
+    );
 };
 
 const SiteAccountsTable = ({
@@ -141,7 +146,8 @@ const SiteAccountsTable = ({
                 dataSource={dataSource as SiteAccountInfo[]}
                 rowKey="account_index"
                 pagination={{
-                    showQuickJumper: true
+                    showQuickJumper: true,
+                    pageSize: 6
                 }}
                 columns={columns}
                 search={false}

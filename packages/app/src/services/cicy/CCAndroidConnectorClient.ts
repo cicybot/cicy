@@ -3,7 +3,6 @@ import { DeviceInfo } from './CCWSAgentClient';
 import { v4 as uuid } from 'uuid';
 
 export interface AdbDevice {
-    id: string;
     sn: string;
     type: string;
     model: string;
@@ -19,6 +18,40 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
 
     constructor() {
         super();
+    }
+
+    static formatDeviceInfo(deviceInfo: string) {
+        const ports = [];
+        const netIfNames = [];
+        const netIps = [];
+        const lines = deviceInfo.split('\n');
+        const info: any = {};
+        for (const linesKey in lines) {
+            const line = lines[linesKey].trim();
+            if (line.indexOf('LISTEN') > -1) {
+                ports.push(parseInt(line.split('[::]:')[1].split(' ')[0]));
+            } else if (line.indexOf('Link ') > -1) {
+                netIfNames.push(line.split(' ')[0]);
+            } else if (line.indexOf('inet ') > -1) {
+                netIps.push(line.split('inet addr:')[1].split(' ')[0]);
+            } else {
+                const t = line.split(':');
+                const key = t[0].replace('Physical ', '').trim();
+                info[key] = line.replace(t[0] + ':', '').trim();
+                if (key === 'size') {
+                    info['width'] = parseInt(info[key].split('x')[0]);
+                    info['height'] = parseInt(info[key].split('x')[1]);
+                }
+            }
+        }
+        info['sdkVersion'] = parseInt(info['sdkVersion']);
+        info['releaseVersion'] = parseInt(info['releaseVersion']);
+        info['density'] = parseInt(info['density']);
+        info['ports'] = ports;
+        info['netIps'] = netIps;
+        info['netIfNames'] = netIfNames;
+        info['ts'] = Date.now();
+        return info;
     }
 
     setSn(sn: string) {
@@ -114,7 +147,7 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
                         if (index === 0) {
                             device = {
                                 ...device,
-                                ...{ id: row, sn: row }
+                                ...{ sn: row }
                             };
                         } else if (index === 1) {
                             device = {
@@ -152,6 +185,30 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
         return await this.deviceAdb(`forward tcp:${localPort} tcp:${remotePort}`);
     }
 
+    async getForwardList() {
+        const res = await this.adb(`forward --list`);
+        if (!res) {
+            return [];
+        }
+        return res.split('\n').map((row: string) => {
+            const t = row.split(' tcp:');
+            return {
+                sn: t[0],
+                localPort: parseInt(t[1]),
+                remotePort: parseInt(t[2])
+            };
+        });
+    }
+
+    async getForwardPorts() {
+        const list = await this.getForwardList();
+        const res: number[] = [];
+        list.forEach((row: { localPort: any }) => {
+            res.push(row.localPort);
+        });
+        return res;
+    }
+
     async saveDeviceSh() {
         await this.fileWrite(
             'device.sh',
@@ -162,7 +219,7 @@ then
 echo deviceId:$(touch /data/local/tmp/id && cat /data/local/tmp/id)
 echo userRotation:$(wm user-rotation)
 echo brand:$(getprop ro.product.brand)
-echo sn:$(getprop ro.serialno)
+echo serialno:$(getprop ro.serialno)
 echo model:$(getprop ro.product.model)
 echo abi:$(getprop ro.product.cpu.abi)
 echo abilist:$(getprop ro.product.cpu.abilist)
@@ -180,6 +237,7 @@ ifconfig | grep "inet "
 fi`
         );
     }
+
     async handleDeviceInfo() {
         await this.saveDeviceSh();
         await this.deviceAdbPush('device.sh', '/data/local/tmp');
@@ -188,41 +246,26 @@ fi`
 
     async getDeviceInfo() {
         const deviceInfo = await this.deviceAdbShell('sh /data/local/tmp/device.sh deviceInfo');
-        const ports = [];
-        const netIfNames = [];
-        const netIps = [];
-        const lines = deviceInfo.split('\n');
-        const info: any = {};
-        for (const linesKey in lines) {
-            const line = lines[linesKey].trim();
-            if (line.indexOf('LISTEN') > -1) {
-                ports.push(parseInt(line.split('[::]:')[1].split(' ')[0]));
-            } else if (line.indexOf('Link ') > -1) {
-                netIfNames.push(line.split(' ')[0]);
-            } else if (line.indexOf('inet ') > -1) {
-                netIps.push(line.split('inet addr:')[1].split(' ')[0]);
-            } else {
-                const t = line.split(':');
-                const key = t[0].replace('Physical ', '').trim();
-                info[key] = line.replace(t[0] + ':', '').trim();
-                if (key === 'size') {
-                    info['width'] = parseInt(info[key].split('x')[0]);
-                    info['height'] = parseInt(info[key].split('x')[1]);
-                }
-            }
-        }
-        info['sdkVersion'] = parseInt(info['sdkVersion']);
-        info['releaseVersion'] = parseInt(info['releaseVersion']);
-        info['density'] = parseInt(info['density']);
-
+        const info = CCAndroidConnectorClient.formatDeviceInfo(deviceInfo);
         if (!info.deviceId) {
             info.deviceId = uuid();
             await this.deviceAdbShell(`echo ${info.deviceId} > /data/local/tmp/id`);
         }
-        info['ports'] = ports;
-        info['netIps'] = netIps;
-        info['netIfNames'] = netIfNames;
-        info['ts'] = Date.now();
         return info;
+    }
+
+    async pmUninstall(packageName: string) {
+        return await this.deviceAdbShell(`pm uninstall --user 0 ${packageName}`);
+    }
+
+    async pmInstall(apkPath: string) {
+        return await this.deviceAdbShell(`pm install -r ${apkPath}`);
+    }
+
+    async amStart(packageName: string, activityName: string) {
+        return await this.deviceAdbShell(`am start -n ${packageName}/${activityName}`);
+    }
+    async amStop(packageName: string) {
+        return await this.deviceAdbShell(`am force-stop ${packageName}`);
     }
 }

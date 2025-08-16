@@ -7,8 +7,8 @@ use serde_json::Value;
 use tokio::time::{sleep, Duration};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use url::Url;
-
 use crate::message::{handle_file_call, handle_shell_call};
+use crate::shell::exec_cmd;
 
 #[derive(Deserialize)]
 struct IncomingMessage {
@@ -101,6 +101,7 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
             is_logged = true;
         }
 
+
         loop {
             match read.next().await {
                 Some(Ok(msg)) => {
@@ -120,6 +121,22 @@ pub async fn connect_cc_server_forever(server_url: &str, client_id: &str) {
                                     }
                                     "logged" => {
                                         is_logged = true;
+
+                                        tokio::select! {
+                                            _ = async {
+                                                let mut last_output: String = "".to_string();
+                                                loop {
+                                                    let output = exec_cmd("adb devices -l").unwrap();
+                                                    if !last_output.eq(output.as_str()) {
+                                                        println!("{}", output);
+                                                        last_output = output;
+                                                    }
+
+                                                    write.send(Message::Text("sss".to_string())).await.expect("TODO: panic message");
+                                                    sleep(Duration::from_secs(1)).await;
+                                                }
+                                            } => {}
+                                        }
                                     }
                                     "logout" => {
                                         error!("logout!!");
@@ -213,7 +230,7 @@ where
                         error!("Failed to parse JSON-RPC payload: {}", e);
                     }
                 }
-            } else if incoming.action == "file" {
+            }  else if incoming.action == "file" {
                 let rpc: Result<JsonRpcPayload, _> = serde_json::from_value(incoming.payload);
                 match rpc {
                     Ok(rpc_payload) => {
@@ -240,12 +257,15 @@ where
                 info!("Unknown action: {}", incoming.action);
             }
         }
+
         Err(e) => {
             error!("Failed to parse incoming message JSON: {}", e);
         }
     }
     Ok(())
 }
+
+
 
 #[cfg(test)]
 mod tests {
@@ -309,6 +329,7 @@ mod tests {
             }
         }
     }
+
     #[test]
     fn test_file_write() {
         let text = r#"{"id":"1","action":"file","payload":{"method":"write","params":["/tmp/test.log","test ss1 content"]}}"#;

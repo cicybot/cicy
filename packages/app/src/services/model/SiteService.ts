@@ -135,6 +135,10 @@ export class SiteService {
         );
     }
 
+    static getIdByUrl(url: string) {
+        return md5(url);
+    }
+
     async getSiteInfo(): Promise<SiteInfo> {
         const res = await new DatabaseService().get(
             `select *
@@ -231,9 +235,5 @@ export class SiteService {
             `acc_${this.siteId}_${this.accountIndex}`,
             JSON.stringify(accountState)
         );
-    }
-
-    static getIdByUrl(url: string) {
-        return md5(url);
     }
 }

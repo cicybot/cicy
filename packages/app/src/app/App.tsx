@@ -6,7 +6,6 @@ import { useEffectOnce } from '../hooks/hooks';
 
 import AndroidDetail from '../pages/android/AndroidDetail';
 import Android from '../pages/home/Android';
-import Clients from '../pages/home/Clients';
 import Home from '../pages/home/Home';
 import Sites from '../pages/home/Sites';
 import Setting from '../pages/home/Setting';
@@ -16,7 +15,7 @@ import { ModelHelper } from '../services/model/ModelHelper';
 
 const router = createHashRouter([
     {
-        path: '/android/detail/:clientId/:sn/:deviceId/:id',
+        path: '/android/detail/:deviceId/:width',
         Component: AndroidDetail
     },
     {
@@ -30,10 +29,6 @@ const router = createHashRouter([
             {
                 index: true,
                 element: <Navigate to="/android" replace />
-            },
-            {
-                path: 'clients',
-                Component: Clients
             },
             {
                 path: 'android',

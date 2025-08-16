@@ -672,6 +672,7 @@ __metadata:
     react-ace: "npm:^13.0.0"
     react-dom: "npm:^18.2.0"
     react-i18next: "npm:^12.1.1"
+    react-icons: "npm:^5.5.0"
     react-is: "npm:^18.2.0"
     react-router: "npm:^7.6.1"
     stream-browserify: "npm:^3.0.0"
@@ -14796,6 +14797,15 @@ __metadata:
     react-native:
       optional: true
   checksum: 10/903b486d112cd0aa40bdc3afaefd0c32b91c0a1e3e3561367c8d91ddc0fbad9945f1d630c3ddcd4764795fc00e0887252e2d337256a825caf3a86de038f6b2db
+  languageName: node
+  linkType: hard
+
+"react-icons@npm:^5.5.0":
+  version: 5.5.0
+  resolution: "react-icons@npm:5.5.0"
+  peerDependencies:
+    react: "*"
+  checksum: 10/67d5b311c23f74829cb90d58b78ddc87959d2087eda7f29b78d1ab6e337b04b0358a00724d73ab60652469d9a2c66ba3c034b8b7d4f32caae942592f92f59a84
   languageName: node
   linkType: hard
 

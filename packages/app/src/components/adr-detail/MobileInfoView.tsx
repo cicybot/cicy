@@ -1,11 +1,7 @@
 import View from '../View';
-import { Drawer } from 'antd';
 import { useState } from 'react';
-import { AppsView } from './apps/AppsView';
-import { List, Switch } from 'antd-mobile';
+import { List } from 'antd-mobile';
 import { useTimeoutLoop } from '@cicy/utils';
-import { ClashConfigView } from '../vpn/ClashConfigView';
-import { onEvent } from '../../utils/utils';
 import { AdrDeviceInfo } from '../../services/model/AdrDeviceModel';
 
 export const MobileInfoView = ({

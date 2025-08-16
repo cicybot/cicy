@@ -1,6 +1,6 @@
 import { ProDescriptions, ProField } from '@ant-design/pro-components';
 import type { TabsProps } from 'antd';
-import { Button, Input, Tabs } from 'antd';
+import { Button, Tabs } from 'antd';
 import View from '../View';
 
 import styled from 'styled-components';
@@ -10,18 +10,18 @@ const StyledTabs = styled(Tabs)`
         position: absolute;
         top: 54px;
         overflow-y: auto;
-        left: 0;
+        left: 12px;
         right: 0;
         bottom: 8px;
     }
 `;
+
 export function SelectedNodeView(props: {
-    inputText: any;
     selectedNode: any;
     onClickNode: any;
     currentClickPoint: any;
 }) {
-    const { selectedNode, onClickNode, inputText, currentClickPoint } = props;
+    const { selectedNode, onClickNode, currentClickPoint } = props;
     const keysFilter = [
         'nodeKey',
         'clickable',

@@ -41,7 +41,9 @@ const BrowserAccountsTable = () => {
                             {useMitm
                                 ? ProxyService.getProxyMitmPort()
                                 : ProxyService.getProxyPort()}
-                            <View ml12>Account_{10000 + id}:pwd</View>
+                            <View ml12>
+                                user_{10000 + id}:{ProxyService.getUserPwd()}
+                            </View>
                         </View>
                     );
                 }
@@ -51,6 +53,11 @@ const BrowserAccountsTable = () => {
             title: '地理位置',
             dataIndex: 'location',
             render: (_, { id, config }) => {
+                let { proxyType } = config;
+                if (proxyType === 'direct' || !proxyType) {
+                    return <>-</>;
+                }
+
                 let { testLocation } = config;
                 return <>{testLocation || '-'}</>;
             }
@@ -97,7 +104,8 @@ const BrowserAccountsTable = () => {
                 dataSource={dataSource}
                 rowKey="id"
                 pagination={{
-                    showQuickJumper: true
+                    showQuickJumper: true,
+                    pageSize: 8
                 }}
                 columns={columns}
                 search={false}

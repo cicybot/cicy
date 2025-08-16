@@ -14,7 +14,7 @@ const BrowserAccounts = () => {
                             title: '首页'
                         },
                         {
-                            title: '浏览器帐户'
+                            title: '指纹浏览器'
                         }
                     ]}
                 />

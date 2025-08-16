@@ -79,7 +79,7 @@ export interface FlexProps {
 }
 
 export interface FontProps {
-    fontSize?: number;
+    fontSize?: number | string;
     color?: string;
     fontWeight?: number;
 }
@@ -292,6 +292,14 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
     if (useSelectText) {
         sx_.userSelect = 'text';
     }
+    if (absFull) {
+        sx_.position = 'absolute';
+        sx_.left = 0;
+        sx_.top = 0;
+        sx_.right = 0;
+        sx_.bottom = 0;
+    }
+
     if (absolute || abs) {
         sx_.position = 'absolute';
     }
@@ -302,15 +310,6 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
     if (fixed) {
         sx_.position = 'fixed';
     }
-
-    if (absFull) {
-        sx_.position = 'absolute';
-        sx_.left = 0;
-        sx_.top = 0;
-        sx_.right = 0;
-        sx_.bottom = 0;
-    }
-
     if (xx0 !== undefined) {
         sx_.left = 0;
         sx_.right = 0;
@@ -393,19 +392,19 @@ export function handleProps(props: Omit<Omit<ViewProps, 'children'>, 'hide' | 'e
     if (w100p) {
         sx_.width = '100%';
     }
-
-    if (w100vw) {
-        sx_.width = '100vw';
-    }
     if (h100p) {
         sx_.height = '100%';
     }
+    if (wh100p) {
+        sx_.width = sx_.height = '100%';
+    }
+
     if (h100vh) {
         sx_.height = '100vh';
     }
 
-    if (wh100p) {
-        sx_.width = sx_.height = '100%';
+    if (w100vw) {
+        sx_.width = '100vw';
     }
     if (m !== undefined) {
         let margin = '';

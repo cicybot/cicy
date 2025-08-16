@@ -36,50 +36,6 @@ export class BrowserAccount {
         this.accountIndex = accountIndex || 0;
     }
 
-    async getSites(): Promise<BrowserAccountSite[]> {
-        const res = await new DatabaseService().all(
-            `select a.account_index,a.auth,a.config,s.site_id,s.title,s.icon,s.url
-                 from site_account as a
-                 left join site as s on s.site_id = a.site_id
-                 where account_index = ?`,
-            [this.accountIndex]
-        );
-        return res.map(row => {
-            return {
-                ...row,
-                auth: JSON.parse(row.auth),
-                config: JSON.parse(row.config)
-            };
-        });
-    }
-
-    async get(): Promise<BrowserAccountInfo> {
-        const res = await new DatabaseService().get(
-            `select *
-                 from browser_account
-                 where id = ?`,
-            [this.accountIndex]
-        );
-        return {
-            ...res,
-            config: JSON.parse(res.config)
-        };
-    }
-
-    async save(config: BrowserAccountConfigInfo) {
-        const row = await this.get();
-        if (row) {
-            return await new DatabaseService().run(
-                `UPDATE browser_account
-                 set config = ?
-                 WHERE id = ?`,
-                [JSON.stringify(config), this.accountIndex]
-            );
-        } else {
-            throw new Error('no browser account');
-        }
-    }
-
     static async add(config?: BrowserAccountConfigInfo, num?: number) {
         if (!num) {
             num = 1;
@@ -138,6 +94,50 @@ export class BrowserAccount {
                     );
             `);
             localStorage.setItem('browser_account_inited', 'true');
+        }
+    }
+
+    async getSites(): Promise<BrowserAccountSite[]> {
+        const res = await new DatabaseService().all(
+            `select a.account_index,a.auth,a.config,s.site_id,s.title,s.icon,s.url
+                 from site_account as a
+                 left join site as s on s.site_id = a.site_id
+                 where account_index = ?`,
+            [this.accountIndex]
+        );
+        return res.map(row => {
+            return {
+                ...row,
+                auth: JSON.parse(row.auth),
+                config: JSON.parse(row.config)
+            };
+        });
+    }
+
+    async get(): Promise<BrowserAccountInfo> {
+        const res = await new DatabaseService().get(
+            `select *
+                 from browser_account
+                 where id = ?`,
+            [this.accountIndex]
+        );
+        return {
+            ...res,
+            config: JSON.parse(res.config)
+        };
+    }
+
+    async save(config: BrowserAccountConfigInfo) {
+        const row = await this.get();
+        if (row) {
+            return await new DatabaseService().run(
+                `UPDATE browser_account
+                 set config = ?
+                 WHERE id = ?`,
+                [JSON.stringify(config), this.accountIndex]
+            );
+        } else {
+            throw new Error('no browser account');
         }
     }
 }

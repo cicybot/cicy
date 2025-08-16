@@ -1,12 +1,10 @@
-import { Button, Tree } from 'antd';
+import { Tree } from 'antd';
 import View from '../View';
 import { SelectedNodeView } from './SelectedNodeView';
-import { CloseOutlined, DownOutlined } from '@ant-design/icons';
-import CCAgentClient from '../../services/cicy/CCWSAgentClient';
+import { DownOutlined } from '@ant-design/icons';
 import { CloseOutline } from 'antd-mobile-icons';
 
 export const InspectView = ({
-    setInspect,
     onSelect,
     treeData,
     selectedKey,
@@ -15,26 +13,23 @@ export const InspectView = ({
     currentClickPoint,
     setExpandedKeys,
     setSelectedNode,
-    setSelectedKey
+    setSelectedKey,
+    onClickNode
 }: {
     setSelectedNode: any;
     treeData: any;
     setSelectedKey: any;
-    setInspect: any;
     onSelect: any;
     selectedKey: any;
     expandedKeys: any;
+    onClickNode: any;
     selectedNode: any;
     currentClickPoint: any;
     setExpandedKeys: any;
 }) => {
     return (
         <View relative wh100p>
-            <View abs top0 xx0 pl12 pt12 h={22}>
-                调试节点：
-            </View>
-
-            <View abs bottom={selectedNode ? 360 : 0} xx0 top={44} overflowYAuto>
+            <View abs bottom={selectedNode ? 360 : 0} xx0 top={12} overflowYAuto>
                 <Tree
                     showLine
                     switcherIcon={<DownOutlined />}
@@ -50,11 +45,12 @@ export const InspectView = ({
                 />
             </View>
 
-            <View abs bottom={0} xx0 h={selectedNode ? 360 : 0}>
+            <View abs pl12 borderBox bottom={0} xx0 h={selectedNode ? 360 : 0}>
+                <View h={1} abs top0 left={0} right={0} bgColor={'#e9e9e9'}></View>
                 <View
                     abs
                     top={12}
-                    right={4}
+                    right={12}
                     zIdx={1000000}
                     pointer
                     onClick={() => {
@@ -67,13 +63,8 @@ export const InspectView = ({
 
                 {selectedNode ? (
                     <SelectedNodeView
-                        inputText={(text: string) => {
-                            // agent.inputText(text);
-                        }}
                         currentClickPoint={currentClickPoint}
-                        onClickNode={(point: { x: number; y: number }) => {
-                            // agent.click(point.x, point.y);
-                        }}
+                        onClickNode={onClickNode}
                         selectedNode={selectedNode}
                     ></SelectedNodeView>
                 ) : null}

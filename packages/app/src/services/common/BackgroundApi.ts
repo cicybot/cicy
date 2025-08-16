@@ -6,9 +6,77 @@ export class BackgroundApi {
     constructor() {
         this.api = window.backgroundApi ? window.backgroundApi : new CCWSMainWindowClient();
     }
-
+    async openUrl(url: string) {
+        return await this.send({
+            action: 'openUrl',
+            payload: {
+                url
+            }
+        });
+    }
     send(msg: { action: string; payload?: any }) {
         return this.api.message(msg);
+    }
+
+    async setBounds(
+        windowId: string,
+        rect: { width?: number; height?: number; x?: number; y?: number },
+        animate?: boolean
+    ) {
+        return await this.send({
+            action: 'callBaseWindow',
+            payload: {
+                windowId,
+                method: 'setBounds',
+                params: {
+                    rect,
+                    animate
+                }
+            }
+        });
+    }
+
+    async setMinimumSize(windowId: string, width: number, height: number) {
+        return await this.send({
+            action: 'callBaseWindow',
+            payload: {
+                windowId,
+                method: 'setMinimumSize',
+                params: {
+                    width,
+                    height
+                }
+            }
+        });
+    }
+
+    async getMinimumSize(windowId: string) {
+        return await this.send({
+            action: 'callBaseWindow',
+            payload: {
+                windowId,
+                method: 'getMinimumSize',
+                params: {}
+            }
+        });
+    }
+
+    async getBounds(windowId: string) {
+        return await this.send({
+            action: 'callBaseWindow',
+            payload: {
+                windowId,
+                method: 'getBounds',
+                params: {}
+            }
+        });
+    }
+
+    currentConnectorClientId() {
+        return this.send({
+            action: 'currentConnectorClientId',
+            payload: {}
+        });
     }
 
     openPath(path: string) {

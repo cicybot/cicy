@@ -1,9 +1,10 @@
 import {
     Alert,
-    Checkbox,
     Breadcrumb,
     Button,
+    Checkbox,
     Divider,
+    Drawer,
     Input,
     message,
     Tabs,
@@ -19,6 +20,7 @@ import { useTimeoutLoop } from '@cicy/utils';
 import BrowserService from '../../services/cicy/BrowserService';
 import { onEvent } from '../../utils/utils';
 import { AceEditorView } from '../../components/ace/AceEditorView';
+import ClientsTable from '../../components/Tables/ClientsTable';
 
 const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
     const [isOnLine, setIsOnLine] = useState(false);
@@ -100,7 +102,7 @@ const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
                 </ProDescriptions.Item>
             </ProDescriptions>
 
-            <View w100p h={88} mt12 pr12 borderBox>
+            <View w100p h={88} mt12 pr12 borderBox hide>
                 <AceEditorView
                     readOnly
                     options={{
@@ -197,7 +199,7 @@ const ProxyMitm = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
                     </View>
                 </ProDescriptions.Item>
             </ProDescriptions>
-            <View w100p h={88} mt12 pr12 borderBox>
+            <View w100p h={88} mt12 pr12 borderBox hide>
                 <AceEditorView
                     readOnly
                     options={{
@@ -244,6 +246,7 @@ function extractIPAndLocation(html: string) {
 
 const Setting = () => {
     const { appInfo, serverIp, initAppInfo } = useMainWindowContext();
+    const [showClients, setShowClients] = useState(false);
     const [publicIpInfo, setPublicIpInfo] = useState([null, null, null]);
     const [serverUrl, setServerUrl] = useState(localStorage.getItem('serverUrl') || '');
     useEffect(() => {
@@ -357,35 +360,40 @@ const Setting = () => {
                         </ProDescriptions.Item>
                     </ProDescriptions>
                     <Divider />
-                    <ProDescriptions column={1}>
-                        <ProDescriptions.Item label={'服务器IP'}>
-                            <View>
-                                {serverIp.split(',').map(row => (
-                                    <View key={row}>{row}</View>
-                                ))}
-                            </View>
-                        </ProDescriptions.Item>
-                    </ProDescriptions>
-                </View>
-            )
-        },
-        {
-            key: '3',
-            label: 'CiCy安卓连接器',
-            children: (
-                <View>
-                    <ProDescriptions column={1}>
-                        <ProDescriptions.Item label={'连接地址'}>
-                            <Input
-                                size={'small'}
-                                onChange={e => {
-                                    setServerUrl(e.target.value);
-                                    localStorage.setItem('serverUrl', e.target.value);
-                                }}
-                                value={serverUrl}
-                            ></Input>
-                        </ProDescriptions.Item>
-                    </ProDescriptions>
+                    <View>
+                        <ProDescriptions column={1}>
+                            <ProDescriptions.Item label={'连接地址'}>
+                                <Input
+                                    size={'small'}
+                                    onChange={e => {
+                                        setServerUrl(e.target.value);
+                                        localStorage.setItem('serverUrl', e.target.value);
+                                    }}
+                                    value={serverUrl}
+                                ></Input>
+                            </ProDescriptions.Item>
+                        </ProDescriptions>
+                    </View>
+                    <Divider />
+                    {/*<ProDescriptions column={1}>*/}
+                    {/*    <ProDescriptions.Item label={'服务器IP'}>*/}
+                    {/*        <View>*/}
+                    {/*            {serverIp.split(',').map(row => (*/}
+                    {/*                <View key={row}>{row}</View>*/}
+                    {/*            ))}*/}
+                    {/*        </View>*/}
+                    {/*    </ProDescriptions.Item>*/}
+                    {/*</ProDescriptions>*/}
+                    <View>
+                        <Button
+                            size={'small'}
+                            onClick={() => {
+                                setShowClients(true);
+                            }}
+                        >
+                            客户端
+                        </Button>
+                    </View>
                 </View>
             )
         },
@@ -417,8 +425,21 @@ const Setting = () => {
                 />
             </View>
             <View pl={24} pr12 w100p borderBox>
-                <Tabs defaultActiveKey="1" items={items} onChange={() => {}} />
+                <Tabs defaultActiveKey="1" items={items} onChange={key => {}} />
             </View>
+            <Drawer
+                title={'客户端'}
+                width={'90%'}
+                closable={false}
+                onClose={() => setShowClients(false)}
+                open={showClients}
+            >
+                {showClients && (
+                    <View>
+                        <ClientsTable></ClientsTable>
+                    </View>
+                )}
+            </Drawer>
         </View>
     );
 };

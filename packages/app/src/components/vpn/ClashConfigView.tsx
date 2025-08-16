@@ -6,33 +6,33 @@ import { Drawer, message } from 'antd';
 import { useState } from 'react';
 import CCWSAgentClient from '../../services/cicy/CCWSAgentClient';
 import { onEvent } from '../../utils/utils';
+import { AdrDeviceInfo, AdrDeviceModel } from '../../services/model/AdrDeviceModel';
+import { ClashConfig } from './VpnView';
+import * as util from 'node:util';
+import { AdrUtils } from '../../services/common/AdrUtils';
 
 export const ClashConfigView = ({
-    agentAppInfo,
-    clashConfig,
-    setClashConfig
+    config,
+    device
 }: {
-    setClashConfig: (v: any) => void;
-    clashConfig: any;
-    agentAppInfo: any;
+    config: ClashConfig;
+    device: AdrDeviceInfo;
 }) => {
     const [showApps, setShowApps] = useState(false);
     const [showConfig, setShowConfig] = useState(false);
-
-    const agent = new CCWSAgentClient(agentAppInfo.clientId);
+    const utils = new AdrUtils(true).setDevice(device);
     const {
         accessControlMode,
-        accessControlPackages: accessControlPackages1,
+        accessControlPackages: accessControlPackages_,
         proxyPoolHost,
         proxyPoolPort,
         username
-    } = clashConfig;
-    const [accessControlPackages, setAccessControlPackages] = useState(
-        JSON.parse(accessControlPackages1 || '[]')
-    );
+    } = config;
+
+    const [accessControlPackages, setAccessControlPackages] = useState(accessControlPackages_);
+
     return (
-        <View px={8}>
-            <View h={8}></View>
+        <View>
             <Form
                 footer={
                     <Button type={'submit'} block color="primary">
@@ -40,9 +40,9 @@ export const ClashConfigView = ({
                     </Button>
                 }
                 onFinish={async values => {
-                    const { accessControlMode, proxyPoolHost, proxyPoolPort } = values;
-                    if (!proxyPoolHost || proxyPoolHost === '127.0.0.1') {
-                        message.error('代理主机不能为空并且不能为127.0.0.1');
+                    const { accessControlMode, username, proxyPoolHost, proxyPoolPort } = values;
+                    if (proxyPoolHost === '127.0.0.1') {
+                        message.error('代理主不能为127.0.0.1');
                         return;
                     }
                     if (!proxyPoolPort) {
@@ -50,29 +50,26 @@ export const ClashConfigView = ({
                         return;
                     }
 
-                    if (!username || !username.startsWith('Account_')) {
-                        message.error('用户名不能为空，并且需以Account_开头');
+                    if (!username || !username.startsWith('user_')) {
+                        message.error('用户名不能为空，并且需以user_开头');
                         return;
                     }
                     onEvent('showLoading');
-                    await agent.jsonrpcApp('stopClash', []);
-                    await agent.jsonrpcApp('editClashProxyConfig', [
+                    await utils.clashStop();
+                    await utils.clashEditClashProxyConfig(
                         proxyPoolHost,
                         proxyPoolPort,
                         username,
-                        'pwd'
-                    ]);
-
-                    await agent.jsonrpcApp('setAccessControlMode', [
-                        accessControlMode ? accessControlMode[0] : 'AcceptAll'
-                    ]);
-                    await agent.jsonrpcApp('setAccessControlPackages', [accessControlPackages]);
-                    await agent.jsonrpcApp('startClash', []);
+                        ProxyService.getUserPwd(),
+                        accessControlMode ? accessControlMode[0] : 'AcceptAll',
+                        accessControlPackages
+                    );
+                    await utils.clashStart();
                     onEvent('hideLoading');
                 }}
                 initialValues={{
-                    password: 'pwd',
-                    username,
+                    password: ProxyService.getUserPwd(),
+                    username: `user_${AdrDeviceModel.getForwardPortById(device.id)}`,
                     proxyPoolHost,
                     accessControlMode,
                     proxyPoolPort
@@ -107,11 +104,12 @@ export const ClashConfigView = ({
                 </Form.Item>
 
                 <Form.Item
-                    help="用户名用于代理池入站路由节点,格式以'Account_'开头',如:Account_10000"
+                    help="用户名用于代理池入站路由节点,格式以'user_'开头',如:user_10000"
                     label="用户名"
                     name="username"
                 >
                     <Input
+                        readOnly
                         style={{ '--text-align': 'right' }}
                         value={username}
                         placeholder="请输入用户名"
@@ -119,7 +117,11 @@ export const ClashConfigView = ({
                         type="text"
                     />
                 </Form.Item>
-                <Form.Item label="密码" name="password" help={"密码固定为'pwd'"}>
+                <Form.Item
+                    label="密码"
+                    name="password"
+                    help={"密码固定为'" + ProxyService.getUserPwd() + "'"}
+                >
                     <Input
                         readOnly
                         style={{ '--text-align': 'right' }}
@@ -155,15 +157,6 @@ export const ClashConfigView = ({
                     >
                         应用清单
                     </List.Item>
-                    <List.Item
-                        onClick={async () => {
-                            const res = await agent.jsonrpcApp('getClashConfig');
-                            setClashConfig(res);
-                            setShowConfig(true);
-                        }}
-                    >
-                        配置文件
-                    </List.Item>
                 </List>
             </Form>
             <View h={8}></View>
@@ -178,27 +171,12 @@ export const ClashConfigView = ({
             >
                 {showApps && (
                     <AppsView
+                        device={device}
                         setAccessControlPackages={v => {
                             setAccessControlPackages(v);
                         }}
                         accessControlPackages={accessControlPackages}
-                        agent={agent}
                     />
-                )}
-            </Drawer>
-            <Drawer
-                width={'360px'}
-                title={`Config`}
-                closable={{ 'aria-label': 'Close Button' }}
-                onClose={() => {
-                    setShowConfig(false);
-                }}
-                open={showConfig}
-            >
-                {showConfig && (
-                    <View p12>
-                        <pre>{clashConfig.configYaml}</pre>
-                    </View>
                 )}
             </Drawer>
         </View>

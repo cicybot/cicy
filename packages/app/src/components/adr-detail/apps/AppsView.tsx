@@ -2,20 +2,23 @@ import CCAgentClient from '../../../services/cicy/CCWSAgentClient';
 import View from '../../View';
 import { useEffect, useState } from 'react';
 import { CheckList } from 'antd-mobile';
+import { AdrDeviceInfo } from '../../../services/model/AdrDeviceModel';
+import { AdrUtils } from '../../../services/common/AdrUtils';
 
 export function AppsView({
-    agent,
+    device,
     accessControlPackages,
     setAccessControlPackages
 }: {
     accessControlPackages: string[];
     setAccessControlPackages: (v: string[]) => void;
-    agent: CCAgentClient;
+    device: AdrDeviceInfo;
 }) {
-    const [apps, setApps] = useState<any[]>([]);
+    const [apps, setApps] = useState<{ name: string; packageName: string; type: string }[]>([]);
+    const utils = new AdrUtils(true).setDevice(device);
     useEffect(() => {
-        agent.jsonrpcApp('getInstalledApps').then(({ apps }: { apps: any[] }) => {
-            setApps(apps);
+        utils.getAppsList().then(res => {
+            setApps(res);
         });
     }, []);
     return (
@@ -30,7 +33,9 @@ export function AppsView({
                 {apps.map(app => (
                     <CheckList.Item key={app.packageName} value={app.packageName}>
                         <View>
-                            <View fontWeight={700}> {app.name}</View>
+                            <View fontWeight={700}>
+                                {app.type} {app.name}
+                            </View>
                             <View fontSize={12}> {app.packageName}</View>
                         </View>
                     </CheckList.Item>

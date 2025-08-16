@@ -1,129 +1,168 @@
-import { ProDescriptions, ProField } from '@ant-design/pro-components';
-import { Button, Drawer } from 'antd';
 import View from '../View';
-import { useEffect, useState } from 'react';
-import { sleep, useTimeoutLoop } from '@cicy/utils';
-import { onEvent } from '../../utils/utils';
-import CCWSAgentClient from '../../services/cicy/CCWSAgentClient';
+import { useState } from 'react';
+import { AdrDeviceInfo } from '../../services/model/AdrDeviceModel';
+import { List, Switch } from 'antd-mobile';
+import { SetOutline } from 'antd-mobile-icons';
+import { useTimeoutLoop } from '@cicy/utils';
+import { AdrUtils } from '../../services/common/AdrUtils';
+import { Drawer } from 'antd';
+import { hideLoading, showLoading } from '../../utils/utils';
 import { ClashConfigView } from './ClashConfigView';
-
-export const VpnView = ({
-    clientId,
-    wsOnlineAgentApp
-}: {
-    wsOnlineAgentApp: boolean;
-    clientId: string;
-}) => {
-    const [agentAppInfo, setAgentAppInfo] = useState<null | any>(null);
-    const [clashConfig, setClashConfig] = useState<null | any>(null);
-    const agent = new CCWSAgentClient(clientId);
-
-    async function getAgentAppInfo() {
-        const res = await agent.jsonrpcApp('agentAppInfo');
-        setAgentAppInfo(res);
-    }
-
-    useEffect(() => {
-        getAgentAppInfo().catch(console.error);
-    }, []);
+import Loading from '../UI/Loading';
+export interface ClashConfig {
+    accessControlMode: 'AcceptAll' | 'AcceptSelected' | 'DenySelected';
+    accessControlPackages: string[];
+    clashRunning: boolean;
+    autoRestart: boolean;
+    proxyPoolHost: string;
+    proxyPoolPort: string;
+    username: string;
+    password: string;
+    configYaml: string;
+}
+export const VpnView = ({ device }: { device: AdrDeviceInfo }) => {
+    const packageName = 'com.cicy.agent.alpha';
+    const activityName = 'com.github.kr328.clash.MainActivity';
+    const installed = !!device.vpnAppInstalled;
+    const vpnAppRunning = !!device.vpnAppRunning;
+    const [editConfig, setEditConfig] = useState(false);
+    const utils = new AdrUtils(true).setDevice(device);
+    const [config, setConfig] = useState<null | ClashConfig>(null);
+    const [showYaml, setShowYaml] = useState(false);
     useTimeoutLoop(async () => {
-        await getAgentAppInfo();
+        const config = await utils.clashGetClashConfig();
+        setConfig(config);
     }, 1000);
-    if (!agentAppInfo) {
-        return null;
+    if (!installed) {
+        return <View></View>;
     }
-    console.log({ agentAppInfo });
-    const { isClashRunning } = agentAppInfo;
+    if (!vpnAppRunning) {
+        return (
+            <View>
+                <List header="">
+                    <List.Item
+                        extra={
+                            <View
+                                onClick={async () => {
+                                    showLoading();
+                                    await utils.amStart(packageName, activityName);
+                                    hideLoading();
+                                }}
+                            >
+                                <Switch checked={false} />
+                            </View>
+                        }
+                    >
+                        Clash
+                    </List.Item>
+                </List>
+            </View>
+        );
+    }
+    if (!config) {
+        return (
+            <View wh100p center>
+                <Loading />
+            </View>
+        );
+    }
     return (
         <>
-            <ProDescriptions column={1}>
-                <ProDescriptions.Item label="Vpn">
-                    <ProField
-                        text={'' + isClashRunning}
-                        mode={'read'}
-                        valueType="select"
-                        request={async () => [
-                            { label: '已开启', value: 'true' },
-                            { label: '未开启', value: 'false' }
-                        ]}
-                    />
-                </ProDescriptions.Item>
-                <View rowVCenter>
-                    <View ml12>
-                        <Button
-                            onClick={async () => {
-                                onEvent('showLoading');
-                                if (isClashRunning) {
-                                    await agent.jsonrpcApp('stopClash');
-                                } else {
-                                    await agent.jsonrpcApp('startClash');
-                                }
-                                onEvent('hideLoading');
-                            }}
-                            size="small"
-                        >
-                            {isClashRunning ? '停止' : '启动'}
-                        </Button>
-                    </View>
-                    <View ml12 hide={!isClashRunning}>
-                        <Button
-                            onClick={async () => {
-                                onEvent('showLoading');
-                                await agent.jsonrpcApp('stopClash');
-                                await sleep(1000);
-                                await agent.jsonrpcApp('startClash');
-                                onEvent('hideLoading');
-                            }}
-                            size="small"
-                        >
-                            重启
-                        </Button>
-                    </View>
-                    <View ml12>
-                        <Button
-                            onClick={async () => {
-                                onEvent('showLoading');
-                                await agent.jsonrpcApp('updateClash');
-                                onEvent('hideLoading');
-                            }}
-                            size="small"
-                        >
-                            更新配置
-                        </Button>
-                    </View>
-                    <View ml12>
-                        <Button
-                            onClick={async () => {
-                                onEvent('showLoading');
-                                const res = await agent.jsonrpcApp('getClashConfig');
-                                setClashConfig(res);
-                                onEvent('hideLoading');
-                            }}
-                            size="small"
-                        >
-                            修改配置
-                        </Button>
-                    </View>
-                </View>
-            </ProDescriptions>
+            <View absFull>
+                <List>
+                    <List.Item
+                        extra={
+                            <View
+                                onClick={async () => {
+                                    showLoading();
+                                    await utils.amStop(packageName);
+                                    hideLoading();
+                                }}
+                            >
+                                <Switch checked={true} />
+                            </View>
+                        }
+                    >
+                        Clash
+                    </List.Item>
+                </List>
+                <List>
+                    <List.Item
+                        extra={
+                            <View
+                                onClick={async () => {
+                                    showLoading();
+                                    if (config.clashRunning) {
+                                        await utils.clashStop();
+                                    } else {
+                                        await utils.clashStart();
+                                    }
+
+                                    hideLoading();
+                                }}
+                            >
+                                <Switch checked={config.clashRunning} />
+                            </View>
+                        }
+                    >
+                        {config.clashRunning ? '运行中' : '已停止'}
+                    </List.Item>
+                    <List.Item
+                        onClick={async () => {
+                            showLoading();
+                            await utils.clashUpdate();
+                            hideLoading();
+                        }}
+                    >
+                        重置配置
+                    </List.Item>
+                    <List.Item
+                        onClick={async () => {
+                            setEditConfig(true);
+                        }}
+                    >
+                        修改配置
+                    </List.Item>
+                </List>
+                <List>
+                    <List.Item
+                        prefix={<SetOutline />}
+                        onClick={() => {
+                            setShowYaml(true);
+                        }}
+                    >
+                        配置文件
+                    </List.Item>
+                </List>
+                {/*<View json={config}></View>*/}
+            </View>
+
             <Drawer
                 width={'360px'}
-                title={'Clash'}
-                closable={{ 'aria-label': 'Close Button' }}
+                title={'配置文件'}
+                closable={true}
                 onClose={() => {
-                    setClashConfig(null);
+                    setShowYaml(false);
                 }}
-                open={!!clashConfig}
+                open={showYaml}
             >
-                {clashConfig && (
-                    <ClashConfigView
-                        setClashConfig={(c: any) => {
-                            setClashConfig(c);
-                        }}
-                        agentAppInfo={agentAppInfo}
-                        clashConfig={clashConfig}
-                    />
-                )}
+                <View p12 absFull top={64} overflowYAuto>
+                    <pre>{config ? config.configYaml : ''}</pre>
+                </View>
+            </Drawer>
+
+            <Drawer
+                width={'360px'}
+                title={'修改配置'}
+                closable={true}
+                onClose={() => {
+                    setEditConfig(false);
+                }}
+                open={editConfig}
+            >
+                <View absFull top={64} overflowYAuto>
+                    <ClashConfigView device={device} config={config} />
+                </View>
             </Drawer>
         </>
     );

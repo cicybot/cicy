@@ -164,7 +164,8 @@ const ClientsTable = () => {
             dataSource={dataSource as TableListItem[]}
             rowKey="key"
             pagination={{
-                showQuickJumper: true
+                showQuickJumper: true,
+                pageSize: 8
             }}
             columns={columns}
             search={false}

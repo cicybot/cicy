@@ -1,58 +1,57 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import View from '../../components/View';
-import CCAndroidConnectorClient from '../../services/cicy/CCAndroidConnectorClient';
-import { connectCCServer } from '../../services/cicy/CCWSClient';
 import { AdrDeviceInfo, AdrDeviceModel } from '../../services/model/AdrDeviceModel';
-import Screen from '../../components/adr-detail/screen/Screen';
-import SizeBarScreen from '../../components/UI/SideBarScreen';
-import { useSessionStorageState } from '@cicy/utils';
+import { AdrUtils } from '../../services/common/AdrUtils';
+import Loading from '../../components/UI/Loading';
+import { AndroidWindow } from '../../components/adr-connector/AndroidWindow';
 
 const AndroidDetail = () => {
-    const { clientId, sn, deviceId, id } = useParams();
-    const connector = new CCAndroidConnectorClient();
-    connector.setClientId(clientId as string);
-    connector.setSn(sn as string);
-    const [isSettingOpen, setIsSettingOpen] = useSessionStorageState('isSettingOpen', false);
-
-    const [deviceInfo, setDeviceInfo] = useState<null | AdrDeviceInfo>(null);
-
-    function getDeviceInfo() {
-        connector.getDeviceInfo().then(res => {
-            setDeviceInfo(res);
-        });
-    }
+    const { width, deviceId } = useParams();
+    const utils = new AdrUtils(true);
+    const [device, setDevice] = useState<null | AdrDeviceInfo>(null);
     useEffect(() => {
-        //@ts-ignore
-        document.title = sn;
-        connectCCServer('ADR-' + sn, {
-            onLogged: () => {
-                getDeviceInfo();
-            },
-            onMessage: message => {},
-            onClose: () => {}
+        new AdrDeviceModel(deviceId as string).get().then(res => {
+            const device = res.info;
+            utils
+                .setDevice(device)
+                .getDeviceInfo()
+                .then(res => {
+                    if (res) {
+                        const newInfo = {
+                            ...device,
+                            ...res
+                        };
+                        new AdrDeviceModel(deviceId as string).save(newInfo);
+                        setDevice(newInfo);
+                    } else {
+                        setDevice(device);
+                    }
+                })
+                .catch(() => {
+                    setDevice(device);
+                });
         });
-    }, [sn]);
-    if (!deviceInfo) {
-        return null;
+    }, []);
+
+    async function saveDevice(device: AdrDeviceInfo) {
+        await new AdrDeviceModel(device.deviceId).save(device);
+        setDevice(device);
+    }
+
+    if (!device) {
+        return (
+            <View absFull center>
+                <Loading></Loading>
+            </View>
+        );
     }
     return (
-        <View w100vw h100vh bgColor={'#393939'} overflowHidden userSelectNone>
-            <View abs left0 w={58} top0 bottom={0}>
-                <SizeBarScreen minSideBar sideBarWidth={58}></SizeBarScreen>
-            </View>
-            <View abs left={58} top0 bottom={0} right={0}>
-                <Screen
-                    getDeviceInfo={getDeviceInfo}
-                    connector={connector}
-                    deviceInfo={deviceInfo}
-                    isSettingOpen={isSettingOpen}
-                    setIsSettingOpen={(v: boolean) => setIsSettingOpen(v)}
-                    useKeyEvent
-                    id={parseInt(id as string)}
-                ></Screen>
-            </View>
-        </View>
+        <AndroidWindow
+            saveDevice={saveDevice}
+            device={device}
+            width={parseInt(width as string)}
+        ></AndroidWindow>
     );
 };
 export default AndroidDetail;

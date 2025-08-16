@@ -111,7 +111,8 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
                         dataSource={sites}
                         rowKey="site_id"
                         pagination={{
-                            showQuickJumper: true
+                            showQuickJumper: true,
+                            pageSize: 6
                         }}
                         columns={columns}
                         search={false}
