@@ -64,7 +64,6 @@ sed -i '' "s/VERSION: .*/VERSION: ${TAG}/" ${PROJECT_DIR}/.github/workflows/cd.y
 sed -i '' "s/\"version\": \".*\"/\"version\": \"${TAG}\"/" "${PROJECT_DIR}/apps/desktop/package.json"
 
 cd $PROJECT_DIR/tools
-node fix-version.js $TAG ../apps-rust/cicy-agent/Cargo.toml
 node fix-version.js $TAG ../apps-rust/cicy-connector/Cargo.toml
 node fix-version.js $TAG ../apps-rust/cicy-server/Cargo.toml
 cd $PROJECT_DIR
