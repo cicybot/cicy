@@ -1,6 +1,6 @@
 [package]
 name = "cicy-connector"
-version = "1.0.101"
+version = "1.0.102"
 authors = ["Barry"]
 edition = "2024"
 license = "MIT"
