@@ -12,7 +12,6 @@ import { AdrUtils } from '../../services/common/AdrUtils';
 import ScreenInspector from '../adr-detail/screen/ScreenInspector';
 import { VpnView } from '../vpn/VpnView';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
-import * as util from 'node:util';
 
 export enum PageNav {
     Home,
@@ -74,8 +73,11 @@ const AdrDeviceDetail = ({
                                     }
                                 })
                             );
-                            document.getElementById(`inspect_node_${device.id}`)!.style.display =
-                                'none';
+                            if (document.getElementById(`inspect_node_${device.id}`)) {
+                                document.getElementById(
+                                    `inspect_node_${device.id}`
+                                )!.style.display = 'none';
+                            }
                             setPageNav(PageNav.Home);
                         }}
                     />

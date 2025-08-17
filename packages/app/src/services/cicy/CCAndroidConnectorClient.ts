@@ -26,6 +26,7 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
         const netIps = [];
         const lines = deviceInfo.split('\n');
         const info: any = {};
+
         for (const linesKey in lines) {
             const line = lines[linesKey].trim();
             if (line.indexOf('LISTEN') > -1) {

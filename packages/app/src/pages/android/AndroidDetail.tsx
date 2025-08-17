@@ -12,7 +12,10 @@ const AndroidDetail = () => {
     const [device, setDevice] = useState<null | AdrDeviceInfo>(null);
     useEffect(() => {
         new AdrDeviceModel(deviceId as string).get().then(res => {
-            const device = res.info;
+            const device = {
+                ...res.info,
+                id: res.id!
+            };
             utils
                 .setDevice(device)
                 .getDeviceInfo()

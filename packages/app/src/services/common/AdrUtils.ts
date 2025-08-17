@@ -493,6 +493,7 @@ export class AdrUtils {
             );
             return res.data;
         } catch (e) {
+            v;
             return null;
         }
     }
@@ -502,6 +503,7 @@ export class AdrUtils {
             const res = await fetch(`${this.getBaseUrl()}/version`);
             return await res.text();
         } catch (e) {
+            console.error(e);
             return null;
         }
     }
@@ -527,17 +529,19 @@ export class AdrUtils {
                 return [];
             }
         } catch (e) {
+            console.error(e);
             return [];
         }
     }
     async getDeviceInfo() {
         try {
             const res = await axios.get(`${this.getBaseUrl()}/deviceInfo`, {
-                timeout: 1000
+                timeout: 5000
             });
             const text = res.data;
             return CCAndroidConnectorClient.formatDeviceInfo(text);
         } catch (e) {
+            console.error(e);
             return null;
         }
     }
@@ -550,6 +554,7 @@ export class AdrUtils {
             });
             return await res.text();
         } catch (e) {
+            console.error(e);
             return null;
         }
     }
@@ -561,12 +566,12 @@ export class AdrUtils {
             const [width, height] = json.size.split('/');
             return { width: parseInt(width), height: parseInt(height) };
         } catch (e) {
+            console.error(e);
             return null;
         }
     }
     async closeWs() {
         if (this.ws) {
-            debugger;
             this.ws.close(3001, 'no reconnect');
         }
     }

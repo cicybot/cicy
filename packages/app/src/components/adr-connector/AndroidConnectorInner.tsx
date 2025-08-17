@@ -33,10 +33,54 @@ export const AndroidConnectorInner = () => {
     const [devices, setDevices] = useState<Map<string, AdbDevice>>(new Map());
     const connector = new CCAndroidConnectorClient();
     const { appInfo } = useMainWindowContext();
-    const [currentDevice, setCurrentDevice] = useState<null | AdrDeviceInfo>(null);
-    const [currentFullscreenDevice, setCurrentFullscreenDevice] = useState<null | AdrDeviceInfo>(
+    const [currentDevice, setCurrentDevice_] = useState<null | AdrDeviceInfo>(null);
+    const [currentFullscreenDevice, setCurrentFullscreenDevice_] = useState<null | AdrDeviceInfo>(
         null
     );
+    const setCurrentDevice = (device: null | AdrDeviceInfo) => {
+        if (device) {
+            new AdrUtils(true)
+                .setDevice(device)
+                .getDeviceInfo()
+                .then(res => {
+                    if (!res) {
+                        setCurrentDevice_(device);
+                    } else {
+                        const deviceNew = {
+                            ...device,
+                            ...res
+                        };
+                        setCurrentDevice_(deviceNew);
+                        saveDevice(deviceNew).then(updateDevices);
+                    }
+                });
+        } else {
+            setCurrentDevice_(device);
+        }
+    };
+
+    const setCurrentFullscreenDevice = (device: null | AdrDeviceInfo) => {
+        setCurrentFullscreenDevice_(device);
+        if (device) {
+            new AdrUtils(true)
+                .setDevice(device)
+                .getDeviceInfo()
+                .then(res => {
+                    if (!res) {
+                        setCurrentDevice_(device);
+                    } else {
+                        const deviceNew = {
+                            ...device,
+                            ...res
+                        };
+                        setCurrentDevice_(deviceNew);
+                        saveDevice(deviceNew).then(updateDevices);
+                    }
+                });
+        } else {
+            setCurrentFullscreenDevice_(device);
+        }
+    };
     const [adrDevice, setAdrDevice] = useState<Map<string, AdrDeviceInfo>>(new Map());
     const [connectClientId, setConnectClientId] = useState('');
     const openAdr = async (device: AdrDeviceInfo) => {
@@ -93,16 +137,17 @@ export const AndroidConnectorInner = () => {
                     ...deviceInfo,
                     sn: sn
                 });
+                adrDevice.set(sn, { ...deviceInfo, sn: sn, id });
             } else {
-                await adrDeviceModel.save({
+                const newDevice = {
                     ...row.info,
                     ...deviceInfo,
                     sn: sn
-                });
+                };
+                await adrDeviceModel.save(newDevice);
                 id = row.id!;
+                adrDevice.set(sn, { ...newDevice, sn: sn, id });
             }
-
-            adrDevice.set(sn, { ...deviceInfo, sn: sn, id });
 
             if (1 || !deviceInfo.ports.includes(9010) || !deviceInfo.ports.includes(9008)) {
                 await connector.deviceAdbPush(
