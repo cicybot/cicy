@@ -1,6 +1,7 @@
 import CCBaseAgentClient from './CCBaseAgentClient';
 import { DeviceInfo } from './CCWSAgentClient';
 import { v4 as uuid } from 'uuid';
+import { AdrDeviceInfo } from '../model/AdrDeviceModel';
 
 export interface AdbDevice {
     sn: string;
@@ -76,6 +77,10 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
 
     async deviceAdb(cmd: string) {
         return await this.adb(`${cmd}`, true);
+    }
+
+    async deviceInstall(apkPath: string) {
+        return await this.adb(`install ${apkPath}`, true);
     }
 
     async deviceAdbShell(cmd: string) {
@@ -211,6 +216,7 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
     }
 
     async saveDeviceSh() {
+        //
         await this.fileWrite(
             'device.sh',
             `
@@ -230,6 +236,8 @@ echo $(wm size)
 echo $(wm density)
 echo tun:$(ifconfig | grep 'tun')
 echo isRoot:$(ls /system/bin/su 2>/dev/null)
+echo agentAppInstalled:$(pm list packages | grep com.cicy.agent.adr)
+echo agentAppRunning:$(pidof com.cicy.agent.adr)
 echo vpnAppInstalled:$(pm list packages | grep com.cicy.agent.alpha)
 echo vpnAppRunning:$(pidof com.cicy.agent.alpha)
 netstat -tnlp | grep LISTEN | grep app_process
@@ -245,7 +253,7 @@ fi`
         return this.getDeviceInfo();
     }
 
-    async getDeviceInfo() {
+    async getDeviceInfo(): Promise<AdrDeviceInfo> {
         const deviceInfo = await this.deviceAdbShell('sh /data/local/tmp/device.sh deviceInfo');
         const info = CCAndroidConnectorClient.formatDeviceInfo(deviceInfo);
         if (!info.deviceId) {

@@ -116,6 +116,7 @@ export const AndroidConnectorInner = () => {
             hideLoading();
         }
     };
+
     const onConnect = async (sn: string) => {
         if (!connectClientId) {
             return;
@@ -124,7 +125,38 @@ export const AndroidConnectorInner = () => {
         connector.setClientId(connectClientId);
         connector.setSn(sn);
         try {
-            const deviceInfo = await connector.handleDeviceInfo();
+            let deviceInfo = await connector.handleDeviceInfo();
+            const { publicDir, pathSep } = appInfo;
+            const assetDir = `${publicDir}${pathSep}static${pathSep}assets`;
+            let flag = false;
+            if (!deviceInfo.agentAppInstalled) {
+                const apk = `${assetDir}${pathSep}agent.apk`;
+                await connector.deviceInstall(apk);
+                flag = true;
+            }
+            if (!deviceInfo.vpnAppInstalled) {
+                const { abi } = deviceInfo;
+                let apk = '';
+                switch (abi) {
+                    case 'x86_64':
+                        apk = `${assetDir}${pathSep}cmfa-2.11.14-alpha-x86_64-release.apk`;
+                        break;
+                    case 'arm64-v8a':
+                        apk = `${assetDir}${pathSep}cmfa-2.11.14-alpha-arm64-v8a-release.apk`;
+                        break;
+                    case 'armeabi-v7a':
+                        apk = `${assetDir}${pathSep}cmfa-2.11.14-alpha-armeabi-v7a-release.apk`;
+                        break;
+                }
+                if (apk) {
+                    await connector.deviceInstall(apk);
+                    flag = true;
+                }
+            }
+            if (flag) {
+                deviceInfo = await connector.getDeviceInfo();
+            }
+
             const { deviceId } = deviceInfo;
             setAdrDevice(adrDevice);
             const adrDeviceModel = new AdrDeviceModel(deviceId);

@@ -23,6 +23,7 @@ export interface ClashConfig {
 export const VpnView = ({ device }: { device: AdrDeviceInfo }) => {
     const packageName = 'com.cicy.agent.alpha';
     const activityName = 'com.github.kr328.clash.MainActivity';
+
     const installed = !!device.vpnAppInstalled;
     const vpnAppRunning = !!device.vpnAppRunning;
     const [editConfig, setEditConfig] = useState(false);
