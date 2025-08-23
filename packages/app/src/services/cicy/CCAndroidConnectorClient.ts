@@ -222,7 +222,7 @@ export default class CCAndroidConnectorClient extends CCBaseAgentClient {
             `
 if [ "$1" = "deviceInfo" ]
 then
-
+mkdir -p /sdcard/Download/cicy
 echo deviceId:$(touch /data/local/tmp/id && cat /data/local/tmp/id)
 echo userRotation:$(wm user-rotation)
 echo brand:$(getprop ro.product.brand)
@@ -236,8 +236,10 @@ echo $(wm size)
 echo $(wm density)
 echo tun:$(ifconfig | grep 'tun')
 echo isRoot:$(ls /system/bin/su 2>/dev/null)
+echo agentAppApkExists:$(ls /sdcard/Download/cicy/agent.apk 2>/dev/null)
 echo agentAppInstalled:$(pm list packages | grep com.cicy.agent.adr)
 echo agentAppRunning:$(pidof com.cicy.agent.adr)
+echo vpnAppApkExists:$(ls /sdcard/Download/cicy/vpn.apk 2>/dev/null)
 echo vpnAppInstalled:$(pm list packages | grep com.cicy.agent.alpha)
 echo vpnAppRunning:$(pidof com.cicy.agent.alpha)
 netstat -tnlp | grep LISTEN | grep app_process

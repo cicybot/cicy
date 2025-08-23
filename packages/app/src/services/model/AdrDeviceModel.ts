@@ -1,8 +1,10 @@
 import DatabaseService from '../common/DatabaseService';
 
 export interface AdrDeviceInfo {
+    agentAppApkExists: string;
     agentAppInstalled: string;
     agentAppRunning: string;
+    vpnAppApkExists: string;
     vpnAppInstalled: string;
     vpnAppRunning: string;
     width: number;

@@ -560,8 +560,8 @@ export class AdrUtils {
 
     async getScreenSize() {
         try {
-            const res = await fetch(`${this.getBaseUrl()}/screen/size`);
-            const json = await res.json();
+            const res = await axios.get(`${this.getBaseUrl()}/screen/size`, { timeout: 5000 });
+            const json = res.data;
             const [width, height] = json.size.split('/');
             return { width: parseInt(width), height: parseInt(height) };
         } catch (e) {

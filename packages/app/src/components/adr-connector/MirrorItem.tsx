@@ -67,27 +67,28 @@ const MirrorItem = ({
         } catch (e) {}
     }, 5000);
 
-    const items: MenuProps['items'] = [
-        {
-            label: '设置',
-            key: 'setting',
-            icon: <SettingOutlined />
-        }
-    ];
+    const items: MenuProps['items'] = [];
+
     if (!isWin) {
         items.push({
             label: '新窗口打开',
             key: 'outOpen',
             icon: <ExportOutlined />
         });
-    }
-    if (!isMax) {
+    } else {
         items.push({
-            label: '最大化',
-            key: 'max',
-            icon: <FullscreenOutlined />
+            label: '设置',
+            key: 'setting',
+            icon: <SettingOutlined />
         });
     }
+    // if (!isMax) {
+    //     items.push({
+    //         label: '最大化',
+    //         key: 'max',
+    //         icon: <FullscreenOutlined />
+    //     });
+    // }
     const actionHeight = AdrUtils.getBottomHeight();
     const actions: React.ReactNode[] = [
         <View
@@ -153,7 +154,7 @@ const MirrorItem = ({
         <StyledCard
             hoverable
             actions={width < 240 ? undefined : actions}
-            style={{ width }}
+            style={{ width, overflow: 'hidden' }}
             variant="outlined"
         >
             <View h={h + AdrUtils.getBottomHeight()} overflowHidden>

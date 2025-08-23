@@ -4,6 +4,8 @@ import MirrorItem from './MirrorItem';
 import AdrDeviceDetail from './AdrDeviceDetail';
 import { useState } from 'react';
 import { BackgroundApi } from '../../services/common/BackgroundApi';
+import { AdrUtils } from '../../services/common/AdrUtils';
+import { hideLoading, showLoading } from '../../utils/utils';
 
 export const AndroidWindow = ({
     saveDevice,
@@ -23,9 +25,9 @@ export const AndroidWindow = ({
                 top0
                 bottom0
                 left0
-                center
+                center={true}
                 bgColor={'#999'}
-                w={currentDevice ? width : '100vw'}
+                w={currentDevice ? width + 24 : '100vw'}
             >
                 <MirrorItem
                     isMax={true}
@@ -33,24 +35,58 @@ export const AndroidWindow = ({
                     httpShortDelayMs={10}
                     setCurrentDevice={async (device: AdrDeviceInfo) => {
                         const windowId = sessionStorage.getItem('__winId')!;
-                        const { width: winWidth } = await new BackgroundApi().getBounds(windowId);
-                        if (winWidth < width + 360) {
-                            await new BackgroundApi().setBounds(
-                                windowId,
-                                { width: width + 360 },
-                                true
+                        showLoading();
+                        try {
+                            const { width: winWidth } = await new BackgroundApi().getBounds(
+                                windowId
                             );
+                            if (winWidth < width + 360 + 24) {
+                                await new BackgroundApi().setBounds(
+                                    windowId,
+                                    { width: width + 360 + 24 },
+                                    true
+                                );
+                            }
+                            const res = await new BackgroundApi().getMinimumSize(windowId);
+                            await new BackgroundApi().setMinimumSize(
+                                windowId,
+                                width + 360 + 24,
+                                res[1]
+                            );
+                            new AdrUtils(true)
+                                .setDevice(device)
+                                .getDeviceInfo()
+                                .then(res => {
+                                    if (!res) {
+                                        setCurrentDevice(device);
+                                    } else {
+                                        const deviceNew = {
+                                            ...device,
+                                            ...res
+                                        };
+                                        setCurrentDevice(device);
+                                        saveDevice(deviceNew);
+                                    }
+                                });
+                        } catch (e) {
+                            console.error(e);
+                        } finally {
+                            hideLoading();
                         }
-                        const res = await new BackgroundApi().getMinimumSize(windowId);
-                        await new BackgroundApi().setMinimumSize(windowId, width + 360, res[1]);
-                        setCurrentDevice(device);
                     }}
                     width={width}
                     device={device}
                 />
             </View>
             {currentDevice && (
-                <View abs top0 bottom0 right0 w={`calc(100vw - ${width}px)`} bgColor={'#f5f5f5'}>
+                <View
+                    abs
+                    top0
+                    bottom0
+                    right0
+                    w={`calc(100vw - ${width + 24}px)`}
+                    bgColor={'#f5f5f5'}
+                >
                     <View absFull overflowHidden>
                         <AdrDeviceDetail
                             showInspect

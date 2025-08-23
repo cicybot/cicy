@@ -25,6 +25,8 @@ export const VpnView = ({ device }: { device: AdrDeviceInfo }) => {
     const activityName = 'com.github.kr328.clash.MainActivity';
 
     const installed = !!device.vpnAppInstalled;
+    const vpnAppApkExists = !!device.vpnAppApkExists;
+
     const vpnAppRunning = !!device.vpnAppRunning;
     const [editConfig, setEditConfig] = useState(false);
     const utils = new AdrUtils(true).setDevice(device);
@@ -34,8 +36,15 @@ export const VpnView = ({ device }: { device: AdrDeviceInfo }) => {
         const config = await utils.clashGetClashConfig();
         setConfig(config);
     }, 1000);
+    if (!vpnAppApkExists) {
+        return (
+            <View absFull center>
+                没有上传VPN apk,请连接ADB设置，并重新连接
+            </View>
+        );
+    }
     if (!installed) {
-        return <View></View>;
+        return <View>no installed</View>;
     }
     if (!vpnAppRunning) {
         return (

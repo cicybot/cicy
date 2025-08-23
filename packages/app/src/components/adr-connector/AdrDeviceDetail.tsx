@@ -178,6 +178,15 @@ const AdrDeviceDetail = ({
                         >
                             Debug Info
                         </List.Item>
+                        <List.Item
+                            prefix={<SetOutline />}
+                            onClick={() => {
+                                setPageNav(PageNav.Setting);
+                                new BackgroundApi().openUrl(adrUtils.getSwagger());
+                            }}
+                        >
+                            Swagger
+                        </List.Item>
                     </List>
                 )}
                 {pageNav === PageNav.Setting && (
@@ -191,17 +200,6 @@ const AdrDeviceDetail = ({
                             <List.Item extra={device.abilist}>CPU</List.Item>
                             <List.Item extra={device.ports.join(',')}>端口</List.Item>
                             <List.Item extra={device.userRotation}>屏幕</List.Item>
-                        </List>
-                        <List header="Api">
-                            <List.Item
-                                prefix={<SetOutline />}
-                                onClick={() => {
-                                    setPageNav(PageNav.Setting);
-                                    new BackgroundApi().openUrl(adrUtils.getSwagger());
-                                }}
-                            >
-                                Swagger
-                            </List.Item>
                         </List>
                     </>
                 )}

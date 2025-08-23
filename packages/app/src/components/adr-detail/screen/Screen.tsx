@@ -279,8 +279,8 @@ const Screen = ({
                         }
                     }}
                     style={{
-                        borderTopLeftRadius: 8,
-                        borderTopRightRadius: 8,
+                        // borderTopLeftRadius: 8,
+                        // borderTopRightRadius: 8,
                         userSelect: 'none',
                         width: '100%',
                         height: 'calc(100% - 32px)'

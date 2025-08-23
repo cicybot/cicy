@@ -85,16 +85,14 @@ export const AndroidConnectorInner = () => {
     const [connectClientId, setConnectClientId] = useState('');
     const openAdr = async (device: AdrDeviceInfo) => {
         showLoading();
-        const screenSize = await new AdrUtils(true)
-            .setAccessIp(device.accessIp)
-            .setAccessPort(device.accessPort)
-            .setId(device.id)
-            .getScreenSize();
-
+        let screenSize = await new AdrUtils(true).setId(device.id).getScreenSize();
         if (!screenSize) {
-            message.error('设备Agent未运行');
-            hideLoading();
-            return;
+            screenSize = await new AdrUtils(true).setDevice(device).getScreenSize();
+            if (!screenSize) {
+                message.error('设备Agent未运行');
+                hideLoading();
+                return;
+            }
         }
         try {
             const { width, height } = screenSize;
@@ -129,12 +127,12 @@ export const AndroidConnectorInner = () => {
             const { publicDir, pathSep } = appInfo;
             const assetDir = `${publicDir}${pathSep}static${pathSep}assets`;
             let flag = false;
-            if (!deviceInfo.agentAppInstalled) {
+            if (!deviceInfo.agentAppApkExists) {
                 const apk = `${assetDir}${pathSep}agent.apk`;
-                await connector.deviceInstall(apk);
+                await connector.deviceAdbPush(apk, '/sdcard/Download/cicy/agent.apk');
                 flag = true;
             }
-            if (!deviceInfo.vpnAppInstalled) {
+            if (!deviceInfo.vpnAppApkExists) {
                 const { abi } = deviceInfo;
                 let apk = '';
                 switch (abi) {
@@ -149,7 +147,7 @@ export const AndroidConnectorInner = () => {
                         break;
                 }
                 if (apk) {
-                    await connector.deviceInstall(apk);
+                    await connector.deviceAdbPush(apk, '/sdcard/Download/cicy/vpn.apk');
                     flag = true;
                 }
             }
@@ -335,7 +333,7 @@ export const AndroidConnectorInner = () => {
                             }}
                         />
                     )}
-                    <View wh100p center overflowYAuto>
+                    <View wh100p center={currentDevice ? undefined : true} overflowYAuto>
                         <MirrorItem
                             isMax={true}
                             httpShortDelayMs={10}
