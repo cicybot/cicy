@@ -397,6 +397,9 @@ export default ({
                 <ProList<ListType>
                     itemLayout="vertical"
                     rowKey="mid"
+                    pagination={{
+                        pageSize: 3
+                    }}
                     headerTitle=""
                     dataSource={dataSource}
                     metas={{

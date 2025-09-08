@@ -114,7 +114,7 @@ function DownloadInfo({
                                 </Form.Item>
 
                                 <Form.Item
-                                    description={'如:http://127.0.0.1:4080/api'}
+                                    description={'如:http://119.29.236.138/api'}
                                     label="Api地址"
                                     name="baseUrl"
                                 >
