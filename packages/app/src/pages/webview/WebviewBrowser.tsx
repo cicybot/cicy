@@ -13,6 +13,7 @@ import ProxyService from '../../services/common/ProxyService';
 import { BrowserAccount, BrowserAccountInfo } from '../../services/model/BrowserAccount';
 import { waitForResult } from '@cicy/utils';
 import ContextMenuView, { ContextMenuParams } from '../../components/UI/ContextMenuView';
+import TgSide from './components/Telegram/TgSide';
 
 export let currentWebContentsId = 0;
 
@@ -22,6 +23,7 @@ export interface BrowserError {
 }
 
 let _favIcon = '';
+let _title = '';
 
 const WebviewBrowserInner = ({
     browserAccountInfo,
@@ -48,7 +50,13 @@ const WebviewBrowserInner = ({
     const [proxyRules, setProxyRules] = useState('');
 
     const [currentUrl, setCurrentUrl] = useState(BLANK_URL);
-
+    let isTg = !!localStorage.getItem('tg_bind_' + siteId);
+    if (currentUrl !== BLANK_URL) {
+        if ('web.telegram.org' === new URL(currentUrl).host) {
+            isTg = true;
+            localStorage.setItem('tg_bind_' + siteId, '1');
+        }
+    }
     useEffect(() => {
         if (!webviewRef.current) {
             return;
@@ -60,7 +68,7 @@ const WebviewBrowserInner = ({
             switch (eventType) {
                 case 'context-menu': {
                     const { params } = evt;
-                    console.log(params);
+                    // console.log(params);
                     setContextMenuParams(params);
                     break;
                 }
@@ -168,7 +176,7 @@ const WebviewBrowserInner = ({
                     break;
                 }
                 default:
-                    console.log(eventType, evt);
+                    console.debug(eventType, evt);
                     break;
             }
         };
@@ -181,6 +189,20 @@ const WebviewBrowserInner = ({
                 await onEvent('did-start-navigation', e);
                 const { isMainFrame, url } = e;
                 if (isMainFrame) {
+                    if (_title !== '_') {
+                        _title = '-';
+                        await window.backgroundApi.message({
+                            action: 'callBaseWindow',
+                            payload: {
+                                windowId,
+                                method: 'setTitle',
+                                params: {
+                                    title: _title
+                                }
+                            }
+                        });
+                    }
+
                     const accountState = await siteService.getAccountState();
                     await siteService.saveAccountState({
                         ...accountState,
@@ -199,16 +221,6 @@ const WebviewBrowserInner = ({
             'did-start-loading': async (e: any) => {
                 setLoading(true);
                 await onEvent('did-start-loading', e);
-                await window.backgroundApi.message({
-                    action: 'callBaseWindow',
-                    payload: {
-                        windowId,
-                        method: 'setTitle',
-                        params: {
-                            title: '-'
-                        }
-                    }
-                });
             },
             'did-stop-loading': async (e: any) => {
                 setLoading(false);
@@ -233,17 +245,20 @@ const WebviewBrowserInner = ({
             'page-title-updated': async (e: any) => {
                 onEvent('page-title-updated', e);
 
-                const res = await window.backgroundApi.message({
-                    action: 'callBaseWindow',
-                    payload: {
-                        windowId,
-                        method: 'setTitle',
-                        params: {
-                            title: e.title
+                if (_title !== e.title) {
+                    _title = e.title;
+                    await window.backgroundApi.message({
+                        action: 'callBaseWindow',
+                        payload: {
+                            windowId,
+                            method: 'setTitle',
+                            params: {
+                                title: _title
+                            }
                         }
-                    }
-                });
-                console.log('page-title-updated', e.title, res);
+                    });
+                }
+                console.log('page-title-updated', e.title);
                 const site = await siteService.getSiteInfo();
                 console.log({ site });
                 if (!site.title) {
@@ -292,8 +307,30 @@ const WebviewBrowserInner = ({
     }, [webviewRef]);
 
     return (
-        <View style={{ height: '100vh' }}>
-            <View style={{ height: 'calc(100vh - 32px)' }} relative>
+        <View absFull overflowHidden>
+            <View
+                hide={!isTg}
+                abs
+                top0
+                right0
+                bottom={32}
+                w={'calc(100vw - 360px)'}
+                borderBox
+                style={{
+                    borderLeft: '1px solid #e9e9e9'
+                }}
+            >
+                {currentUrl !== BLANK_URL && (
+                    <TgSide webview={webviewRef.current! as WebviewTag}></TgSide>
+                )}
+            </View>
+            <View
+                style={{
+                    height: 'calc(100vh - 32px)',
+                    width: isTg ? '360px' : undefined
+                }}
+                relative
+            >
                 {error && (
                     <View
                         wh100p

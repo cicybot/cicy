@@ -6,6 +6,7 @@ import { AdrDeviceInfo, AdrDeviceModel } from '../../services/model/AdrDeviceMod
 import { useLocalStorageState } from '@cicy/utils';
 import MirrorAdrView from '../adr-connector/MirrorAdrView';
 import { CheckCircleFilled } from '@ant-design/icons';
+import DrawerButton from '../DrawerButton';
 
 const AdrDevicesTable = ({
     adrDevice,
@@ -173,6 +174,15 @@ const AdrDevicesTable = ({
                     >
                         投影
                     </Checkbox>
+                </View>
+                <View mr12>
+                    <DrawerButton title={'DebugInfo'}>
+                        <View
+                            json={{
+                                devices: Array.from(adrDevice).map(row => row[1])
+                            }}
+                        ></View>
+                    </DrawerButton>
                 </View>
             </View>
             <View absFull top={height}>

@@ -2,6 +2,7 @@
 .favorites.json
 # compiled output
 dist
+.benchmarks
 tmp
 *.pyc
 .benchmarks

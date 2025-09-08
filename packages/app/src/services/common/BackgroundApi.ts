@@ -6,6 +6,42 @@ export class BackgroundApi {
     constructor() {
         this.api = window.backgroundApi ? window.backgroundApi : new CCWSMainWindowClient();
     }
+    async getDownloadState(downloadItems: any[], downloadIds: Record<number, string>) {
+        const downloadItemsMap = new Map();
+        downloadItems.forEach(row => {
+            downloadItemsMap.set(row.id, row);
+        });
+        const downloadItemRows = await this.send({
+            action: 'getDownloadState',
+            payload: {}
+        });
+
+        downloadItemRows.forEach((row: { getSavePath: string; savePath: string; id: string }) => {
+            const t = row.id.split('/');
+            const downloadId = parseInt(t[t.length - 1]);
+            if (downloadIds[downloadId]) {
+                const mediaId = downloadIds[downloadId];
+                const r = {
+                    ...row,
+                    mediaId,
+                    downloadId
+                };
+                downloadItemsMap.set(row.id, r);
+            }
+        });
+        const res = Array.from(downloadItemsMap)
+            .map(row => {
+                const { getSavePath, savePath, ...r } = row[1];
+                return {
+                    ...r,
+                    savePath: getSavePath || savePath
+                };
+            })
+            .filter(row => row.state !== 'cancelled');
+        res.sort((a: any, b: any) => b.ts - a.ts);
+        return res;
+    }
+
     async openUrl(url: string) {
         return await this.send({
             action: 'openUrl',
@@ -14,8 +50,8 @@ export class BackgroundApi {
             }
         });
     }
-    send(msg: { action: string; payload?: any }) {
-        return this.api.message(msg);
+    async send(msg: { action: string; payload?: any }) {
+        return await this.api.message(msg);
     }
 
     async setBounds(
@@ -172,8 +208,8 @@ export class BackgroundApi {
         });
     }
 
-    utils(payload: { method: string; params?: any }) {
-        return this.send({
+    async utils(payload: { method: string; params?: any }) {
+        return await this.send({
             action: 'utils',
             payload
         });

@@ -130,3 +130,115 @@ export function formatRelativeTime(
         minute: '2-digit'
     });
 }
+
+export function dataURItoBlob(dataURI: string) {
+    // Split the Data URI to get the MIME type and base64 data
+    const splitDataURI = dataURI.split(',');
+    const mimeString = splitDataURI[0].split(':')[1].split(';')[0];
+    const base64String = splitDataURI[1];
+
+    // Convert base64 to raw binary data
+    const byteString = atob(base64String);
+
+    // Write the bytes of the string to an ArrayBuffer
+    const arrayBuffer = new ArrayBuffer(byteString.length);
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i);
+    }
+
+    return new Blob([arrayBuffer], { type: mimeString });
+}
+
+export function downloadFile(url: string, filename: string) {
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    link.href = url;
+    // Set the download filename
+    link.download = filename;
+    // Append to body, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+export function formatSize(bytes: number, decimals = 1) {
+    if (bytes === 0) return '0 B';
+
+    const k = 1024;
+    const sizes = ['B', 'K', 'M', 'G', 'T'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+}
+
+export function formatDateYYYYMMDD(timestamp: number) {
+    const date = new Date(timestamp * 1000);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+export function formatDuration(seconds: number, options = {}) {
+    if (seconds === 0) return '0s';
+
+    const {
+        showHours = true,
+        showMinutes = true,
+        showSeconds = true,
+        compact = false,
+        padding = false
+    } = options as any;
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    const parts = [];
+
+    if (showHours && hours > 0) {
+        parts.push(padding && hours < 10 ? `0${hours}h` : `${hours}h`);
+    }
+
+    if (showMinutes && (minutes > 0 || hours > 0)) {
+        if (compact && hours > 0 && minutes === 0) {
+            // Skip minutes if 0 and compact mode
+        } else {
+            parts.push(padding && minutes < 10 ? `0${minutes}m` : `${minutes}m`);
+        }
+    }
+
+    if (showSeconds && (secs > 0 || seconds === 0)) {
+        if (compact && (hours > 0 || minutes > 0) && secs === 0) {
+            // Skip seconds if 0 and compact mode
+        } else {
+            parts.push(padding && secs < 10 ? `0${secs}s` : `${secs}s`);
+        }
+    }
+
+    return parts.join(compact ? '' : '');
+}
+
+export function bytesToDataURI(bytes: number[]) {
+    // Convert byte array to Uint8Array
+    const byteArray = new Uint8Array(bytes);
+
+    // Create blob from bytes (assuming it's JPEG based on common Telegram format)
+    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+    // Create FileReader to convert to data URI
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+export function bytesToDataURISync(bytes: any[], mimeType = 'image/jpeg') {
+    const byteArray = new Uint8Array(bytes);
+    //@ts-ignore
+    const base64 = btoa(String.fromCharCode.apply(null, byteArray));
+    return `data:${mimeType};base64,${base64}`;
+}

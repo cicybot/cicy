@@ -91,7 +91,7 @@ const AdrDeviceDetail = ({
                         props={{
                             top: 0,
                             wh: 44,
-                            right: 0
+                            left: 6
                         }}
                         onClick={async () => {
                             if (onClose) {
@@ -170,18 +170,17 @@ const AdrDeviceDetail = ({
                         >
                             安装程序
                         </List.Item>
+                        {/*<List.Item*/}
+                        {/*    prefix={<SetOutline />}*/}
+                        {/*    onClick={() => {*/}
+                        {/*        setPageNav(PageNav.DebugInfo);*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    Debug Info*/}
+                        {/*</List.Item>*/}
                         <List.Item
                             prefix={<SetOutline />}
                             onClick={() => {
-                                setPageNav(PageNav.DebugInfo);
-                            }}
-                        >
-                            Debug Info
-                        </List.Item>
-                        <List.Item
-                            prefix={<SetOutline />}
-                            onClick={() => {
-                                setPageNav(PageNav.Setting);
                                 new BackgroundApi().openUrl(adrUtils.getSwagger());
                             }}
                         >

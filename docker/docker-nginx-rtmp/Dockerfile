@@ -1,0 +1,12 @@
+FROM cicybot/nginx-mp4-rtmp:1.0.2
+
+ENV HTTP_PORT 80
+ENV HTTPS_PORT 443
+ENV RTMP_PORT 1935
+WORKDIR /www/static
+
+EXPOSE 1935
+EXPOSE 80
+
+CMD ["nginx"]
+

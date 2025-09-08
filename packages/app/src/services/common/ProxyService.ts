@@ -85,7 +85,7 @@ export default class ProxyService {
     }
 
     static getUserPwd() {
-        return 'pwd';
+        return 'password';
     }
 
     static getProxyPort() {

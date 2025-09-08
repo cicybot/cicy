@@ -115,14 +115,16 @@ const ProxyPool = ({ appInfo }: { appInfo: MainWindowAppInfo }) => {
                 ></AceEditorView>
             </View>
 
-            <View w100p h={44} mt12 pr12 borderBox>
+            <View w100p h={64} mt12 pr12 borderBox>
                 <AceEditorView
                     readOnly
                     options={{
                         showLineNumbers: false,
                         wrap: true
                     }}
-                    value={`curl -v -x http://127.0.0.1:${ProxyService.getProxyPort()} https://api.myip.com`}
+                    value={`
+curl -v -x http://user_10000:${ProxyService.getUserPwd()}@127.0.0.1:${ProxyService.getProxyPort()} https://api.myip.com
+`}
                     mode={'sh'}
                     id={'env11'}
                 ></AceEditorView>
@@ -403,8 +405,8 @@ const Setting = () => {
             children: (
                 <View>
                     <ProxyPool appInfo={appInfo}></ProxyPool>
-                    <Divider></Divider>
-                    <ProxyMitm appInfo={appInfo}></ProxyMitm>
+                    {/*<Divider></Divider>*/}
+                    {/*<ProxyMitm appInfo={appInfo}></ProxyMitm>*/}
                 </View>
             )
         }

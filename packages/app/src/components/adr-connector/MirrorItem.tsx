@@ -75,6 +75,11 @@ const MirrorItem = ({
             key: 'outOpen',
             icon: <ExportOutlined />
         });
+        items.push({
+            label: '设置',
+            key: 'setting',
+            icon: <SettingOutlined />
+        });
     } else {
         items.push({
             label: '设置',

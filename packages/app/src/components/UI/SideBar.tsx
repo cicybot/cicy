@@ -1,4 +1,9 @@
-import { AndroidOutlined, SettingOutlined, WindowsOutlined } from '@ant-design/icons';
+import {
+    AndroidOutlined,
+    SettingOutlined,
+    DashboardOutlined,
+    WindowsOutlined
+} from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
 import React from 'react';
@@ -23,6 +28,8 @@ const StyledDiv = styled('div')`
     }
 `;
 const items: MenuItem[] = [
+    { key: '/dashboard', icon: <DashboardOutlined />, label: '控制台' },
+
     { key: '/android', icon: <AndroidOutlined />, label: '安卓连接器' },
     { key: '/sites', icon: <WindowsOutlined />, label: '站点' },
     {
@@ -40,7 +47,7 @@ const SizeBar = ({ sideBarWidth, minSideBar }: { sideBarWidth: number; minSideBa
     return (
         <StyledDiv>
             <Menu
-                defaultSelectedKeys={[location.pathname === '/' ? '/android' : location.pathname]}
+                defaultSelectedKeys={[location.pathname === '/' ? '/dashboard' : location.pathname]}
                 mode="inline"
                 style={{
                     width: sideBarWidth,

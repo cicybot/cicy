@@ -20,13 +20,14 @@ import os from 'os';
 import { getLocalIPAddressList } from '@cicy/cicy-ws';
 import util from 'util';
 import { exec } from 'child_process';
+import Downloader from './Downloader';
 const execPromise = util.promisify(exec);
 
 const publicDir = path.resolve(__dirname, isDev ? '../../' : '../../../', 'public');
 
 export async function initDir() {
-    const { appDataPath, publicDir, meta, isWin, isDev } = getAppInfo();
-    let { version } = getAppInfo();
+    const { appDataPath, meta } = getAppInfo();
+    // let { version } = getAppInfo();
 
     if (!fs.existsSync(path.join(appDataPath, 'bounds'))) {
         fs.mkdirSync(path.join(appDataPath, 'bounds'), { recursive: true });
@@ -40,37 +41,37 @@ export async function initDir() {
     if (!fs.existsSync(path.join(appDataPath, 'meta'))) {
         fs.mkdirSync(path.join(appDataPath, 'meta'), { recursive: true });
     }
-    if (isDev) {
-        version = '0.0.0';
-    }
-    const apkPath = path.join(publicDir, 'static', 'assets', `app-v${version}.apk`);
-
-    if (!fs.existsSync(apkPath)) {
-        try {
-            if (isWin) {
-                const exe7z = path.join(publicDir, 'static', 'assets', `7z.exe`);
-                await execPromise(
-                    `${exe7z} e ${path.join(
-                        publicDir,
-                        'static',
-                        'assets',
-                        `app-v${version}.apk.zip`
-                    )} -o${path.join(publicDir, 'static', 'assets')}`
-                );
-            } else {
-                await execPromise(
-                    `unzip -o ${path.join(
-                        publicDir,
-                        'static',
-                        'assets',
-                        `app-v${version}.apk.zip`
-                    )} -d  ${path.join(publicDir, 'static', 'assets')}`
-                );
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
+    // if (isDev) {
+    //     version = '0.0.0';
+    // }
+    // const apkPath = path.join(publicDir, 'static', 'assets', `app-v${version}.apk`);
+    //
+    // if (!fs.existsSync(apkPath)) {
+    //     try {
+    //         if (isWin) {
+    //             const exe7z = path.join(publicDir, 'static', 'assets', `7z.exe`);
+    //             await execPromise(
+    //                 `${exe7z} e ${path.join(
+    //                     publicDir,
+    //                     'static',
+    //                     'assets',
+    //                     `app-v${version}.apk.zip`
+    //                 )} -o${path.join(publicDir, 'static', 'assets')}`
+    //             );
+    //         } else {
+    //             await execPromise(
+    //                 `unzip -o ${path.join(
+    //                     publicDir,
+    //                     'static',
+    //                     'assets',
+    //                     `app-v${version}.apk.zip`
+    //                 )} -d  ${path.join(publicDir, 'static', 'assets')}`
+    //             );
+    //         }
+    //     } catch (e) {
+    //         console.error(e);
+    //     }
+    // }
 
     execPromise(`chmod +x "${meta.bin}"`).catch(console.error);
 }
@@ -342,7 +343,7 @@ export class MainWindow {
         }
 
         ipcMain.handle('message', async (e: any, message: { action: string; payload: any }) => {
-            if (!['utils', 'db', 'mainWindowInfo'].includes(message.action)) {
+            if (!['utils', 'db', 'mainWindowInfo', 'getDownloadState'].includes(message.action)) {
                 console.log('[+] [MSG]', message);
             }
 
@@ -382,6 +383,9 @@ export class MainWindow {
                 }
                 case 'getAppInfo': {
                     return MainWindow.getInfo();
+                }
+                case 'getDownloadState': {
+                    return Downloader.getItems();
                 }
                 case 'initCCServer': {
                     await initCCServer(

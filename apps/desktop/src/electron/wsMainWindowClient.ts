@@ -229,7 +229,7 @@ export async function handelUtilsMsg(payload?: { method?: string; params?: any }
             return { result };
         }
         case 'fileReadString': {
-            const result = await FileHelper.readString(params[0]);
+            const result = await FileHelper.readString(params[0], params[1]);
             return { result };
         }
         case 'fileWriteString': {
@@ -238,6 +238,16 @@ export async function handelUtilsMsg(payload?: { method?: string; params?: any }
         }
         case 'mkdir': {
             const result = await FileHelper.mkdir(params[0]);
+            return { result };
+        }
+
+        case 'cp': {
+            const result = await FileHelper.cp(params[0], params[1]);
+            return { result };
+        }
+
+        case 'mv': {
+            const result = await FileHelper.mv(params[0], params[1]);
             return { result };
         }
 

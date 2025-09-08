@@ -260,12 +260,14 @@ export const AndroidConnectorInner = () => {
             console.error(error);
         }
     }, 1000);
+    const [currentTabKey, setCurrentTabKey] = useState('all');
+
     const items: TabsProps['items'] = [
         {
             key: 'all',
             label: '所有',
             children: (
-                <View absFull p12>
+                <View absFull p12 hide={currentTabKey !== 'all'}>
                     <AdrDevicesTable
                         {...{
                             adrDevice,
@@ -284,26 +286,32 @@ export const AndroidConnectorInner = () => {
             key: 'local',
             label: '本地',
             children: (
-                <View absFull p12>
+                <View absFull p12 hide={currentTabKey !== 'local'}>
                     <AndroidLocal {...{ adrDevice, forwardPorts, openAdr, onConnect, devices }} />
                 </View>
             )
-        },
-        {
-            key: 'cloud',
-            label: '云手机',
-            children: (
-                <View absFull p12>
-                    云手机
-                </View>
-            )
         }
+        // {
+        //     key: 'cloud',
+        //     label: '云手机',
+        //     children: (
+        //         <View absFull p12>
+        //             云手机
+        //         </View>
+        //     )
+        // }
     ];
     return (
         <AndroidConnectorPage>
             {!currentFullscreenDevice && (
                 <View borderBox wh100p relative px12 overflowHidden>
-                    <StyledTabs defaultActiveKey="all" items={items} onChange={key => {}} />
+                    <StyledTabs
+                        defaultActiveKey={currentTabKey}
+                        items={items}
+                        onChange={key => {
+                            setCurrentTabKey(key);
+                        }}
+                    />
                 </View>
             )}
 

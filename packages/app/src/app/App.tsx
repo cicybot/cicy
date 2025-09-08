@@ -12,6 +12,7 @@ import Setting from '../pages/home/Setting';
 import LeiDian from '../pages/home/LeiDian';
 import BrowserAccounts from '../pages/home/BrowserAccounts';
 import { ModelHelper } from '../services/model/ModelHelper';
+import Dashboard from '../pages/home/Dashboard';
 
 const router = createHashRouter([
     {
@@ -28,7 +29,11 @@ const router = createHashRouter([
         children: [
             {
                 index: true,
-                element: <Navigate to="/android" replace />
+                element: <Navigate to="/dashboard" replace />
+            },
+            {
+                path: 'dashboard',
+                Component: Dashboard
             },
             {
                 path: 'android',

@@ -32,7 +32,18 @@ const SitesTable = () => {
                     title = record.url.substring(0.5);
                 }
                 return (
-                    <a title={record.url} onClick={() => setDetail(record)}>
+                    <a
+                        title={record.url}
+                        onClick={async () => {
+                            try {
+                                const service = new BrowserService(record.url);
+                                await service.openWindow();
+                            } catch (error) {
+                                //@ts-ignore
+                                message.error(error.message);
+                            }
+                        }}
+                    >
                         {title}
                     </a>
                 );
@@ -44,21 +55,21 @@ const SitesTable = () => {
             valueType: 'option',
             key: 'option',
             render: (_, record) => [
-                <a
-                    style={{ marginRight: 8 }}
-                    key="open"
-                    onClick={async () => {
-                        try {
-                            const service = new BrowserService(record.url);
-                            await service.openWindow();
-                        } catch (error) {
-                            //@ts-ignore
-                            message.error(error.message);
-                        }
-                    }}
-                >
-                    <ExportOutlined />
-                </a>,
+                // <a
+                //     style={{ marginRight: 8 }}
+                //     key="open"
+                //     onClick={async () => {
+                //         try {
+                //             const service = new BrowserService(record.url);
+                //             await service.openWindow();
+                //         } catch (error) {
+                //             //@ts-ignore
+                //             message.error(error.message);
+                //         }
+                //     }}
+                // >
+                //     <ExportOutlined />
+                // </a>,
                 <Popconfirm
                     onConfirm={() => {
                         new SiteService(record.site_id).deleteSite().finally(refetch);
@@ -88,6 +99,7 @@ const SitesTable = () => {
             ...row
         };
     });
+
     return (
         <>
             <ProTable<SiteInfo>

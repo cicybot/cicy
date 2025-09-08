@@ -1,0 +1,70 @@
+{
+    "name": "@cicy/lvdou",
+    "version": "1.0.0",
+    "author": "Web3 Discover APPS Limited <barry.ptp@gmail.com>",
+    "description": "Web3 Discover",
+    "dependencies": {
+        "@cicy/app": "1.0.0",
+        "@cicy/utils": "1.0.0",
+        "antd": "^5.25.3",
+        "antd-mobile": "5.39.0",
+        "axios": "^1.9.0",
+        "buffer": "^6.0.3",
+        "inherits": "^2.0.4",
+        "md5": "^2.3.0",
+        "process": "^0.11.10",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-i18next": "^12.1.1",
+        "react-router": "^7.6.1",
+        "stream-browserify": "^3.0.0",
+        "styled-components": "^6.1.1",
+        "video.js": "^8.23.4"
+    },
+    "devDependencies": {
+        "@testing-library/dom": "^9.3.1",
+        "@testing-library/jest-dom": "^5.16.5",
+        "@testing-library/react": "^13.4.0",
+        "@testing-library/user-event": "^13.5.0",
+        "@types/fs-extra": "^11.0.4",
+        "@types/inherits": "^2",
+        "@types/jest": "^27.5.2",
+        "@types/md5": "^2",
+        "@types/node": "^20.11.0",
+        "@types/react": "^18.0.26",
+        "@types/react-dom": "^18.0.9",
+        "@types/styled-components": "^5.1.26",
+        "@vitejs/plugin-react": "^4.2.1",
+        "assert": "^2.1.0",
+        "fs-extra": "^11.2.0",
+        "react-is": "^18.2.0",
+        "ts-node": "^10.9.1",
+        "typescript": "5.2.2",
+        "vite": "^5.0.11",
+        "vite-plugin-node-polyfills": "0.17.0",
+        "wrangler": "^4.23.0"
+    },
+    "scripts": {
+        "start": "vite dev",
+        "preview": "vite preview",
+        "build": "tsc && vite build",
+        "build:web": "yarn build",
+        "sync":"rsync -avh --delete --exclude='static' ./dist/ /Users/ton/Desktop/projects/cicy/docker/docker-nginx-rtmp/www/root",
+        "deploy": "wrangler pages deploy ./dist --project-name lvdou --commit-dirty=true"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "ts-standard": {
+        "project": "./tsconfig.json"
+    }
+}

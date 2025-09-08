@@ -1,4 +1,11 @@
-import { app, BrowserWindow, globalShortcut, powerMonitor, WebContents } from 'electron';
+import {
+    app,
+    BrowserWindow,
+    DownloadItem,
+    globalShortcut,
+    powerMonitor,
+    WebContents
+} from 'electron';
 import log from 'electron-log/main';
 import { updateElectronApp } from 'update-electron-app';
 import { MainWindow } from './electron/mainWindow';
@@ -12,6 +19,7 @@ import {
 import { delay } from './electron/utils';
 import { s3 } from './electron/db';
 import WebContentsService from './electron/webContentsService';
+import Downloader from './electron/Downloader';
 
 app.setName('CiCy');
 
@@ -38,6 +46,60 @@ app.on('web-contents-created', (_event, contents) => {
 
     session.webRequest.onBeforeSendHeaders((details, callback) => {
         callback(details);
+    });
+
+    session.on('will-download', (event, item, webContents) => {
+        const downloadId = `${item.getURL()}`;
+        const downloader = new Downloader(downloadId);
+        downloader.updateState({
+            id: downloadId,
+            ts: Date.now(),
+            savePath: item.getSavePath(),
+            filename: item.getFilename(),
+            totalBytes: item.getTotalBytes(),
+            receivedBytes: item.getReceivedBytes(),
+            percent: item.getPercentComplete(),
+            bytesPerSecond: item.getCurrentBytesPerSecond(),
+            state: item.getState(),
+            status: 'init'
+        });
+
+        item.on('updated', (event, state) => {
+            downloader.updateState({
+                id: downloadId,
+                ts: Date.now(),
+                savePath: item.getSavePath(),
+                filename: item.getFilename(),
+                totalBytes: item.getTotalBytes(),
+                receivedBytes: item.getReceivedBytes(),
+                percent: item.getPercentComplete(),
+                bytesPerSecond: item.getCurrentBytesPerSecond(),
+                state: item.getState(),
+                status: 'updated'
+            });
+        });
+
+        // Handle download completion
+        item.on('done', (event, state) => {
+            downloader.updateState({
+                id: downloadId,
+                ts: Date.now(),
+                savePath: item.getSavePath(),
+                filename: item.getFilename(),
+                totalBytes: item.getTotalBytes(),
+                receivedBytes: item.getReceivedBytes(),
+                percent: item.getPercentComplete(),
+                bytesPerSecond: item.getCurrentBytesPerSecond(),
+                state: state,
+                error: state === 'interrupted' ? 'Download interrupted' : null,
+                status: 'done'
+            });
+        });
+    });
+    contents.on('will-navigate', (e: any) => {
+        if (e.url.startsWith('tg://')) {
+            e.preventDefault();
+        }
     });
 });
 
@@ -96,9 +158,9 @@ app.on('certificate-error', (event, webContents, url, error, certificate, callba
 });
 
 app.on('login', (event, webContents, details, authInfo, callback) => {
-    console.log('>>> [login] authInfo', authInfo);
+    console.log('>>> [login] authInfo', authInfo, webContents, details);
 
-    if (authInfo.isProxy) {
+    if (authInfo.isProxy && webContents) {
         const auth = WebContentsService.getAuthByWebContentsId(webContents.id);
         console.log('>>> [login] auth', auth);
         if (auth && auth.proxyUsername && auth.proxyPassword) {

@@ -170,19 +170,19 @@ const BrowserAccountDetail = ({ row }: { row: BrowserAccountInfo }) => {
                             />
                             <ProFormText width="md" name="proxyHost" label="代理主机" />
                         </ProFormGroup>
-                        <ProFormGroup title="">
-                            <ProFormCheckbox width="md" name="useMitm" label="使用中间人" />
-                        </ProFormGroup>
+                        {/*<ProFormGroup title="">*/}
+                        {/*    <ProFormCheckbox width="md" name="useMitm" label="使用中间人" />*/}
+                        {/*</ProFormGroup>*/}
                         <View mb={24}>代理端口 {useMitm ? 4446 : 4445}</View>
                     </ProForm>
                 </View>
             )
-        },
-        {
-            key: '3',
-            label: '代理',
-            children: <BrowserAccountProxy browserAccount={browserAccount}></BrowserAccountProxy>
         }
+        // {
+        //     key: '3',
+        //     label: '代理',
+        //     children: <BrowserAccountProxy browserAccount={browserAccount}></BrowserAccountProxy>
+        // }
     ];
     return <Tabs defaultActiveKey="1" items={items} onChange={() => {}} />;
 };

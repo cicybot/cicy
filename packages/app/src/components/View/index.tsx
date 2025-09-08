@@ -127,7 +127,7 @@ export interface ViewProps
         MarginProps,
         UtilsProps,
         React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
-    style?: CSSProperties | undefined;
+    style?: CSSProperties | undefined | Record<any, any>;
     children?:
         | ReactNode
         | ReactElement<any, string | JSXElementConstructor<any>>

@@ -1,0 +1,43 @@
+services:
+  lvdou:
+    build:
+      context: ~/lvdou  # Relative path to lvdou-app directory
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: lvdou-app
+    environment:
+      - ASSETS_DIR=/www/data/assets
+      - ACCESS_TOKEN=
+      - DB_DIR=
+      - LOG_DIR=
+      - JWT_SECRET_KEY=
+    volumes:
+      - ~/lvdou/app:/code/app
+      - ./www:/www
+      - ./data:/data
+    networks:
+      - app-network
+  nginx-rtmp:
+    build: .
+    depends_on:
+      - lvdou
+    networks:
+      - app-network
+    ports:
+      - 1935:1935
+      - 80:80
+      - 8443:443
+    environment:
+      - HTTP_PORT=80
+      - RTMP_PORT=1935
+    volumes:
+      - ./certs:/opt/certs
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./www:/www
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
