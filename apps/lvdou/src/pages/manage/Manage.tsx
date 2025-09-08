@@ -2,10 +2,16 @@ import { View } from '@cicy/app';
 import { List } from 'antd-mobile';
 import { UnorderedListOutline } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router';
+import { useGlobalContext } from '../../providers/GlobalProvider';
+import { useAuthLogin } from '../../hooks/useAuthLogin';
 
 const Manage = () => {
     let navigate = useNavigate();
-
+    const { state } = useGlobalContext();
+    useAuthLogin();
+    if (!state.authUser) {
+        return null;
+    }
     return (
         <View wh100p overflowYAuto>
             <List>

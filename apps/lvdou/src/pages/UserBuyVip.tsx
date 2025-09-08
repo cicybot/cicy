@@ -134,7 +134,7 @@ const UserInvite = () => {
                     </Swiper>
                 </View>
 
-                {authUser?.vip_expired_at && (
+                {Boolean(authUser?.vip_expired_at) && (
                     <View mt={32} ml12>
                         <View rowVCenter mr12 fontSize={16} fontWeight={700}>
                             VIP到期: {formatDateTime(authUser?.vip_expired_at!)}

@@ -49,6 +49,7 @@
         "preview": "vite preview",
         "build": "tsc && vite build",
         "build:web": "yarn build",
+        "copy": "yarn build && yarn sync",
         "sync":"rsync -avh --delete --exclude='static' ./dist/ /Users/ton/Desktop/projects/cicy/docker/docker-nginx-rtmp/www/root",
         "deploy": "wrangler pages deploy ./dist --project-name lvdou --commit-dirty=true"
     },

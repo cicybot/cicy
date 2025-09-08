@@ -1,6 +1,6 @@
 import { createHashRouter, Navigate, RouterProvider } from 'react-router';
 import { useEffectOnce } from '@cicy/app/dist/hooks/hooks';
-import { GlobalProvider } from './providers/GlobalProvider';
+import { GlobalProvider, PageNav, useGlobalContext } from './providers/GlobalProvider';
 import { ConfigProvider, theme } from 'antd';
 import { useLocalStorageState } from '@cicy/utils';
 
@@ -21,6 +21,7 @@ import PayQrcode from './pages/manage/PayQrcode';
 import OrderUpdate from './pages/manage/OrderUpdate';
 import ManageTickets from './pages/manage/ManageTickets';
 import ManageTicketsReply from './pages/manage/ManageTicketsReply';
+import Auth from './pages/Auth';
 
 const router = createHashRouter([
     {
@@ -93,7 +94,24 @@ const router = createHashRouter([
 ]);
 
 export const AppInner = () => {
-    return <RouterProvider router={router} />;
+    const { state } = useGlobalContext();
+    console.log('currentPage', state.currentPage);
+    switch (state.currentPage) {
+        case PageNav.Login:
+            return (
+                <View>
+                    <Auth />
+                </View>
+            );
+        case PageNav.Reg:
+            return (
+                <View>
+                    <Auth isReg={true} />
+                </View>
+            );
+        default:
+            return <RouterProvider router={router} />;
+    }
 };
 
 const App = () => {

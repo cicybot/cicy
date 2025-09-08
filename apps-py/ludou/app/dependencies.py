@@ -19,6 +19,7 @@ async def get_bearer_token_header(
     if  (url_path.startswith("/api/video/list")
             or url_path.startswith("/api/video/detail")
             or url_path.startswith("/api/auth/sign")
+            or url_path.startswith("/api/auth/manage")
             or url_path.startswith("/api/app/settings")
             or url_path.startswith("/api/auth/validate")
             or url_path.startswith("/api/video/key")):

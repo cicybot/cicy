@@ -202,7 +202,8 @@ async def appSettings(session: SessionDep,request: AppSettingRequest,credentials
         ts = int(ts),
     )
 
+
 @app.get("/api")
 async def root():
-    logger.info("ACCESS_TOKEN: %s",os.getenv("ACCESS_TOKEN","test"))
+    logger.info("root")
     return {"message": "Hello Bigger Applications!","version":"1.0.1"}

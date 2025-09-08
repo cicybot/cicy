@@ -7,6 +7,8 @@ import { useLocalStorageState } from '@cicy/utils';
 import { formatDateTime } from '../../utils/utils';
 import { useNavigate } from 'react-router';
 import HeaderLeftIcon from '../../components/HeaderLeftIcon';
+import { useGlobalContext } from '../../providers/GlobalProvider';
+import { useAuthLogin } from '../../hooks/useAuthLogin';
 
 const ManageTickets = () => {
     let navigate = useNavigate();
@@ -29,6 +31,11 @@ const ManageTickets = () => {
     useEffect(() => {
         fetchRows(isAll);
     }, []);
+    const { state } = useGlobalContext();
+    useAuthLogin();
+    if (!state.authUser) {
+        return null;
+    }
     return (
         <View absFull>
             <View>

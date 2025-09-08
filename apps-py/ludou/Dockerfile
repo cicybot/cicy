@@ -1,13 +1,14 @@
-FROM python:3.11
-
-WORKDIR /code
+FROM cicybot/python-3.11-ffmpeg:1.0.1
 
 COPY ./requirements.txt /code/requirements.txt
+
 RUN pip config set global.extra-index-url "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 COPY ./app /code/app
+
+WORKDIR /code
 
 EXPOSE 3080
 

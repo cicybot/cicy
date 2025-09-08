@@ -238,7 +238,7 @@ function DownloadInfo({
                                 if (!checkUrlAndToken()) {
                                     return;
                                 }
-                                if (!video || !video.file_info.thumb_size) {
+                                if (1 || !video || !video.file_info.thumb_size) {
                                     const url = await new TelegramWebviewService(
                                         webview
                                     ).getCachedFile(record.id, 'document', 'm');
@@ -257,7 +257,7 @@ function DownloadInfo({
                                     try {
                                         await uploadFile(
                                             file,
-                                            `${baseUrl}/file/upload`, // Replace with your actual upload URL
+                                            `${baseUrl}/file/upload?path=${fileName}`, // Replace with your actual upload URL
                                             token
                                         );
                                     } catch (e) {

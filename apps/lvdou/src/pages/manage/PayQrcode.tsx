@@ -8,6 +8,8 @@ import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import EmptyView from '../../components/EmptyView';
 import HeaderLeftIcon from '../../components/HeaderLeftIcon';
+import { useAuthLogin } from '../../hooks/useAuthLogin';
+import { useGlobalContext } from '../../providers/GlobalProvider';
 
 const StyledImageUploader = styled(ImageUploader)`
     cursor: pointer;
@@ -31,6 +33,11 @@ const PayQrcode = () => {
     useEffect(() => {
         fetchRows();
     }, []);
+    const { state } = useGlobalContext();
+    useAuthLogin();
+    if (!state.authUser) {
+        return null;
+    }
     return (
         <View absFull>
             <View>

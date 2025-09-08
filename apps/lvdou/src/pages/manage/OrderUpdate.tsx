@@ -4,8 +4,12 @@ import { useState } from 'react';
 import axios from 'axios';
 import { formatDateTime } from '../../utils/utils';
 import HeaderLeftIcon from '../../components/HeaderLeftIcon';
+import { useGlobalContext } from '../../providers/GlobalProvider';
+import { useAuthLogin } from '../../hooks/useAuthLogin';
 
 const OrderUpdate = () => {
+    const { state } = useGlobalContext();
+    console.log('authUser:', state.authUser);
     const [amount, setAmount] = useState('');
     const [order, setOrder] = useState<any | null>(null);
     const t: any = {
@@ -17,6 +21,10 @@ const OrderUpdate = () => {
         1: '支付成功',
         2: '支付失败'
     };
+    useAuthLogin();
+    if (!state.authUser) {
+        return null;
+    }
     return (
         <View absFull>
             <View>
